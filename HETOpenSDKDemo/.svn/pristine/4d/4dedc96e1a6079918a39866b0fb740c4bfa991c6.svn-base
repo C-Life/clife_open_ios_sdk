@@ -1,0 +1,75 @@
+//
+//  ViewController.m
+//  HETOpenSDKDemo
+//
+//  Created by mr.cao on 16/1/21.
+//  Copyright © 2016年 mr.cao. All rights reserved.
+//
+
+#import "ViewController.h"
+
+#import "HETAuthorize.h"
+#import "MainViewController.h"
+#import "HETDeviceControlBusiness.h"
+
+@interface ViewController ()
+@property (nonatomic, strong) HETAuthorize *auth;
+@end
+
+@implementation ViewController
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    self.view.backgroundColor = [UIColor whiteColor];
+    [self setLeftBarButtonItemHide:YES];
+    
+       
+    
+    // Do any additional setup after loading the view, typically from a nib.
+   //检查SDK是否已经授权登录，否则不能使用
+    HETAuthorize *auth = [[HETAuthorize alloc] initWithAppKey:ktestAPPKEY
+                                                    appSecret:ktestAPPSECRET];
+    self.auth = auth;
+    
+    if (![auth isAuthenticated]) {
+        [auth authorizeWithCompleted:^(HETAccount *account, NSError *error) {
+            NSLog(@"%@,token:%@",account,account.accessToken);
+            MainViewController *vc=[[MainViewController alloc]init];
+            [self.navigationController pushViewController:vc animated:YES];
+        }];
+
+            }
+    else
+    {
+        MainViewController *vc=[[MainViewController alloc]init];
+        [self.navigationController pushViewController:vc animated:YES];
+    }
+
+}
+// convert a hex NSString to NSData, spaces and angled brackets are ignored
+- (NSData *)dataFromHexString:(NSString *)string
+{
+    string = [string lowercaseString];
+    NSMutableData *data= [NSMutableData new];
+    unsigned char whole_byte;
+    char byte_chars[3] = {'\0','\0','\0'};
+    int i = 0;
+    int length = (int) string.length;
+    while (i < length-1) {
+        char c = [string characterAtIndex:i++];
+        if (c < '0' || (c > '9' && c < 'a') || c > 'f')
+            continue;
+        byte_chars[0] = c;
+        byte_chars[1] = [string characterAtIndex:i++];
+        whole_byte = strtol(byte_chars, NULL, 16);
+        [data appendBytes:&whole_byte length:1];
+    }
+    return data;
+}
+
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+@end

@@ -1,0 +1,17 @@
+//
+//  WIFICommonProtocol.h
+//  NewBindDeviceProject
+//
+//  Created by mr.cao on 15/6/24.
+//  Copyright (c) 2015年 mr.cao. All rights reserved.
+//  0x41旧协议指令类
+
+#import <Foundation/Foundation.h>
+#import "HETWIFICommonReform.h"
+@interface HETWIFICommonProtocol : NSObject
++(HETWIFICommonReform*)transformData:(NSData *)data;
+
++(NSData *)fetchBindPacketWithObj:(HETWIFICommonReform *)obj  withUserKey:(NSString *)userKey;
+
++(NSData *)fetchLittleLoopPacketWithObj:(HETWIFICommonReform *)obj;
+@end

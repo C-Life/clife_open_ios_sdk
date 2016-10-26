@@ -1,0 +1,57 @@
+//
+//  bindJavaScript.m
+//  NewBindDeviceProject
+//
+//  Created by mr.cao on 15/7/21.
+//  Copyright (c) 2015年 mr.cao. All rights reserved.
+//
+
+#import "bindJavaScript.h"
+
+@implementation bindJavaScript
+
+-(void)yes
+{
+    /*if(self.deviceControlBlock)
+    {
+        self.deviceControlBlock(@"yes");
+    }*/
+    if(self.bindJavaScriptdelegate &&[self.bindJavaScriptdelegate respondsToSelector:@selector(yesButton)])
+    {
+        [self.bindJavaScriptdelegate yesButton];
+    }
+}
+-(void)config:(id)data
+{
+    
+    if(self.configBlock)
+    {
+        self.configBlock(data);
+    }
+}
+
+-(void)send:(id)data :(id)successCallback :(id)errorCallback
+{
+    if(self.deviceControlBlock)
+    {
+        self.deviceControlBlock(data,successCallback,errorCallback);
+    }
+
+}
+-(void)setTitle:(id)data
+{
+    if(self.getTitleBlock)
+    {
+        self.getTitleBlock(data);
+    }
+}
+
+
+-(void)tips:(id)data
+{
+    if(self.gettipsBlock)
+    {
+        self.gettipsBlock(data);
+    }
+}
+@end

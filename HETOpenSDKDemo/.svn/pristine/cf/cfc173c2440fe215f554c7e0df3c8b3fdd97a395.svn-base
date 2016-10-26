@@ -1,0 +1,1030 @@
+//
+//  WIFIBindManager.m
+//  NewBindDeviceProject
+//
+//  Created by mr.cao on 15/6/24.
+//  Copyright (c) 2015年 mr.cao. All rights reserved.
+//
+
+#import "HETWIFIBindBusiness.h"
+#import "HETWIFICommonReform.h"
+#import "HETSmartLinkMangerAPI.h"
+#import "HETNetWorkRequest.h"
+#import "HETAuthorize.h"
+#import "HETURLRequestHelper.h"
+#import "HETWIFICommonProtocol.h"
+#import "HETWIFINewProtocol.h"
+#import "HETWIFIOpenSDKProtocol.h"
+#import "HETNetWorkRequest.h"
+#import "HETAccounts.h"
+
+
+#import "HFSmartLink.h"
+//#import "HFSmartLinkDeviceInfo.h"
+#import <SystemConfiguration/CaptiveNetwork.h>
+#include "hf-pmk-generator.h"
+
+#define  KFetchTimeOut 1
+#define  KFetchTimes 50
+#define  kHETAPIBaseUrl @"https://200.200.200.50/v1/app/open"//@"https://test.open.api.clife.cn/v1"
+#define  kHETUploadAPIBaseUrl @"https://200.200.200.50/v1/app/open"//@"https://test.open.api.clife.cn/v1"
+
+
+//#define  kHETAPIBaseUrl @"https://open.api.clife.cn"//@"https://test.open.api.clife.cn/v1"
+//#define  kHETUploadAPIBaseUrl @"https://open.api.clife.cn"//@"https://test.open.api.clife.cn/v1"
+
+#define  kListenPort 18899
+#define  RET_KEY  @"smart_config"
+#define  CONTENT_COUNT  5 //内容发送次数
+#define  HEADER_COUNT  200 //头发送次数
+#define  HEADER_CAPACITY  76 //密码头内容
+#define  HEADER_PACKAGE_DELAY_TIME  10 // 发送头内容时的间隔(ms)
+#define  CONTENT_GROUP_DELAY_TIME  500 // 密码与报文尾循环发送时的间隔(ms)
+#define  CONTENT_PACKAGE_DELAY_TIME  50 //密码报文尾的内容间隔(ms)
+#define  CONTENT_CHECKSUM_BEFORE_DELAY_TIME  100 //内容和报文尾的间隔时间(ms)
+#define  SERVER_PACKAGE_DELAY_TIME 500 // 发送服务器地址和key的间隔
+#define  SEND_PWD_PORT 49999 //广播路由器密码端口
+#define  SEND_SERVER_PORT 18899 //广播服务器IP PORT Key端口
+#define  SEND_SMARTLINKFIND_PORT 18899 //广播smartlinkfind和HF－ALLASSISTHREAD端口
+#define  BIND_PORT     48899 //监听设备发过来的信息
+#define  mysleep(ms) [NSThread sleepForTimeInterval:ms/1000.0]
+
+
+
+
+typedef NS_ENUM(NSUInteger,COMMANDType)
+{
+    /**
+     *  APP广播USERKE Y【32】+ 服务器 IP 【4】+端 口号【2】
+     */
+    HET_OPENSDK_BIND_SENDSERVERINFO=0x0200,
+    /**
+     *  发现设备
+     */
+    HET_OPENSDK_BIND_DISCOVERDEVICE=0x0400,
+    /**
+     *  上传控制参数
+     */
+    HET_OPENSDK_CONFIG_SEND=0x0104,
+    /**
+     *  收到控制参数
+     */
+    HET_OPENSDK_CONFIG_RECV=0x0204,
+    /**
+     *  请求设备上传控制参数
+     */
+    HET_OPENSDK_CONFIG_REQ=0x0404,
+    /**
+     *  收到设备上传控制参数
+     */
+    HET_OPENSDK_CONFIG_RES=0x0304,
+    /**
+     *  请求设备发送运行数据
+     */
+    HET_OPENSDK_RUN_REQ=0x0405,
+    /**
+     *  收到设备运行数据
+     */
+    HET_OPENSDK_RUN_RECV=0x0105,
+    /**
+     *  设备上传运行参数
+     */
+    HET_OPENSDK_RUN_RES=0x0305,
+    /**
+     *  设备运行故障
+     */
+    HET_OPENSDK_RUN_ERROR=0x010E,
+    
+    
+};
+
+
+@interface HETWIFIBindBusiness()<smartlinkDelegate>
+{
+    NSMutableArray *houseAndDevices;   // 一个家庭和其绑定的设备
+    NSMutableArray *housesAndDevices;  // 多个家庭和其绑定的设备
+    NSMutableArray *housesInfoArr;     // 家庭信息
+    HETSmartLinkMangerAPI *smartlink;
+    
+    long tag;
+    BOOL HFCMDIsRuning;
+    NSInteger HFCMDSendCount;
+    NSMutableString *log;
+    NSMutableArray *macArray;
+    NSMutableArray *ip_mac_name_array;
+    NSMutableArray *scanDeviceArray;
+    NSMutableArray *BindSuccArray;
+    
+    BOOL start;
+    NSString *myHost;
+    NSInteger currentDeviceType;
+    NSInteger  bindFailCount;
+    
+    HFSmartLink * smtlk;
+ 
+}
+@property(nonatomic,strong) dispatch_source_t fetchSSIDtimer;
+@property(nonatomic,strong) dispatch_source_t fetchBINDStatetimer;
+
+/**
+ *  配置用户Key,需要对应用做Key机制验证，如果不添加key，功能将不能使用
+ */
+//@property (nonatomic, strong) NSString *appKey;
+
+@end
+
+
+@implementation HETWIFIBindBusiness
+
+static HETWIFIBindBusiness *_sharedInstance = nil;
++ (const HETWIFIBindBusiness *)sharedInstance
+{
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        _sharedInstance = [[HETWIFIBindBusiness alloc] init];
+    });
+    return _sharedInstance;
+}
+
+- (instancetype)init
+{
+    self = [super init];
+    if(self)
+    {
+       /* if (smartlink) {
+            [smartlink stop_smartLink];
+            smartlink = nil;
+        }
+        smartlink = [[SmartLinkMangerAPI alloc] init];
+        smartlink.delegate = self;*/
+ 
+    }
+    return self;
+}
+-(void)fetchSSIDInfoWithInterVal:(NSTimeInterval)interval
+                       WithTimes:(NSTimeInterval)times
+                    SuccessBlock:(void(^)(NSString* ssidStr))success
+
+{
+    if (self.fetchSSIDtimer) {
+        return;
+    }
+    __block NSUInteger  tick=0;
+    
+    dispatch_queue_t queue = dispatch_get_main_queue();
+    self.fetchSSIDtimer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0,queue);
+    dispatch_source_set_timer(self.fetchSSIDtimer,dispatch_walltime(NULL, 0),(interval?:3)*NSEC_PER_SEC, 0);
+    dispatch_source_set_event_handler(self.fetchSSIDtimer, ^{
+        if (tick < (times?:NSIntegerMax)){
+            success([self fetchSSIDInfo]);
+            
+        }else{
+            dispatch_source_cancel(self.fetchSSIDtimer);
+        }
+        tick ++;
+    });
+    dispatch_source_set_cancel_handler(self.fetchSSIDtimer, ^{
+        
+        dispatch_source_cancel(self.fetchSSIDtimer);
+#if !OS_OBJECT_USE_OBJC
+        dispatch_release(self.realDatatimer);
+#endif
+        self.fetchSSIDtimer = NULL;
+    });
+    dispatch_resume(self.fetchSSIDtimer);
+
+}
+-(void)stopFetchSSIDInfo
+{
+    if (self.fetchSSIDtimer)
+        dispatch_source_cancel(self.fetchSSIDtimer);
+   }
+-(void)resumeFetchSSIDInfo
+{
+    if (self.fetchSSIDtimer)
+      dispatch_resume(self.fetchSSIDtimer);
+
+}
+-(void)suspendFetchSSIDInfo
+{
+     if (self.fetchSSIDtimer)
+        dispatch_suspend(self.fetchSSIDtimer);
+
+}
+-(NSString *)fetchmacSSIDInfo
+{
+    return [self fetchBSSIDInfo];
+}
+#pragma mark 绑定第一步，获取服务器地址和端口
+//扫描设备
+-(void)scanDevicewithPassWord:(NSString *)psw withDeviceType:(NSInteger)deviceType;
+{
+    [self getServerIPAndPort];
+   
+     [self startBroadCastPWD:psw withDeviceType:deviceType];
+    
+}
+-(void)startScanDevicewithSSID:(NSString *)ssid withPassWord:(NSString *)psw withDeviceType:(DeviceType)deviceType
+{
+    [self getServerIPAndPort];
+    [self startBroadCastPWD:psw withDeviceType:deviceType];
+}
+-(void)startScanDevicewithDeviceType:(NSInteger)deviceType
+{
+    [self getServerIPAndPort];
+    if(!smartlink)
+    {
+        smartlink = [[HETSmartLinkMangerAPI alloc] init];
+        smartlink.delegate = self;
+    }
+    
+    HFCMDIsRuning = NO;
+    start = YES;
+    currentDeviceType=deviceType;
+}
+-(void)getServerIPAndPort
+{
+    
+    if ([[HETNetWorkRequest shared].appKey length] == 0)
+    {
+        NSString *reason = [NSString stringWithFormat:@"appKey为空，请检查key是否正确设置。"];
+        
+        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"提示" message:reason delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil, nil];
+        
+        [alert show];
+        return;
+    }
+
+    //获取时间戳
+    NSTimeInterval time = [[NSDate date] timeIntervalSince1970];
+    NSString *_timestamp = [NSString stringWithFormat: @"%lld", (long long)(time * 1000)];
+    
+    NSDictionary *params=[NSDictionary dictionaryWithObjectsAndKeys:[HETNetWorkRequest shared].appKey,@"appId",_timestamp,@"timestamp", nil];
+    NSString * fullURL = [kHETAPIBaseUrl stringByAppendingString:@"/device/getBindConfig"];
+    [[HETNetWorkRequest shared]startRequestWithHTTPMethod:HETRequestMethodGet withRequestUrl:fullURL processParams:params needSign:NO BlockWithSuccess:^(HETNetWorkRequestOperation *operation, id responseObject) {
+        if([responseObject isKindOfClass:[NSDictionary class]])
+        {
+            NSDictionary *dictValue=[responseObject objectForKey:@"data"];
+            //NSString *serverIp=[dictValue objectForKey:@"serverIp"];
+            //NSString *serverPort=[dictValue objectForKey:@"serverPort"];
+           NSDictionary *serverConfig = @{@"serverIp": [dictValue valueForKey:@"serverIp"], @"serverPort" : [dictValue valueForKey:@"serverPort"]};
+            [[NSUserDefaults standardUserDefaults] setObject:serverConfig forKey:@"HETServerConfig"];
+            [[NSUserDefaults standardUserDefaults] synchronize];
+        }
+        else
+        {
+            if(self.delegate&&[self.delegate respondsToSelector:@selector(HETWIFIBindBusinessFail:) ])
+            {
+                [self.delegate HETWIFIBindBusinessFail:nil];
+            }
+            
+        }
+
+        
+    } failure:^(HETNetWorkRequestOperation *operation, NSError *error) {
+        NSLog(@"获取设备绑定IP和端口号网络请求错误:%@",error);
+        if(self.delegate&&[self.delegate respondsToSelector:@selector(HETWIFIBindBusinessFail:) ])
+        {
+            [self.delegate HETWIFIBindBusinessFail:nil];
+        }
+ 
+    }];
+    /*[[HETNetWorkRequest shared]getFromPath:@"/device/getBindConfig" params:params needSign:NO BlockWithSuccess:^(HETNetWorkRequestOperation *operation, id responseObject) {
+        if([responseObject isKindOfClass:[NSDictionary class]])
+        {
+            NSDictionary *dictValue=[responseObject objectForKey:@"data"];
+            //NSString *serverIp=[dictValue objectForKey:@"serverIp"];
+            //NSString *serverPort=[dictValue objectForKey:@"serverPort"];
+            NSDictionary *serverConfig = @{@"serverIp": [dictValue valueForKey:@"serverIp"], @"serverPort" : [dictValue valueForKey:@"serverPort"]};
+            [[NSUserDefaults standardUserDefaults] setObject:serverConfig forKey:@"serverConfig"];
+            [[NSUserDefaults standardUserDefaults] synchronize];
+        }
+        else
+        {
+            if(self.delegate&&[self.delegate respondsToSelector:@selector(WIFIBindBusinessFail) ])
+            {
+                [self.delegate WIFIBindBusinessFail];
+            }
+
+        }
+    } failure:^(HETNetWorkRequestOperation *operation, NSError *error) {
+        NSLog(@"获取设备绑定IP和端口号网络请求错误:%@",error);
+        if(self.delegate&&[self.delegate respondsToSelector:@selector(WIFIBindBusinessFail) ])
+        {
+            [self.delegate WIFIBindBusinessFail];
+        }
+
+    }];*/
+    
+    /*HETNetWorkRequest *request=[[HETNetWorkRequest alloc]init];
+    //获取时间戳
+    NSTimeInterval time = [[NSDate date] timeIntervalSince1970];
+    NSString *_timestamp = [NSString stringWithFormat: @"%lld", (long long)(time * 1000)];
+
+    NSDictionary *params=[NSDictionary dictionaryWithObjectsAndKeys:testAPPKEY,@"appId",_timestamp,@"timestamp", nil];
+    [request getFromPath:@"https://200.200.200.50/v1/app/open/device/getBindConfig" params:params completed:^(id result, NSData *data, NSError *error) {
+        
+    }];*/
+
+
+   /*HETDeviceGetBindConfigRequest *request=[[HETDeviceGetBindConfigRequest alloc]initWithAccessToken:[HETUserDefaultsPreference sharedInstance].accessToken];
+    [request startWithSuccess:^(NSDictionary *dictValue) {
+        NSLog(@"dictValue:%@",dictValue);
+        if(dictValue)
+        {
+            NSDictionary *serverConfig = @{@"serverIp": [dictValue valueForKey:@"serverIp"], @"serverPort" : [dictValue valueForKey:@"serverPort"]};
+            [[NSUserDefaults standardUserDefaults] setObject:serverConfig forKey:@"serverConfig"];
+            [[NSUserDefaults standardUserDefaults] synchronize];
+        
+            //[self getBindDevicesByUserId];
+            
+       
+        }
+        else
+        {
+           if(self.delegate&&[self.delegate respondsToSelector:@selector(WIFIBindBusinessFail) ])
+           {
+               [self.delegate WIFIBindBusinessFail];
+           }
+            
+    
+        }
+        
+    } failure:^(NSError *error, NSInteger statusCode) {
+        if(self.delegate&&[self.delegate respondsToSelector:@selector(WIFIBindBusinessFail)])
+        {
+            [self.delegate WIFIBindBusinessFail];
+        }
+
+        
+    }];*/
+
+}
+
+-(void) startBroadCastPWD:(NSString *)pwd withDeviceType:(NSInteger)deviceType
+{
+    if(!smartlink)
+    {
+        smartlink = [[HETSmartLinkMangerAPI alloc] initWithBindPort:18899];
+        smartlink.delegate = self;
+    }
+
+    HFCMDIsRuning = NO;
+    start = YES;
+    currentDeviceType=deviceType;
+    
+    //HF WiFi模块接入路由
+    smtlk =[[HFSmartLink alloc]init];// [HFSmartLink shareInstence];
+    smtlk.isConfigOneDevice = false;
+    
+    smtlk.waitTimers = 30;//15;
+    [smtlk startWithKey:pwd processblock:^(NSInteger process) {
+        
+    } successBlock:^(HFSmartLinkDeviceInfo *dev) {
+        //[self  showAlertWithMsg:[NSString stringWithFormat:@"%@:%@",dev.mac,dev.ip] title:@"OK"];
+    } failBlock:^(NSString *failmsg) {
+        //[self  showAlertWithMsg:failmsg title:@"error"];
+    } endBlock:^(NSDictionary *deviceDic) {
+        
+        
+    }];
+    
+}
+
+#pragma mark 绑定第二步，先与服务器建立连接，发送服务器地址和key给设备
+
+-(void)bindDevices:(NSArray<HETWIFICommonReform *>*)deviceArrayObj withTimeOut:(NSTimeInterval)interval;
+{
+    dispatch_async(dispatch_get_main_queue(), ^{
+      [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(BindActionTimeout) object:nil ];
+    });
+    
+    if(interval>0)
+    {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self performSelector:@selector(BindActionTimeout) withObject:nil afterDelay:interval];
+        });
+
+        
+    }
+     bindFailCount=deviceArrayObj.count;
+
+    for (int i=0;i<deviceArrayObj.count;i++) {
+        HETWIFICommonReform *obj=[deviceArrayObj objectAtIndex:i];
+        [self sendBindInfoToServer:obj];
+    }
+
+    
+}
+-(void)BindActionTimeout{
+    
+    if(self.delegate&&[self.delegate respondsToSelector:@selector(HETWIFIBindBusinessFail:) ])
+    {
+        [self.delegate HETWIFIBindBusinessFail:nil];
+    }
+    
+}
+
+
+//与服务器建立连接,设备的信息提交给服务器
+-(void)sendBindInfoToServer:(HETWIFICommonReform *)obj
+{
+    if ([[HETNetWorkRequest shared].appKey length] == 0)
+    {
+        NSString *reason = [NSString stringWithFormat:@"appKey为空，请检查key是否正确设置。"];
+        
+        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"提示" message:reason delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil, nil];
+        
+        [alert show];
+        return;
+    }
+
+ 
+    char deviceType =obj.device_type;
+    char deviceSubType =obj.device_subtype;
+    int bindType = 1; //绑定类型（1-WiFi  2-蓝牙）
+    NSString *timezone=[HETURLRequestHelper currentTimeOffset] ;
+    //获取时间戳
+    NSTimeInterval time = [[NSDate date] timeIntervalSince1970];
+    NSString *_timestamp = [NSString stringWithFormat: @"%lld", (long long)(time * 1000)];
+    
+    NSDictionary *params=[NSDictionary dictionaryWithObjectsAndKeys:[HETNetWorkRequest shared].appKey,@"appId",_timestamp,@"timestamp",timezone,@"timeZone",obj.device_mac,@"mac",[NSString stringWithFormat:@"%d",(unsigned int)obj.device_brand],@"deviceBrandId",[NSString stringWithFormat:@"%d",deviceType],@"deviceTypeId",[NSString stringWithFormat:@"%d",deviceSubType],@"deviceSubtypeId",[NSString stringWithFormat:@"%d",bindType],@"bindType",@(10),@"protocol", nil];
+
+    NSString * fullURL = [kHETAPIBaseUrl stringByAppendingString:@"/device/bind"];
+    [[HETNetWorkRequest shared]startRequestWithHTTPMethod:HETRequestMethodPost withRequestUrl:fullURL processParams:params needSign:YES BlockWithSuccess:^(HETNetWorkRequestOperation *operation, id responseObject) {
+        NSLog(@"绑定设备:%@",responseObject);
+        if([responseObject isKindOfClass:[NSDictionary class]])
+        {
+            NSString *code=[responseObject objectForKey:@"code"];
+            if(code.intValue==0)
+            {
+                //NSString *stringValue=[responseObject objectForKey:@"data"];
+                NSDictionary *dic=[responseObject objectForKey:@"data"];
+                NSString *userKey=[dic objectForKey:@"userKey"];
+                 HETAccount *account=[[HETAccounts shared]currentAccount];
+                account.userKey=userKey;
+                [[HETAccounts shared]addAccount:account];
+                
+                 obj.deviceID=[dic objectForKey:@"deviceId"];
+                
+                //APP广播服务器IP端口
+                [self sendServerInfoAndKeyToDevice:obj withUserKey:userKey];
+            }
+            else
+            {
+                NSLog(@"%@",[responseObject objectForKey:@"msg"]);
+                bindFailCount--;
+                if(bindFailCount==0)
+                {
+                     dispatch_async(dispatch_get_main_queue(), ^{
+                    [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(BindActionTimeout) object:nil ];
+                     });
+                }
+                [[NSUserDefaults standardUserDefaults]removeObjectForKey:@"HETServerConfig"];
+                [[NSUserDefaults standardUserDefaults]removeObjectForKey:@"HETServerBaseUrl"];
+                [[NSUserDefaults standardUserDefaults] synchronize];
+
+                if(self.delegate&&[self.delegate respondsToSelector:@selector(HETWIFIBindBusinessFail:)])
+                {
+                    [self.delegate HETWIFIBindBusinessFail:obj];
+                }
+                
+            }
+            
+        }
+        else
+        {
+            bindFailCount--;
+            if(bindFailCount==0)
+            {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(BindActionTimeout) object:nil ];
+                });
+
+            }
+            [[NSUserDefaults standardUserDefaults]removeObjectForKey:@"HETServerConfig"];
+            [[NSUserDefaults standardUserDefaults]removeObjectForKey:@"HETServerBaseUrl"];
+            [[NSUserDefaults standardUserDefaults] synchronize];
+
+            if(self.delegate&&[self.delegate respondsToSelector:@selector(HETWIFIBindBusinessFail:) ])
+            {
+                [self.delegate HETWIFIBindBusinessFail:obj];
+            }
+            
+        }
+        
+    } failure:^(HETNetWorkRequestOperation *operation, NSError *error) {
+        NSLog(@"与服务器建立连接,设备的信息提交给服务器:%@",error);
+        bindFailCount--;
+        if(bindFailCount==0)
+        {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(BindActionTimeout) object:nil ];
+            });
+
+        }
+        [[NSUserDefaults standardUserDefaults]removeObjectForKey:@"HETServerConfig"];
+        [[NSUserDefaults standardUserDefaults]removeObjectForKey:@"HETServerBaseUrl"];
+        [[NSUserDefaults standardUserDefaults] synchronize];
+      
+        if(self.delegate&&[self.delegate respondsToSelector:@selector(HETWIFIBindBusinessFail:) ])
+        {
+            [self.delegate HETWIFIBindBusinessFail:obj];
+        }
+    }];
+    /*[[HETNetWorkRequest shared]postToPath:@"/device/bind" params:params needSign:YES BlockWithSuccess:^(HETNetWorkRequestOperation *operation, id responseObject) {
+        if([responseObject isKindOfClass:[NSDictionary class]])
+        {
+            NSString *code=[responseObject objectForKey:@"code"];
+            if(code.intValue==0)
+            {
+               NSString *stringValue=[responseObject objectForKey:@"data"];
+               obj.deviceID=stringValue;
+               //APP广播服务器IP端口
+               [self sendServerInfoAndKeyToDevice:obj];
+            }
+            else
+            {
+                NSLog(@"%@",[responseObject objectForKey:@"msg"]);
+                if(self.delegate&&[self.delegate respondsToSelector:@selector(WIFIBindBusinessFail)])
+                {
+                    [self.delegate WIFIBindBusinessFail];
+                }
+
+            }
+
+        }
+        else
+        {
+            if(self.delegate&&[self.delegate respondsToSelector:@selector(WIFIBindBusinessFail) ])
+            {
+                [self.delegate WIFIBindBusinessFail];
+            }
+            
+        }
+
+        
+    } failure:^(HETNetWorkRequestOperation *operation, NSError *error) {
+        if(self.delegate&&[self.delegate respondsToSelector:@selector(WIFIBindBusinessFail) ])
+        {
+            [self.delegate WIFIBindBusinessFail];
+        }
+
+        
+    }];*/
+
+    /*NSString *timeZoneStr = [[housesAndDevices firstObject] valueForKey:@"timeZone"];
+        // 当前保存的房子信息中有时区标识
+        if (timeZoneStr && ![timeZoneStr isEqualToString:@""]) {
+            sendParam = @{@"userId": userId, @"houseId" : houseId, @"timeZone" : timeZoneStr, @"mac" : obj.device_mac, @"deviceType" : @(deviceType), @"deviceSubtypeId" : @(deviceSubType),@"bindType":@(bindType)};
+        }
+        // 没有时区标识
+        else {
+            NSTimeZone *localTimeZone = [NSTimeZone systemTimeZone];
+            NSInteger sec = [localTimeZone secondsFromGMT];
+            NSString *timezone ;
+            if (sec >0) {
+                timezone = [NSString stringWithFormat:@"+%02d%02d",sec/3600,(sec/60)%60];
+            }
+            else
+            {
+                timezone = [NSString stringWithFormat:@"-%02d%02d",-sec/3600,(-sec/60)%60];
+            }
+            sendParam = @{@"userId":userId,@"houseId":houseId,@"mac":obj.device_mac, @"deviceType":@(deviceType),@"deviceSubtypeId":@(deviceSubType),@"bindType":@(bindType),@"timeZone":timezone};
+        }*/
+    /*HETDeviceBindRequest *request=[[HETDeviceBindRequest alloc]initWithAccessToken:[HETUserDefaultsPreference sharedInstance].accessToken timeZone:[timezone intValue] mac:obj.device_mac deviceBrandId:1 deviceTypeId:deviceType deviceSubtypeId:deviceSubType bindType:bindType];//[[[HETDeviceBindRequest alloc]initWithUserId:_userID.integerValue houseId:houseId.integerValue timeZone:timezone mac:obj.device_mac deviceType:deviceType deviceSubtypeId:deviceSubType bindType:bindType];
+    [request startWithSuccess:^(NSString *stringValue) {
+        obj.deviceID=stringValue;
+        //APP广播服务器IP端口
+        [self sendServerInfoAndKeyToDevice:obj];
+        
+        
+    } failure:^(NSError *error, NSInteger statusCode) {
+        if(self.delegate&&[self.delegate respondsToSelector:@selector(WIFIBindBusinessFail) ])
+        {
+            [self.delegate WIFIBindBusinessFail];
+        }
+
+        
+    }];*/
+    
+}
+//APP广播服务器IP端口
+-(void)sendServerInfoAndKeyToDevice:(HETWIFICommonReform *)obj withUserKey:(NSString *)userKey{
+ 
+    NSData *sendData=[HETWIFICommonProtocol fetchBindPacketWithObj:obj withUserKey:userKey];
+    NSLog(@"sendData:%@",sendData);
+    [self sendData:sendData withCount:20];
+    [self fetchbindStateCheckWithobj:obj];
+}
+-(void)sendData:(NSData *)data withCount:(NSInteger)count{
+    start = YES;
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^(void){
+        NSString *boardIP = [self getIpAddressInfo];
+        
+        if (boardIP == nil) {
+            return ;
+        }
+        int i=0;
+        while (start && i<count)  {
+            [smartlink sendData:data toHost:boardIP withPort:SEND_SERVER_PORT withTimeout:-1 tag:tag++];
+            mysleep(1000);
+            i++;
+        }
+    });
+}
+
+
+#define kCommonReform @"kCLWIFICommonReform"
+#define kCount  @"kcount"
+-(void)fetchbindStateCheckWithobj:(HETWIFICommonReform *)obj
+
+{
+    NSUInteger count = 0;
+    [self fetchbindStateCheckWithobjWithTick:@{kCommonReform:obj,kCount:@(count)} ];
+}
+-(void)fetchbindStateCheckWithobjWithTick:(NSDictionary *)objt
+{
+    if ([[HETNetWorkRequest shared].appKey length] == 0)
+    {
+        NSString *reason = [NSString stringWithFormat:@"appKey为空，请检查key是否正确设置。"];
+        
+        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"提示" message:reason delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil, nil];
+        
+        [alert show];
+        return;
+    }
+    
+    
+    if(start)
+    {
+
+    NSUInteger count = [[objt valueForKey:kCount] unsignedIntegerValue];
+    HETWIFICommonReform *obj = [objt valueForKey:kCommonReform];
+    __block NSUInteger tick = count;
+
+    //获取时间戳
+    NSTimeInterval time = [[NSDate date] timeIntervalSince1970];
+    NSString *_timestamp = [NSString stringWithFormat: @"%lld", (long long)(time * 1000)];
+    
+    NSDictionary *params=[NSDictionary dictionaryWithObjectsAndKeys:[HETNetWorkRequest shared].appKey,@"appId",_timestamp,@"timestamp",obj.deviceID,@"deviceId", nil];
+    NSString * fullURL = [kHETAPIBaseUrl stringByAppendingString:@"/device/getBindState"];
+    [[HETNetWorkRequest shared]startRequestWithHTTPMethod:HETRequestMethodGet withRequestUrl:fullURL processParams:params needSign:NO BlockWithSuccess:^(HETNetWorkRequestOperation *operation, id responseObject) {
+        NSLog(@"绑定成功");
+        [self stop];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(BindActionTimeout) object:nil ];
+        });
+        
+        //获取时间戳
+       /* NSTimeInterval time = [[NSDate date] timeIntervalSince1970];
+        NSString *_timestamp = [NSString stringWithFormat: @"%lld", (long long)(time * 1000)];
+        
+        NSDictionary *params=[NSDictionary dictionaryWithObjectsAndKeys:testAPPKEY,@"appId",_timestamp,@"timestamp", nil];
+        
+        NSString * fullURL = [kHETAPIBaseUrl stringByAppendingString:@"/device/getBind"];
+        [[HETNetWorkRequest shared]startRequestWithHTTPMethod:HETRequestMethodGet withRequestUrl:fullURL processParams:params needSign:NO BlockWithSuccess:^(HETNetWorkRequestOperation *operation, id responseObject) {
+        //[[HETNetWorkRequest shared]getFromPath:@"/device/getBind" params:params needSign:NO //BlockWithSuccess:^(HETNetWorkRequestOperation *operation, id responseObject) {*/
+            /*
+             {
+             code = 0;
+             data =     (
+             {
+             bindTime = "2015-08-11 18:22:51";
+             bindType = 1;
+             deviceBrandId = 409;
+             deviceBrandName = "\U6df1\U5733\U4e91\U6816\U5c0f\U6eaa\U79d1\U6280\U6709\U9650\U516c\U53f8";
+             deviceIcon = "http://200.200.200.50/v1/device/icon";
+             deviceId = D96D92204D93C84F18D3E4A684C3D414;
+             deviceModel = 1;
+             deviceName = "\U9999\U85b0\U673a(\U4e03\U8272)(409)";
+             deviceSubtypeId = 11003;
+             deviceSubtypeName = "\U9999\U85b0\U673a(\U4e03\U8272)(409)";
+             deviceTypeId = 11;
+             deviceTypeName = "\U9999\U85b0\U673a(409)";
+             macAddress = ACCF2356BEBC;
+             onlineStatus = 2;
+             roomId = 25;
+             roomName = Test;
+             share = "<null>";
+             }
+             );
+             }
+             
+             */
+            
+            
+       /* } failure:^(HETNetWorkRequestOperation *operation, NSError *error) {
+            
+        }];*/
+        
+        if(self.delegate&&[self.delegate respondsToSelector:@selector(HETWIFIBindBusinessSuccess:)])
+        {
+            [self.delegate HETWIFIBindBusinessSuccess:obj];
+            
+        }
+        
+    } failure:^(HETNetWorkRequestOperation *operation, NSError *error) {
+        if(tick>KFetchTimes)
+            
+        {
+            [self stop];
+            [[NSUserDefaults standardUserDefaults]removeObjectForKey:@"HETServerConfig"];
+            [[NSUserDefaults standardUserDefaults]removeObjectForKey:@"HETServerBaseUrl"];
+            [[NSUserDefaults standardUserDefaults] synchronize];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(BindActionTimeout) object:nil ];
+            });
+            
+            if(self.delegate&&[self.delegate respondsToSelector:@selector(HETWIFIBindBusinessFail:) ])
+            {
+                [self.delegate HETWIFIBindBusinessFail:obj];
+            }
+            
+        }
+        else
+        {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [self performSelector:@selector(fetchbindStateCheckWithobj:) withObject:obj afterDelay:KFetchTimeOut];
+            });
+            
+        }
+        tick++;
+        
+    }];
+
+    /*[[HETNetWorkRequest shared]getFromPath:@"/device/getBindState" params:params needSign:NO BlockWithSuccess:^(HETNetWorkRequestOperation *operation, id responseObject) {
+        NSLog(@"绑定成功");
+         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(BindActionTimeout) object:nil ];
+        //获取时间戳
+        NSTimeInterval time = [[NSDate date] timeIntervalSince1970];
+        NSString *_timestamp = [NSString stringWithFormat: @"%lld", (long long)(time * 1000)];
+        
+        NSDictionary *params=[NSDictionary dictionaryWithObjectsAndKeys:testAPPKEY,@"appId",_timestamp,@"timestamp", nil];
+        
+        [[HETNetWorkRequest shared]getFromPath:@"/device/getBind" params:params needSign:NO BlockWithSuccess:^(HETNetWorkRequestOperation *operation, id responseObject) {*/
+            /*
+             {
+             code = 0;
+             data =     (
+             {
+             bindTime = "2015-08-11 18:22:51";
+             bindType = 1;
+             deviceBrandId = 409;
+             deviceBrandName = "\U6df1\U5733\U4e91\U6816\U5c0f\U6eaa\U79d1\U6280\U6709\U9650\U516c\U53f8";
+             deviceIcon = "http://200.200.200.50/v1/device/icon";
+             deviceId = D96D92204D93C84F18D3E4A684C3D414;
+             deviceModel = 1;
+             deviceName = "\U9999\U85b0\U673a(\U4e03\U8272)(409)";
+             deviceSubtypeId = 11003;
+             deviceSubtypeName = "\U9999\U85b0\U673a(\U4e03\U8272)(409)";
+             deviceTypeId = 11;
+             deviceTypeName = "\U9999\U85b0\U673a(409)";
+             macAddress = ACCF2356BEBC;
+             onlineStatus = 2;
+             roomId = 25;
+             roomName = Test;
+             share = "<null>";
+             }
+             );
+             }
+
+             */
+            
+            
+       /* } failure:^(HETNetWorkRequestOperation *operation, NSError *error) {
+            
+        }];
+
+        if(self.delegate&&[self.delegate respondsToSelector:@selector(WIFIBindBusinessSuccess:)])
+        {
+            [self.delegate WIFIBindBusinessSuccess:obj];
+            
+        }
+
+        
+    } failure:^(HETNetWorkRequestOperation *operation, NSError *error) {
+        if(tick>KFetchTimes)
+        {
+            if(self.delegate&&[self.delegate respondsToSelector:@selector(WIFIBindBusinessFail) ])
+            {
+                [self.delegate WIFIBindBusinessFail];
+            }
+            
+        }
+        else
+        {
+            [self performSelector:@selector(fetchbindStateCheckWithobj:) withObject:obj afterDelay:KFetchTimeOut];
+        }
+        tick++;
+ 
+    }];*/
+    
+    /*HETDeviceBindStateRequest *request=[[HETDeviceBindStateRequest alloc]initWithAccessToken:[HETUserDefaultsPreference sharedInstance].accessToken deviceId:obj.deviceID];
+    [request startWithSuccess:^{
+        NSLog(@"绑定成功");
+        if(self.delegate&&[self.delegate respondsToSelector:@selector(WIFIBindBusinessSuccess:)])
+        {
+            [self.delegate WIFIBindBusinessSuccess:obj];
+            
+        }
+        
+        
+        
+    } failure:^(NSError *error, NSInteger statusCode) {
+        if(tick>KFetchTimes)
+        {
+            if(self.delegate&&[self.delegate respondsToSelector:@selector(WIFIBindBusinessFail) ])
+            {
+                [self.delegate WIFIBindBusinessFail];
+            }
+  
+        }
+       else
+       {
+           [self performSelector:@selector(fetchbindStateCheckWithobj:) withObject:obj afterDelay:KFetchTimeOut];
+       }
+       tick++;
+    }];*/
+    }
+    
+}
+/*-(void)deviceControl:(UInt16)cmdNo withDeviceInfo:(HETWIFICommonReform *)obj SuccessBlock:(void(^)(id responseObject))successBlock FailBlock:(void(^)( NSError *error))failureBlock
+{
+    NSData *sendData=[HETWIFICommonProtocol fetchBindPacketWithObj:obj];
+    NSLog(@"sendData:%@",sendData);
+    NSString *boardIP = [self getIpAddressInfo];
+    if (boardIP == nil) {
+        return ;
+    }
+
+    [smartlink sendData:sendData toHost:boardIP withPort:SEND_SERVER_PORT withTimeout:-1 tag:0];
+  
+}*/
+
+#pragma mark 扫描到的设备
+-(void)smartlink:(id)smartlink BindDeviceInfo:(HETWIFICommonReform *)obj
+{
+    NSLog(@"obj:%@,%@",obj,obj.device_mac);
+    if(!obj)
+    {
+        return;
+    }
+    if(self.delegate&&[self.delegate respondsToSelector:@selector(scanWIFIDevice:BindDeviceInfo:)])
+    {
+        [self.delegate scanWIFIDevice:self BindDeviceInfo:obj];
+    }
+    
+}
+
+#pragma mark 接收到的数据
+-(void)didReceiveData:(NSData *)data fromAddress:(NSData *)address
+{
+    NSString *host = nil;
+    uint16_t port = 0;
+    [HETGCDAsyncUdpSocket getHost:&host port:&port fromAddress:address];
+    
+    //扫描的设备信息<5a214000 00000199 0b031000 accf2356 bebc0000 00000000 00000000 00000400 0deb>
+    const char* bytes = [data bytes];
+    Byte protocolStart =*(Byte *)(bytes);
+    Byte protocolVersions =*(Byte *)(bytes +1);
+    HETWIFICommonReform *obj=nil;
+    if(protocolStart==0x5A)
+    {
+        obj=[HETWIFIOpenSDKProtocol transformData:data];
+    }
+    else
+    {
+        if(protocolVersions==0x41)
+        {
+            obj=[HETWIFICommonProtocol transformData:data];
+        }
+        else if(protocolVersions==0x42)
+        {
+            obj=[HETWIFINewProtocol transformData:data];
+        }
+    }
+   NSLog(@"来自:%@---收到数据:%@,协议类型:%02x,扫描的设备大分类:%d，小分类:%d,命令类型:%04x",host,data,obj.protocol_version ,obj.device_type,obj.device_subtype,obj.device_cmdtype);
+   // NSLog(@"form:%@---udpData:%@,扫描的设备类型:%d(%ld),通信指令:%x",host,data,obj.device_type,(long)currentDeviceType,obj.device_cmdtype);
+    if (obj.device_type!=currentDeviceType &&currentDeviceType>0) {
+        NSLog(@"扫描到的设备类型不一致");
+        return;
+    }
+    //if(obj.device_cmdtype==HET_OPENSDK_BIND_DISCOVERDEVICE)//扫描到设备回复
+    if((obj.device_cmdtype==0x0001&&protocolStart==0xF2)||(obj.device_cmdtype==HET_OPENSDK_BIND_DISCOVERDEVICE&&protocolStart==0x5A))
+    {
+        if (scanDeviceArray == nil) {
+            scanDeviceArray = [[NSMutableArray alloc] init];
+        }
+        obj.device_ip=host;
+        NSPredicate *predicate = [NSPredicate predicateWithFormat:@"device_mac == %@", obj.device_mac];
+        NSMutableArray *array = [NSMutableArray arrayWithArray:[scanDeviceArray filteredArrayUsingPredicate:predicate]];
+        
+        if(array.count==0||!array){
+            NSLog(@"设备mac地址:%@",obj.device_mac);
+            [scanDeviceArray addObject:obj];
+            if(self.delegate&&[self.delegate respondsToSelector:@selector(scanWIFIDevice:BindDeviceInfo:)])
+            {
+                NSLog(@"设备mac地址:%@",obj.device_mac);
+                [self.delegate scanWIFIDevice:self BindDeviceInfo:obj];
+            }
+
+        }
+        
+   
+
+        
+    }
+    
+}
+
+- (NSString*)fetchSSIDInfo {
+    NSString *ssid = nil;
+    NSArray *ifs = (__bridge_transfer id)CNCopySupportedInterfaces();
+    for (NSString *ifnam in ifs) {
+        NSDictionary *info = (__bridge_transfer id)CNCopyCurrentNetworkInfo((__bridge CFStringRef)ifnam);
+        if (info[@"SSID"]) {
+            ssid = info[@"SSID"];
+        }
+    }
+    return ssid;
+}
+
+//获得所连Wi-Fi的Mac地址
+- (NSString*)fetchBSSIDInfo {
+    NSString *bssid = nil;
+    NSArray *ifs = (__bridge_transfer id)CNCopySupportedInterfaces();
+    for (NSString *ifnam in ifs) {
+        NSDictionary *info = (__bridge_transfer id)CNCopyCurrentNetworkInfo((__bridge CFStringRef)ifnam);
+        if (info[@"BSSID"]) {
+            bssid = info[@"BSSID"];
+        }
+    }
+    //去除冒号
+    return [bssid stringByReplacingOccurrencesOfString:@":" withString:@""];
+}
+
+//获取广播地址
+-(NSString *)getIpAddressInfo{
+    struct ifaddrs *interfaces = NULL;
+    struct ifaddrs *temp_addr = NULL;
+    NSString *address;
+    getifaddrs(&interfaces);
+    temp_addr = interfaces;
+    while (temp_addr!=NULL) {
+        NSString *ifa_name = [NSString stringWithUTF8String:temp_addr->ifa_name];
+        if ([ifa_name isEqualToString:@"en0"]&&temp_addr->ifa_addr->sa_family == AF_INET) {
+            unsigned int IP = ((struct sockaddr_in *)temp_addr->ifa_addr)->sin_addr.s_addr;
+            unsigned int mask = ((struct sockaddr_in *)temp_addr->ifa_netmask)->sin_addr.s_addr;
+            myHost = [NSString stringWithUTF8String:inet_ntoa(((struct sockaddr_in *)temp_addr->ifa_addr)->sin_addr)];
+            unsigned int temp = (IP&mask)|(~mask);//计算广播地址
+            struct in_addr inaddr;
+            inaddr.s_addr = temp;
+            address = [NSString stringWithUTF8String:inet_ntoa(inaddr)];
+            return address;
+        }
+        temp_addr = temp_addr->ifa_next;
+    }
+    return nil;
+}
+-(NSString *)currentTimeOffset{
+    time_t t = time(NULL);
+    struct tm lt = {0};
+    localtime_r(&t, &lt);
+    int hour=(int)(lt.tm_gmtoff/3600);
+    int minute=(lt.tm_gmtoff%3600)*60;
+    
+    if (hour<0) {
+        return [NSString stringWithFormat:@"%05d",hour*100+minute];
+    }
+    return [NSString stringWithFormat:@"%04d",hour*100+minute];
+}
+-(void) stop
+{
+    start = NO;
+    [smartlink stop_smartLink];
+    smartlink=nil;
+    
+    if (smtlk) {
+        [smtlk stopWithBlock:^(NSString *stopMsg, BOOL isOk) {
+            
+        }];
+        [smtlk closeWithBlock:^(NSString *closeMsg, BOOL isOK) {
+            
+        }];
+    }
+
+}
+
+-(void)start
+{
+    HFCMDIsRuning = NO;
+    start = YES;
+    if (smartlink) {
+        [smartlink stop_smartLink];
+        smartlink = nil;
+    }
+    smartlink = [[HETSmartLinkMangerAPI alloc] init];
+    smartlink.delegate = self;
+}
+@end

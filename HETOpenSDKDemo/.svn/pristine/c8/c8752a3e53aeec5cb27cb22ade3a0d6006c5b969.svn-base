@@ -1,0 +1,106 @@
+//
+//  CLBLEDataRequest.h
+//  BLEForCSleep
+//
+//  Created by Sandy wu on 15/6/4.
+//  Copyright (c) 2015年 Het. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+#import "LGBluetooth.h"
+
+@class CLBLEBaseApi;
+typedef NS_ENUM (NSUInteger, CLBLEState){
+    CLBLEStateIdle,
+    CLBLEStateSending,
+    CLBLEStateReceiving,
+};
+
+typedef void (^BLEScanDiscoverPeripheralsCallback) (NSArray *peripherals);
+
+@protocol CLBLEPacketHandle <NSObject>
+-(NSInteger)receivedPacketDataLength;
+-(NSInteger)totalPacketDataLength;
+
+-(NSData*)singlePacketDataDeviceResponse;
+
+-(NSData*)singlePacketDataAppResponse;
+
+
+-(NSData*)fetchCompletePacketData;
+
+/**
+ *  根据需要发送的数据包，做拆分，确定每一个包的数据内容
+ *
+ *  @return 单数数据包的内容
+ */
+-(NSData*)fetchSinglePacketData;
+
+-(BOOL)fetchPacketDataSendOver;
+/**
+ *  解析收到的蓝牙数据
+ *
+ *  @param data  收到的数据
+ *  @param error error信息
+ *
+ *  @return 如果解析完成，返回解析之后的值，如果解析失败返回空，error有值
+ *  如果解析没有完成，返回空，error也是空
+ */
+-(NSData*)receiveAndParseData:(NSData*)data error:(NSError**)error;
+
+
+-(id)apiManager:(CLBLEBaseApi*)manager reformData:(NSData*)data;
+@end
+
+
+
+
+
+@protocol CLBLEDataSource <NSObject>
+
+@required
+
+-(NSArray*)scanServiceArray;
+
+-(NSString*)readSeriveID;
+
+-(NSString*)readCharacteristicID;
+
+-(NSString*)writeSeriveID;
+
+-(NSString*)writeCharacteristicID;
+
+
+-(NSString *)broadName;
+
+@optional
+
+
+-(LGPeripheral*)connectedPeripheral;
+
+@end
+
+typedef void (^BLEProgressiveDownLoadBlock) (NSInteger totalBytesRead, NSInteger totalBytesExpected);
+
+typedef void (^BLESuccessBlock) (NSData *data);
+
+typedef void (^BLEFailBlock) (NSError* error);
+
+typedef void (^BleStateBlock)(CBCentralManagerState state);
+
+@interface CLBLEBaseApi : NSObject
+
+@property (nonatomic,weak) NSObject<CLBLEDataSource>* child;
+
+@property (nonatomic,assign) CLBLEState state;
+
+@property (nonatomic,assign) BOOL bleIsReady;
+
+
+-(void)setProgressiveBlock:(BLEProgressiveDownLoadBlock)progressBlock;
+-(void)sendBLEDataWithDataPacketProtocol:(id<CLBLEPacketHandle>)packetDelegate
+                                 Success:(BLESuccessBlock)successBlock
+                                    fail:(BLEFailBlock)failBlock;
+
+
+@end

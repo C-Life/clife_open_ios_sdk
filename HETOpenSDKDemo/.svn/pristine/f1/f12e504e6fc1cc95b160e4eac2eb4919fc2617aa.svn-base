@@ -1,0 +1,245 @@
+//
+//  OpenSDKCommonProtocol.m
+//  openSDK
+//
+//  Created by mr.cao on 15/11/26.
+//  Copyright © 2015年 peng. All rights reserved.
+//
+
+#import "OpenSDKCommonProtocol.h"
+#import <sys/socket.h>
+#import <sys/sysctl.h>
+#import <net/if.h>
+#import <net/if_dl.h>
+#import <ifaddrs.h>
+#import <arpa/inet.h>
+/**
+ * 开放平台协议格式
+ * -------------------------------------------------------------------------------------------------------------------------
+ * | 0x5A | Length | Protocol Version | Protocol Type  | Device Type | Mac Addr |     SN | Reserved | Command Type | Frame Body | FCS  |
+ * |-------------------------------------------------------------------------------------------------------------------------|
+ * | 1byte| 2byte  |     1byte        |      1byte     |   8byte  |     6byte   |    4byte |8byte   |
+ 2byte        |     Nbyte | 2byte|
+ * -------------------------------------------------------------------------------------------------------------------------
+ * <p/>
+ * 0x5A: 帧开始标志;
+ * Length:从数据长度到数据校验的字节数;
+ * Protocol Version:协议版本，详情见版本表(注 1);0x40
+ * Protocol Type:协议类型 0x00 ID 认证 0x01 业务 数据 0x02 WIFI 升级 0x03 PCB 升级 0xFF 生产测试;
+ * Device Type:包括设备品牌【4】设备的类型，高字节大分类【1】，低字节小分类【1】，数据协议版本【1】，保留【1】;
+ * Mac Addr:客户端 WIFI 模组的 MAC 地址 ACCF233BA86A;
+ * SN:数据帧序列号
+ * Reserved:保留位;
+ * Command Type:相关操作命令字,高字节为数据方向; Bit7~Bit7  数据源：10-服务器 01-手机 00-终端
+ * Frame Body:帧数据段字节数，合法值范围：0～1024(注)，汉枫模块不超过 200 字节;
+ * FCS:帧数据段内容 CRC16 校验值(CRC-16/X25 X16+X12+X5+1),包含所有帧数据除外不包含0xF2;
+ */
+//<5a 21 40 00 000001990b031000   accf2356bebc 00000000  0000000000000000 0400   0deb>
+@implementation OpenSDKCommonProtocol
+
+
+
++(OpenSDKCommonReform*)transformData:(NSData *)data
+{
+    OpenSDKCommonReform *obj = [[OpenSDKCommonReform alloc] init];
+    
+    const char* bytes = [data bytes];
+    int length = (int)data.length;
+    char start1 = *bytes;
+    unsigned short cmd = 0;
+    unsigned short length1 =*(unsigned short *)(bytes + 1);
+    unsigned long long macaddr=0;
+    //报文头不对
+    if (start1 != (char)0x5a) {
+        return nil;
+    }
+    //长度不等
+    if (length1 != length-1) {
+        return nil;
+    }
+    unsigned short temp1 = [self crc16with:bytes+1 andlength:length-3];
+    unsigned short crc = NTOHS(*(unsigned short *)(bytes +length -2));
+    //CRC校验失败
+    if (crc != temp1) {
+        return nil;
+    }
+    
+    unsigned long long temp;
+    memcpy((char *)&temp, bytes+13, 8);
+    macaddr = (((unsigned long long )ntohl((unsigned int)((temp << 32) >> 32))) << 32) | (unsigned int)ntohl((int)(temp >> 32));
+    macaddr = macaddr>>16;
+    NSString *mac = [[NSString stringWithFormat:@"%llx",macaddr] uppercaseString];
+    char Pro_version = *(bytes+3);
+    char Pro_type = *(bytes +4);
+    cmd = (*(bytes +31))*256 + *(bytes +32);
+    unsigned long device_brand=ntohl(*(unsigned long *)(bytes +5));
+    //unsigned long deviceNum =NTOHS(*(unsigned long *)(bytes + 3));
+    unsigned short Dev_type = NTOHS(*(unsigned short *)(bytes +9));
+    NSData *content = [NSData dataWithBytes:bytes+32 length:length1-34];
+    
+    obj.startflag=start1;
+    obj.protocol_version=Pro_version;
+    obj.protocol_type=Pro_type;
+    obj.device_type=((Dev_type&0xff00)>>8);
+    obj.device_subtype=(Dev_type&0x00ff);
+    obj.device_brand=device_brand;
+    //obj.device_codeNum=deviceNum;
+    obj.device_mac=mac;
+    obj.device_cmdtype=cmd;
+    obj.body=content;
+    obj.length=length1;
+    if(obj.startflag==0x5a)
+    {
+        //NSLog(@"0x5a -CMD:%x",obj.device_cmdtype);
+    }
+    if(obj.device_cmdtype==0x0400)
+    {
+        //NSLog(@"");
+    }
+    
+    
+    return obj;
+
+}
+//与服务器建立连接的时候发送设备信息包给服务器
++(NSData *)fetchBindPacketWithObj:(OpenSDKCommonReform *)obj
+{
+    unsigned char ipArray[1];
+    for(int i = 0;i<1;i++){
+        NSString *iptr=obj.device_ip;
+        unsigned char lastIpNum = [[[iptr componentsSeparatedByString:@"."] lastObject] integerValue];
+        ipArray[i] = lastIpNum;
+    }
+    
+    
+    NSDictionary *serverDic = [[NSUserDefaults standardUserDefaults] objectForKey:@"HETServerConfig"];
+    // NSString *md5 = [[NSUserDefaults standardUserDefaults] objectForKey:@"accountAndPassMd5Str"];
+    NSString *md5 =@"0";// [HETUserDefaultsPreference sharedInstance].accountAndPassMd5Str;
+    unsigned int ip = inet_addr([[serverDic objectForKey:@"serverIp"] UTF8String]);
+    unsigned short port = [[serverDic objectForKey:@"serverPort"] shortValue];
+    
+    char content[38];
+    memset(content, 0, 38);
+    *(unsigned int *)(content+32) = ip;
+    *(unsigned short *)(content +36) = htons(port);
+    memcpy(content, [md5 UTF8String], 32);
+    obj.body=[NSData dataWithBytes:content length:38];
+    obj.device_cmdtype=0x0200;
+    //obj.protocol_version=0x00;
+    //obj.protocol_type=0x00;
+    // obj.device_type=0;
+    //obj.device_mac=@"000000000000";
+    
+    NSData *contentData = obj.body;
+    char Pro_ver =obj.protocol_version;
+    char Pro_type =obj.protocol_type;
+    unsigned short temp1 = obj.device_cmdtype;
+    unsigned short cmd = HTONS(temp1);
+    unsigned short temp2 = (obj.device_subtype&0x00ff)|((obj.device_type<<8)&0xff00);
+    unsigned short Dev_type = HTONS(temp2);
+    unsigned long temp4 = obj.device_brand;
+    unsigned long  device_brand=htonl(temp4);
+    NSString *macaddrstr = obj.device_mac;
+    
+    unsigned long long temp;
+    NSScanner *scanner = [NSScanner scannerWithString:macaddrstr];
+    (void) [scanner scanHexLongLong:&temp];
+    unsigned long long macaddr;
+    macaddr = (((unsigned long long )htonl((unsigned int)((temp << 32) >> 32))) << 32) | (unsigned int)htonl((int)(temp >> 32));
+    macaddr = macaddr>>16;
+    
+    unsigned short temp3 = [contentData length];
+    char retdata[35+temp3];
+    memset(retdata, 0, 35+temp3);
+    unsigned short contentLength = temp3;
+    HTONS(contentLength);
+    retdata[0] = 0x5a;
+    retdata[1]=((34+temp3)&0xff00)<<8;
+    retdata[2]=((34+temp3)&0x00ff);
+    
+    retdata[3] = Pro_ver;
+    retdata[4] = Pro_type;
+    memcpy(retdata+5, (char *)(& device_brand), 4);
+    memcpy(retdata+9, (char *)(&Dev_type), 2);
+    memcpy(retdata+13, (char *)(& macaddr), 6);
+    memcpy(retdata+31, (char *)(&cmd), 2);
+    
+    memcpy(retdata+33, [contentData bytes], [contentData length]);
+    unsigned short crctemp = [self crc16with:retdata+1 andlength:33+temp3];
+    unsigned short crc = HTONS(crctemp);
+    memcpy(retdata+temp3+33, (char *)(& crc), 2);
+    return [NSData dataWithBytes:retdata length:35+temp3];
+}
++(NSData *)fetchLittleLoopPacketWithObj:(OpenSDKCommonReform *)obj
+{
+  
+    
+    NSData *contentData = obj.body;
+    char Pro_ver =obj.protocol_version;
+    char Pro_type =obj.protocol_type;
+    unsigned short temp1 = obj.device_cmdtype;
+    unsigned short cmd = HTONS(temp1);
+    unsigned short temp2 = (obj.device_subtype&0x00ff)|((obj.device_type<<8)&0xff00);
+    unsigned short Dev_type = HTONS(temp2);
+    unsigned long temp4 = obj.device_brand;
+    unsigned long  device_brand=htonl(temp4);
+    NSString *macaddrstr = obj.device_mac;
+    
+    unsigned long long temp;
+    NSScanner *scanner = [NSScanner scannerWithString:macaddrstr];
+    (void) [scanner scanHexLongLong:&temp];
+    unsigned long long macaddr;
+    macaddr = (((unsigned long long )htonl((unsigned int)((temp << 32) >> 32))) << 32) | (unsigned int)htonl((int)(temp >> 32));
+    macaddr = macaddr>>16;
+    
+    unsigned short temp3 = [contentData length];
+    char retdata[35+temp3];
+    memset(retdata, 0, 35+temp3);
+    unsigned short contentLength = temp3;
+    HTONS(contentLength);
+    retdata[0] = 0x5a;
+    retdata[1]=((34+temp3)&0xff00)<<8;
+    retdata[2]=((34+temp3)&0x00ff);
+    retdata[3] = Pro_ver;
+    retdata[4] = Pro_type;
+    memcpy(retdata+5, (char *)(& device_brand), 4);
+    memcpy(retdata+9, (char *)(&Dev_type), 2);
+    memcpy(retdata+13, (char *)(& macaddr), 6);
+    memcpy(retdata+31, (char *)(&cmd), 2);
+    
+    memcpy(retdata+33, [contentData bytes], [contentData length]);
+    unsigned short crctemp = [self crc16with:retdata+1 andlength:34+temp3];
+    unsigned short crc = HTONS(crctemp);
+    memcpy(retdata+temp3+33, (char *)(& crc), 2);
+    return [NSData dataWithBytes:retdata length:35+temp3];
+}
+//CRC校验
++(unsigned short)crc16with:(const char *)data andlength:(int) length
+{
+    char j;
+    int i;
+    unsigned short retCrc16;
+    retCrc16 = 0xffff;
+    for(i=0;i<length;i++)
+    {
+        retCrc16 ^=((*data++)&0x000000ff);
+        for(j = 0;j<8;j++){
+            if(retCrc16&0x01)
+            {
+                retCrc16=(retCrc16>>1)^0x8408;
+            }
+            else{
+                retCrc16>>=0x01;
+            }
+        }
+    }
+    return ~retCrc16;
+}
+
+@end
+
+@implementation OpenSDKCommonReform
+
+
+
+@end

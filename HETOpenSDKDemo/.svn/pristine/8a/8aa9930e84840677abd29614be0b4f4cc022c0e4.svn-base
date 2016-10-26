@@ -1,0 +1,66 @@
+//
+//  HETNetWorkRequest.h
+//  openSDK
+//
+//
+//  Created by peng on 6/25/15.
+//  Copyright (c) 2015 peng All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+#import "HETNetWorkRequestOperation.h"
+
+typedef NS_ENUM(NSInteger , HETRequestMethod) {
+    HETRequestMethodGet = 0,
+    HETRequestMethodPost,
+    HETRequestMethodHead,
+    HETRequestMethodPut,
+    HETRequestMethodDelete,
+    HETRequestMethodPatch
+};
+
+@interface HETNetWorkRequest : NSObject
+
+@property (assign, nonatomic) NSInteger maxConcurrentRequests;
+@property (nonatomic, strong) NSString *accessToken;
+@property (nonatomic, strong) NSString *appSecret;
+@property (nonatomic, strong) NSString *appKey;
+@property (nonatomic, strong) NSString *refreshAccessTokenURL;
+
++ (HETNetWorkRequest *)shared;
+
+-(void)startRequestWithHTTPMethod: (HETRequestMethod)method  withRequestUrl:(NSString *)requestUrl processParams:(NSDictionary *)params needSign:(BOOL)needSign
+                 BlockWithSuccess:(SuccessBlock)success
+                          failure:(FailureBlock)failure;
+-(void)startMultipartFormDataRequestWithRequestUrl:(NSString *)requestUrl processParams:(NSDictionary *)params 
+BlockWithSuccess:(SuccessBlock)success
+failure:(FailureBlock)failure;
+
+/*- (HETNetWorkRequestOperation*)requestWithURLRequest:(NSURLRequest *)request
+                                    BlockWithSuccess:(SuccessBlock)success
+                                             failure:(FailureBlock)failure;
+- (HETNetWorkRequestOperation*)getFromUrl:(NSString *)url
+                                   params:(NSDictionary *)params
+                                 needSign:(BOOL)needSign
+                         BlockWithSuccess:(SuccessBlock)success
+                                  failure:(FailureBlock)failure;
+
+- (HETNetWorkRequestOperation*)postToUrl:(NSString *)url
+                                  params:(NSDictionary *)params
+                                needSign:(BOOL)needSign
+                        BlockWithSuccess:(SuccessBlock)success
+                                 failure:(FailureBlock)failure;
+
+- (HETNetWorkRequestOperation*)getFromPath:(NSString *)apiPath
+                                    params:(NSDictionary *)params
+                                  needSign:(BOOL)needSign
+                          BlockWithSuccess:(SuccessBlock)success
+                                   failure:(FailureBlock)failure;
+
+- (HETNetWorkRequestOperation*)postToPath:(NSString *)apiPath
+                                   params:(NSDictionary *)params
+                                 needSign:(BOOL)needSign
+                         BlockWithSuccess:(SuccessBlock)success
+                                  failure:(FailureBlock)failure;*/
+
+@end

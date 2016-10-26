@@ -1,0 +1,38 @@
+//
+//  SmartLinkMangerAPI.h
+//  NewBindDeviceProject
+//
+//  Created by mr.cao on 15/6/24.
+//  Copyright (c) 2015年 mr.cao. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+#import <sys/socket.h>
+#import <sys/sysctl.h>
+#import <net/if.h>
+#import <net/if_dl.h>
+#import <ifaddrs.h>
+
+#import <arpa/inet.h>
+#import "HETGCDAsyncUdpSocket.h"
+
+@protocol smartlinkDelegate <NSObject>
+@optional
+
+- (void)didReceiveData:(NSData *)data
+           fromAddress:(NSData *)address;
+
+@end
+
+
+@interface HETSmartLinkMangerAPI : NSObject
+@property(weak,nonatomic) id<smartlinkDelegate> delegate;
+
+
+- (void)sendData:(NSData *)data
+          toHost:(NSString *)host
+        withPort:(uint16_t)port
+     withTimeout:(NSTimeInterval)timeout
+             tag:(long)atag;
+-(void) stop_smartLink;
+@end

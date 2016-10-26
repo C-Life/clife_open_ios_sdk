@@ -1,0 +1,277 @@
+//
+//  CLDeviceDataBase.m
+//  NewBindDeviceProject
+//
+//  Created by 操国庆 on 15/8/2.
+//  Copyright (c) 2015年 mr.cao. All rights reserved.
+//
+
+#import "CLDeviceDataBase.h"
+#import "HTDataBase.h"
+#import "FMDatabase.h"
+@implementation CLDeviceDataBase
+/**
+ *  the func for save
+ *
+ *  @param tableName <#tableName description#>
+ *  @param keys      <#keys description#>
+ *
+ *  @return <#return value description#>
+ */
++(BOOL)initDeviceTable:(NSString *)tableName withKeys:(NSArray *)keys{
+    HTDataBase *db = [HTDataBase shareInstance];
+    __block BOOL isFindPrimaryKey = NO;
+    NSMutableArray *keyArr = [NSMutableArray arrayWithArray:keys];
+    [keys enumerateObjectsUsingBlock:^(NSString *obj , NSUInteger idx, BOOL *stop){
+        if ([obj isEqualToString:@"deviceId"]){
+            *stop = YES;
+            [keyArr removeObject:@"deviceId"];
+            isFindPrimaryKey = YES;
+        }
+    }];
+    NSAssert(isFindPrimaryKey == YES, @"the primary key of 'deviceId' must be specified");
+    if (![db checkTableIsExist:tableName]) {
+        NSMutableString *sql = [[NSMutableString alloc] initWithFormat:@"CREATE TABLE if not exists %@ (deviceId TEXT DEFAULT NULL,",tableName];
+        for (int i = 0; i < keyArr.count - 1; i++)
+        {
+            NSString *key = keyArr[i];
+            [sql appendFormat:@"%@ TEXT DEFAULT NULL,",key];
+        }
+        [sql appendFormat:@"%@ TEXT DEFAULT NULL);",[keyArr lastObject]];
+        
+        if ([db execDBWithSQLString:sql]) {
+            return YES;
+        }else
+            return NO;
+    }else{
+        return YES;
+        //casue sqlite3 cant be opratored key , so the following code is not used
+        NSString *sql = [NSString stringWithFormat:@"pragma table_info(%@)",tableName];
+        NSArray *result = [db queryTablewithSql:sql];
+        NSLog(@"result:%@",result);
+        //new keys are not included old key in the table, so we should delete old key
+        for (NSDictionary *dic in result) {
+            NSString *key = dic[@"name"];
+            [keys enumerateObjectsUsingBlock:^(NSString *obj,NSUInteger idx, BOOL *stop){
+                if ([obj isEqualToString:key]) {
+                    *stop = YES;
+                }else{
+                    if (idx == keys.count-1) {
+                        //pay attation , directly delete name is not supproted by sqlite,
+                        NSString *sql = [NSString stringWithFormat:@"alter table %@ drop %@",tableName,key];
+                        if (![db execDBWithSQLString:sql]) {
+                            NSLog(@"drop old key fail in %@",tableName);
+                        }
+                    }
+                }
+            }];
+        }
+        //old keys are not included new key int the table , so we should add new key for this table
+        for (NSString *newKey in keys) {
+            [result enumerateObjectsUsingBlock:^(NSDictionary *obj, NSUInteger idx, BOOL *stop){
+                NSString *oldKey = obj[@"name"];
+                if ([newKey isEqualToString:oldKey]) {
+                    *stop = YES;
+                }else{
+                    if (idx == result.count - 1) {
+                        NSString *sql = [NSString stringWithFormat:@"alter table %@ add %@ TEXT DEFAULT NULL",tableName,newKey];
+                        if (![db execDBWithSQLString:sql]) {
+                            NSLog(@"add new key fail in the %@",tableName);
+                        }
+                    }
+                }
+            }];
+        }
+    }
+    return YES;
+}
++(BOOL)tableName:(NSString *)tableName addLine:(NSDictionary *)dic{
+    __block BOOL isFindPrimaryKey = NO;
+    [dic enumerateKeysAndObjectsUsingBlock:^(NSString * key,id obj, BOOL *stop){
+        if ([key isEqualToString:@"deviceId"]) {
+            isFindPrimaryKey = YES;
+            *stop = YES;
+        }
+    }];
+    NSAssert(isFindPrimaryKey, @"primary key must be contented");
+    //delete old data
+    NSMutableDictionary *resultDic = [[self tableName:tableName queryWithDeviceId:dic[@"deviceId"]] mutableCopy];
+    if (resultDic.count>1) {
+        [self tableName:tableName deleteLineWithDeviceId:dic[@"deviceId"]];
+    }
+    [resultDic addEntriesFromDictionary:dic];
+    NSMutableString *keyStr = [NSMutableString stringWithFormat:@""];
+    NSMutableString *valueStr = [NSMutableString stringWithFormat:@""];
+    NSArray *allKeys = [resultDic allKeys];
+    for (NSString *key in allKeys) {
+        if ([key isEqualToString:[allKeys lastObject]]) {
+            [keyStr appendFormat:@"%@",key];
+            [valueStr appendFormat:@"'%@'",resultDic[key]];
+        }else{
+            [keyStr appendFormat:@"%@,",key];
+            [valueStr appendFormat:@"'%@',",resultDic[key]];
+        }
+    }
+    //    NSString* querySql=[NSString stringWithFormat:@"select deviceId from %@ where deviceId =%@;",tableName,dic[@"deviceId"]];
+    //    NSArray *staArr = [[HTDataBase shareInstance] queryTablewithSql:querySql];
+    //    NSString *sql ;
+    //    if (staArr.count > 0) {
+    //        NSMutableString *mutalStr = [NSMutableString stringWithFormat:@""];
+    //        NSMutableDictionary *mutDic = [NSMutableDictionary dictionaryWithDictionary:dic];
+    //        [mutDic removeObjectForKey:@"deviceId"];
+    //        NSString *lastKey = [dic.allKeys lastObject];
+    //        for (NSString *key in dic.allKeys) {
+    //            if ([key isEqualToString:lastKey]) {
+    //                [mutalStr appendFormat:@"%@='%@';",key,dic[key]];
+    //            }else{
+    //                [mutalStr appendFormat:@"%@='%@',",key,dic[key]];
+    //            }
+    //        }
+    //        sql = [NSString stringWithFormat:@"update %@ set %@ where deviceId='%@'",tableName,mutalStr,dic[@"deviceId"]];
+    //    }else
+    NSString *sql = [NSString stringWithFormat:@"insert or replace into %@ (%@) values(%@);",tableName,keyStr,valueStr];
+    if ([[HTDataBase shareInstance ] execDBWithSQLString:sql]) {
+        return YES;
+    }
+    return NO;
+}
+
++(NSDictionary *)tableName:(NSString *)tableName queryWithDeviceId:(NSString *)deviceId{
+    NSString *sql = [NSString stringWithFormat:@"select * from %@ where deviceId = '%@'",tableName,deviceId];
+    NSArray *result = [[HTDataBase shareInstance] queryTablewithSql:sql];
+    NSLog(@"%@",result);
+    if (result.count > 0) {
+        return result[0];
+    }
+    return [NSDictionary dictionary];
+}
+
++ (BOOL)tableName:(NSString *)tableName deleteLineWithDeviceId:(NSString *)deviceId{
+    if (!deviceId) {
+        return NO;
+    }
+    NSString* sql=nil;
+    
+    sql = [NSString stringWithFormat:
+           @"select * from %@ where deviceId=%@", tableName,deviceId];
+    NSArray *staArr = [[HTDataBase shareInstance] queryTablewithSql:sql];
+    if (staArr && staArr.count > 0) {
+        sql = [NSString stringWithFormat:
+               @"delete from %@ where deviceId=%@", tableName,deviceId];
+        BOOL delResult = [[HTDataBase shareInstance] execDBWithSQLString:sql];
+        if (delResult) {
+            NSLog(@"删除数据库中的列成功.");
+            return YES;
+        }
+    }
+    return YES;
+}
++(BOOL)initPlanTime:(NSString*)deviceId{
+    [[HTDataBase shareInstance] openDB];
+    NSString* tableName=[NSString stringWithFormat:@"planTime"];
+    NSString* sql=[NSString stringWithFormat:@"CREATE TABLE if not exists %@ ("
+                   "deviceId TEXT DEFAULT NULL,"
+                   "planOffSwitch INTEGER DEFAULT '0',"
+                   "planOffTime TEXT DEFAULT NULL,"
+                   "planOpenSwtich INTEGER DEFAULT '0',"
+                   "planOpenTime TEXT DEFAULT NULL)",tableName];
+    
+    
+    if (![[HTDataBase shareInstance] checkTableIsExist:tableName]) {
+        // 不存在
+        if ([[HTDataBase shareInstance ] execDBWithSQLString:sql]) {
+            return YES;
+        }
+        else{
+            return NO;
+        }
+    }
+    return YES;
+}
+
++(BOOL)saveOrUpdatePlanTime:(NSDictionary *)planTimeDic{
+    NSString* tableName=[NSString stringWithFormat:@"planTime"];
+    NSString* sql=[NSString stringWithFormat:@"select deviceId from %@ where deviceId =%@;",tableName,planTimeDic[@"deviceId"]];
+    NSArray *staArr = [[HTDataBase shareInstance] queryTablewithSql:sql];
+    if (staArr!=nil&&staArr.count>0) {
+        sql = [NSString stringWithFormat:
+               @"update %@ "
+               "set planOffSwitch=%d,"
+               "planOffTime='%@',"
+               "planOpenSwtich=%d,"
+               "planOpenTime='%@' "
+               "where deviceId=%@",
+               tableName,
+               [planTimeDic[@"planOffSwitch"] intValue],
+               planTimeDic[@"planOffTime"],
+               [planTimeDic[@"planOpenSwtich"] intValue],
+               planTimeDic[@"planOpenTime"],
+               planTimeDic[@"deviceId"]];
+    }
+    else{
+        sql = [NSString stringWithFormat:
+               @"Insert into %@ "
+               "(deviceId,"
+               "planOffSwitch,"
+               "planOffTime,"
+               "planOpenSwtich,"
+               "planOpenTime) "
+               "values(%@,%d,'%@',%d,'%@');",
+               tableName,
+               planTimeDic[@"deviceId"],
+               [planTimeDic[@"planOffSwitch"] intValue],
+               planTimeDic[@"planOffTime"],
+               [planTimeDic[@"planOpenSwtich"] intValue],
+               planTimeDic[@"planOpenTime"]];
+    }
+    
+    if ([[HTDataBase shareInstance ] execDBWithSQLString:sql]) {
+        return YES;
+    }
+    return NO;
+}
+
++(NSDictionary *)getPlanTimeByDeviceId:(NSString *)deviceId{
+    if (!deviceId || deviceId.length == 0) {
+        return nil;
+    }
+    NSString* tableName=[NSString stringWithFormat:@"planTime"];
+    NSString* sql=nil;
+    
+    sql = [NSString stringWithFormat:
+           @"select "
+           "deviceId,"
+           "planOffSwitch,"
+           "planOffTime,"
+           "planOpenSwtich,"
+           "planOpenTime "
+           "from %@ where deviceId=%@", tableName,deviceId];
+    
+    NSArray *staArr = [[HTDataBase shareInstance] queryTablewithSql:sql];
+    if (staArr&&staArr.count>0) {
+        return staArr[0];
+    }
+    
+    return nil;
+}
+
++ (BOOL)deletePlanTimeByDeviceId:(NSString *)deviceId {
+    if (!deviceId || deviceId.length == 0) {
+        return NO;
+    }
+    NSString* tableName=[NSString stringWithFormat:@"planTime"];
+    NSString* sql=nil;
+    
+    sql = [NSString stringWithFormat:
+           @"select * from %@ where deviceId=%@", tableName,deviceId];
+    NSArray *staArr = [[HTDataBase shareInstance] queryTablewithSql:sql];
+    if (staArr&&staArr.count>0) {
+        sql = [NSString stringWithFormat:
+               @"delete from %@ where deviceId=%@", tableName, deviceId];
+        BOOL result = [[HTDataBase shareInstance] execDBWithSQLString:sql];
+        return result;
+    }
+    return YES;
+}
+
+@end

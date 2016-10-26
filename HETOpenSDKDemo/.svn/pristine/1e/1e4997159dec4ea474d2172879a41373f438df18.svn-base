@@ -1,0 +1,122 @@
+//
+//  ViewController.m
+//  HETOpenSDKDemo
+//
+//  Created by mr.cao on 16/1/21.
+//  Copyright © 2016年 mr.cao. All rights reserved.
+//
+
+#import "ViewController.h"
+
+#import <HETOpenSDK/HETAuthorize.h>
+#import "MainViewController.h"
+
+//资源路径
+#define kHETSDKBundleXMLName(fileName) [[NSBundle bundleWithPath:[[NSBundle mainBundle] pathForResource:@"HETSDKResource" ofType:@"bundle"]]pathForResource:fileName ofType:@"xml"]
+
+@interface ViewController ()
+@property (nonatomic, strong) HETAuthorize *auth;
+@end
+
+@implementation ViewController
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    self.view.backgroundColor = [UIColor whiteColor];
+    [self setLeftBarButtonItemHide:YES];
+    
+   
+    
+    // Do any additional setup after loading the view, typically from a nib.
+   //检查SDK是否已经授权登录，否则不能使用
+    HETAuthorize *auth = [[HETAuthorize alloc] init];
+    self.auth = auth;
+    
+    if (![auth isAuthenticated]) {
+        [auth authorizeWithCompleted:^(HETAccount *account, NSError *error) {
+            NSLog(@"%@,token:%@",account,account.accessToken);
+            MainViewController *vc=[[MainViewController alloc]init];
+            [self.navigationController pushViewController:vc animated:YES];
+        }];
+
+            }
+    else
+    {
+        MainViewController *vc=[[MainViewController alloc]init];
+        [self.navigationController pushViewController:vc animated:YES];
+    }
+   /* [auth autoAuthorizeWithOpenId:nil withCompleted:^(HETAccount *account, NSError *error) {
+        NSLog(@"%@,token:%@,openID:%@",account,account.accessToken,account.openId);
+        MainViewController *vc=[[MainViewController alloc]init];
+        [self.navigationController pushViewController:vc animated:YES];
+    }];*/
+
+
+}
+- (NSData*)dataForHexString:(NSString*)hexString
+{
+    if (hexString == nil) {
+        return nil;
+    }
+    const char* ch = [[hexString lowercaseString] cStringUsingEncoding:NSUTF8StringEncoding];
+    NSMutableData* data = [NSMutableData data];
+    while (*ch) {
+        if (*ch == ' ') {
+            continue;
+        }
+        char byte = 0;
+        if ('0' <= *ch && *ch <= '9') {
+            byte = *ch - '0';
+        }
+        else if ('a' <= *ch && *ch <= 'f') {
+            byte = *ch - 'a' + 10;
+        }
+        else if ('A' <= *ch && *ch <= 'F') {
+            byte = *ch - 'A' + 10;
+        }
+        ch++;
+        byte = byte << 4;
+        if (*ch) {
+            if ('0' <= *ch && *ch <= '9') {
+                byte += *ch - '0';
+            } else if ('a' <= *ch && *ch <= 'f') {
+                byte += *ch - 'a' + 10;
+            }
+            else if('A' <= *ch && *ch <= 'F')
+            {
+                byte += *ch - 'A' + 10;
+            }
+            ch++;
+        }
+        [data appendBytes:&byte length:1];
+    }
+    return data;
+    
+}
+// convert a hex NSString to NSData, spaces and angled brackets are ignored
+- (NSData *)dataFromHexString:(NSString *)string
+{
+    string = [string lowercaseString];
+    NSMutableData *data= [NSMutableData new];
+    unsigned char whole_byte;
+    char byte_chars[3] = {'\0','\0','\0'};
+    int i = 0;
+    int length = (int) string.length;
+    while (i < length-1) {
+        char c = [string characterAtIndex:i++];
+        if (c < '0' || (c > '9' && c < 'a') || c > 'f')
+            continue;
+        byte_chars[0] = c;
+        byte_chars[1] = [string characterAtIndex:i++];
+        whole_byte = strtol(byte_chars, NULL, 16);
+        [data appendBytes:&whole_byte length:1];
+    }
+    return data;
+}
+
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+@end

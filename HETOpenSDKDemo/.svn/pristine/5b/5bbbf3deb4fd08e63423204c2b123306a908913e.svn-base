@@ -1,0 +1,106 @@
+//
+//  DeviceControlBusiness.h
+//  openSDK
+//
+//  Created by mr.cao on 15/8/13.
+//  Copyright (c) 2015年 peng. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+typedef void(^successBlock)(id responseObject);
+typedef void(^failureBlock)( NSError *error);
+
+@interface HETDeviceControlBusiness : NSObject
+/**
+ *  配置用户Key,需要对应用做Key机制验证，如果不添加key，功能将不能使用
+ */
+@property (nonatomic, strong) NSString *appKey;
+/**
+ *  下发控制设备
+ *
+ *  @param json     设备控制json
+ *  @param deviceID 设备deviceID
+ *  @param success  设备控制成功的回调
+ *  @param failure  设备控制失败的回调
+ */
+- (void)deviceControlWithJSON:(NSString *)json
+                 withDeviceID:(NSString *)deviceID
+                      success:(successBlock)success
+                      failure:(failureBlock)failure;
+
+
+
+/**
+ *  查询设备配置数据信息
+ *
+ *  @param deviceID 设备deviceID
+ *  @param success  成功的回调
+ *  @param failure  失败的回调
+ */
+- (void)fetchDeviceConfigDataWithDeviceID:(NSString *)deviceID
+                              success:(successBlock)success
+                              failure:(failureBlock)failure;
+
+
+
+/**
+ *  查询设备运行数据信息
+ *
+ *  @param deviceID 设备deviceID
+ *  @param success  成功的回调
+ *  @param failure  失败的回调
+ */
+- (void)fetchDeviceRunDataWithDeviceID:(NSString *)deviceID
+                              success:(successBlock)success
+                              failure:(failureBlock)failure;
+/**
+ *  查询绑定的所有设置列表
+ *
+ *  @param success 成功的回调
+ *  @param failure 失败的回调
+
+ */
+- (void)fetchAllBindDeviceSuccess:(successBlock)success
+                               failure:(failureBlock)failure;
+
+
+
+/**
+ *  解除设备绑定
+ *
+ *  @param deviceID 设备deviceID
+ *  @param success  解除绑定成功的回调
+ *  @param failure  解除绑定失败的回调
+ */
+- (void)unbindDeviceWithDeviceID:(NSString *)deviceID
+                              success:(successBlock)success
+                              failure:(failureBlock)failure;
+
+
+
+
+/**
+ *  设备数据上传（蓝牙）
+ *
+ *  @param deviceID 设备deviceID
+ *  @param dataType 数据类型（1-历史数据，2-实时数据）
+ *  @param data     需要上传的数据
+ *  @param success  上传成功的回调
+ *  @param failure  上传失败的回调
+ */
+- (void)uploadDeviceDataWithDeviceID:(NSString *)deviceID
+                            dataType:(NSInteger) dataType
+                                data:(NSData *)data
+                             success:(successBlock)success
+                             failure:(failureBlock)failure;
+
+
+-(void)bindDeviceWithDeviceMAC:(NSString *)macAddr
+                      deviceBrandId:(NSInteger) deviceBrandId
+                      deviceTypeId:(NSInteger) deviceTypeId
+                     deviceSubtypeId:(NSInteger) deviceSubtypeId
+                      bindType:(NSInteger)bindType
+                       success:(successBlock)success
+                      failure:(failureBlock)failure;
+
+@end

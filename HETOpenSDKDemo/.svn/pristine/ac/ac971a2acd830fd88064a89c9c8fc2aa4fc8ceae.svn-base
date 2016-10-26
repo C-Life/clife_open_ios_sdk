@@ -1,0 +1,16 @@
+//
+//  CSleepBlueToothDefine.h
+//  BLEForCSleep
+//
+//  Created by Sandy wu on 15/5/30.
+//  Copyright (c) 2015年 Het. All rights reserved.
+//
+
+#ifndef BLEForCSleep_CSleepBlueToothDefine_h
+#define BLEForCSleep_CSleepBlueToothDefine_h
+
+#define CSLEEP_WRITE_CHARACTER_UUID @"ff01"
+#define CSLEEP_READ_CHARACTER_UUID  @"ff02"
+#define CSLEEP_SERVICE_UUID         @"ff12"
+
+#endif

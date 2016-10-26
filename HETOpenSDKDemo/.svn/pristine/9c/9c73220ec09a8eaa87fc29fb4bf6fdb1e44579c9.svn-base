@@ -1,0 +1,198 @@
+//
+//  WeiboAccounts.m
+//  WeiboSDK
+//
+//  Created by Liu Jim on 8/3/13.
+//  Copyright (c) 2013 openlab. All rights reserved.
+//
+
+#import "HETAccounts.h"
+
+
+
+@interface HETAccounts()
+
+@property (nonatomic, strong) NSMutableDictionary *accountsDictionary;
+@property (nonatomic, strong) NSMutableArray *accounts;
+
+@end
+
+@implementation HETAccounts
+
+- (id)init {
+    self = [super init];
+    if (self) {
+        self.accountsDictionary = [[NSMutableDictionary alloc] init];
+        self.accounts = [[NSMutableArray alloc] init];
+        dispatch_queue_t lowPriQueue =
+        dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0);
+        _dataQueue = dispatch_queue_create("HETAccounts.data", DISPATCH_QUEUE_SERIAL);
+        dispatch_set_target_queue(_dataQueue, lowPriQueue);
+
+    }
+    return self;
+}
+
++ (HETAccounts *)shared {
+    static HETAccounts* _instance;
+    static dispatch_once_t onceToken;
+
+    dispatch_once(&onceToken, ^{
+        _instance = [[HETAccounts alloc] init];
+        [_instance loadAccounts];
+    });
+
+    return _instance;
+
+}
+
+- (NSMutableArray *)accounts {
+    return _accounts;
+}
+
+- (NSString *)getAccountsStoragePath {
+	NSString *filePath = [[self documentDirectoryPathWithName:@"db"]
+						  stringByAppendingPathComponent:@"accounts.db"];
+	return filePath;
+}
+
+- (void)loadAccounts {
+	NSString *filePath = [self getAccountsStoragePath];
+	NSArray *weiboAccounts = [NSKeyedUnarchiver unarchiveObjectWithFile:filePath];
+	if (!weiboAccounts) {
+		weiboAccounts = [[NSMutableArray alloc] init];
+		[NSKeyedArchiver archiveRootObject:weiboAccounts toFile:filePath];
+	}
+	self.accounts = [NSMutableArray arrayWithArray:weiboAccounts];
+    for (HETAccount *account in self.accounts) {
+        [_accountsDictionary setObject:account forKey:account.openId];
+    }
+}
+
+- (void)saveAccounts {
+    dispatch_async(_dataQueue, ^{
+        NSString *filePath = [self getAccountsStoragePath];
+        [NSKeyedArchiver archiveRootObject:_accounts toFile:filePath];
+    });
+}
+
+- (BOOL)addAccount:(HETAccount *)account {
+//    if (!account.user) {
+//        return NO;
+//    }
+    HETAccount *addedAccount = [_accountsDictionary objectForKey:account.openId];
+    if (addedAccount) {
+        //addedAccount.accessToken = account.accessToken;
+        //addedAccount.expirationDate = account.expirationDate;
+        account.selected = YES;
+        [_accounts removeObject:addedAccount];
+        [_accountsDictionary removeObjectForKey:account.openId];
+        [_accountsDictionary setObject:account forKey:account.openId];
+        [_accounts insertObject:account atIndex:0];
+    }
+    else {
+        addedAccount = account;
+        if (_accounts.count == 0) {
+            account.selected = YES;
+        }
+        [_accountsDictionary setObject:account forKey:account.openId];
+        [_accounts insertObject:account atIndex:0];
+    }
+    [self saveAccounts];
+    return YES;
+}
+
+- (void)removeAccount:(HETAccount *)account {
+    HETAccount *accountToBeRemoved = [_accountsDictionary objectForKey:account.openId];
+    BOOL isCurrentAccount = accountToBeRemoved.selected;
+    if (accountToBeRemoved) {
+        [_accounts removeObject:accountToBeRemoved];
+        [_accountsDictionary removeObjectForKey:account.openId];
+    }
+    if (isCurrentAccount) {
+        if (_accounts.count > 0) {
+            [[_accounts objectAtIndex:0] setSelected:YES];
+        }
+    }
+    [self saveAccounts];
+}
+
+- (void)setCurrentAccount:(HETAccount *)currentAccount {
+    for (HETAccount *account in _accounts) {
+        account.selected = [account.openId isEqualToString:currentAccount.openId];
+    }
+    [self saveAccounts];
+}
+
+- (HETAccount *)currentAccount {
+    for (HETAccount *account in _accounts) {
+        if (account.selected) {
+            return account;
+        }
+    }
+    return nil;
+}
+
+- (void)signOut {
+    HETAccount *currentAccount = [self currentAccount];
+    if (currentAccount) {
+        [self removeAccount:currentAccount];
+    }
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+- (BOOL)createPathIfNecessary:(NSString*)path {
+    BOOL succeeded = YES;
+
+    NSFileManager* fm = [NSFileManager defaultManager];
+    if (![fm fileExistsAtPath:path]) {
+        succeeded = [fm createDirectoryAtPath: path
+                  withIntermediateDirectories: YES
+                                   attributes: nil
+                                        error: nil];
+    }
+
+    return succeeded;
+}
+
+- (NSString*)bundlePathWithName:(NSString *)name {
+    return [[[NSBundle mainBundle] resourcePath]
+            stringByAppendingPathComponent:name];
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+- (NSString*)documentDirectoryPathWithName:(NSString*)name {
+    NSArray* paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+    NSString* cachesPath = [paths objectAtIndex:0];
+    NSString* cachePath = [cachesPath stringByAppendingPathComponent:name];
+
+    [self createPathIfNecessary:cachesPath];
+    [self createPathIfNecessary:cachePath];
+
+    return cachePath;
+}
+
+- (NSString*)cacheDirectoryPathWithName:(NSString*)name {
+    return [self cacheDirectoryPathWithName:name createPathIfNecessary:YES];
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+- (NSString*)cacheDirectoryPathWithName:(NSString*)name createPathIfNecessary:(BOOL)createPathIfNecessary{
+    NSArray* paths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
+    NSString* cachesPath = [paths objectAtIndex:0];
+    NSString* cachePath = [cachesPath stringByAppendingPathComponent:name];
+
+    if (createPathIfNecessary) {
+        [self createPathIfNecessary:cachesPath];
+        [self createPathIfNecessary:cachePath];
+    }
+
+    return cachePath;
+}
+
+- (NSString *)sanitizeFileNameString:(NSString *)fileName {
+    NSCharacterSet* illegalFileNameCharacters = [NSCharacterSet characterSetWithCharactersInString:@"/\\?%*|\"<>"];
+    return [[fileName componentsSeparatedByCharactersInSet:illegalFileNameCharacters] componentsJoinedByString:@""];
+}
+@end

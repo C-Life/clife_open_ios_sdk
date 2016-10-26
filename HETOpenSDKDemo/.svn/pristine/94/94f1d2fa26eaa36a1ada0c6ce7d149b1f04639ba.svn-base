@@ -1,0 +1,2088 @@
+//
+//  DeviceControlBusiness.m
+//  openSDK
+//
+//  Created by mr.cao on 15/8/13.
+//  Copyright (c) 2015年 mr.cao. All rights reserved.
+//
+
+
+#import "HETDeviceControlBusiness.h"
+
+#import "HETSmartLinkMangerAPI.h"
+#import "HETWIFICommonProtocol.h"
+#import "HETWIFINewProtocol.h"
+#import "HETWIFIOpenSDKProtocol.h"
+#import "HETXMLReader.h"
+#import "Reachability.h"
+#import <mach/mach_time.h> // for mach_absolute_time
+#import "HETDeviceRequestBusiness.h"
+
+#import "HETAccounts.h"
+
+#define kFrequencySecond    1
+#define appConnectDeviceTime 5 //多久app未连接设备则认为连接失败
+#define WEAKSELF typeof(self) __weak weakSelf = self;
+
+
+static NSString *const kdefinitions=@"definitions";
+static NSString *const kbyteDef    =@"byteDef";
+static NSString *const kproperty   =@"property";
+static NSString *const korder      =@"order";
+static NSString *const klength     =@"length";
+static NSString *const kjavaType   =@"javaType";
+static NSString *const kignore     =@"ignore";
+static NSString *const kshift      =@"shift";
+static NSString *const kbitDefList =@"bitDefList";
+static NSString *const kbitDef     =@"bitDef";
+
+static NSString *const ksendCmd=@"ksendCmd";
+static NSString *const krecvCmd=@"krecvCmd";
+static NSString *const kencodeXMLToDic=@"kencodeXMLToDic";
+static NSString *const kdecodeXMLToDic=@"kdecodeXMLToDic";
+static NSString *const kcmdBlock=@"kcmdBlock";
+static NSString *const ksuccessBlock=@"ksuccessBlock";
+static NSString *const kfailBlock=@"kfailBlock";
+
+
+
+
+typedef NS_ENUM(NSUInteger,COMMANDType)
+{
+    /**
+     *  APP广播USERKE Y【32】+ 服务器 IP 【4】+端 口号【2】
+     */
+    HET_OPENSDK_BIND_SENDSERVERINFO=0x0200,
+    /**
+     *  发现设备
+     */
+    HET_OPENSDK_BIND_DISCOVERDEVICE=0x0400,
+    /**
+     *  上传控制参数
+     */
+    HET_OPENSDK_CONFIG_SEND=0x0104,
+    /**
+     *  收到控制参数
+     */
+    HET_OPENSDK_CONFIG_RECV=0x0204,
+    /**
+     *  请求设备上传控制参数
+     */
+    HET_OPENSDK_CONFIG_REQ=0x0404,
+    /**
+     *  收到设备上传控制参数
+     */
+    HET_OPENSDK_CONFIG_RES=0x0304,
+    /**
+     *  请求设备发送运行数据
+     */
+    HET_OPENSDK_RUN_REQ=0x0405,
+    /**
+     *  收到设备运行数据
+     */
+    HET_OPENSDK_RUN_RECV=0x0105,
+    /**
+     *  设备上传运行参数
+     */
+    HET_OPENSDK_RUN_RES=0x0305,
+    /**
+     *  设备运行故障
+     */
+    HET_OPENSDK_RUN_ERROR=0x010E,
+    
+    
+};
+
+@interface HETDeviceControlBusiness()<smartlinkDelegate>
+{
+    NSData             *_sendData;
+    NSDictionary       *_sendDictionary;
+    NSArray            *_sendDictionaryKeysArray;
+    NSDictionary       *_encodeDic;
+    NSDictionary       *_runDecondeDic;
+    NSData             *_cfgData;
+    NSData             *_runData;
+    HETWIFICommonReform *_deviceObj;
+    NSDictionary       *_lastdeviceControlDic; //上一次设置的内容
+    NSUInteger          _sendCount;
+    BOOL                _bSupportLittleLoop;
+    NSMutableArray     *_protocolArray;//存放每个命令字与XML,block回调的关系数据
+    
+    
+    HETDeviceRequestBusiness *_business;
+    
+   
+
+}
+@property (nonatomic,readwrite) BOOL                 isLittleLoop;
+@property (nonatomic          ) NSUInteger           checkLoopCount;
+@property (nonatomic,strong   ) NSTimer              *getCfgInfoTimer; //获取配置信息定时器
+@property (nonatomic,strong   ) NSTimer              *getRunDataTimer; //获取运行信息定时器
+@property (nonatomic,strong   ) NSTimer              *checkLoopTimer;  //验证大小循环定时器
+@property (nonatomic,strong   ) NSTimer              *getDeviceInfoTimer;//获取设备基本信息定时器，主要获取在线离线状态
+@property (nonatomic,strong   ) NSTimer              *checkSocketTimer;  //验证大小循环定时器
+@property (nonatomic,strong   ) NSTimer              *checkPacketTimer;  //验证小循环报文重发
+@property (nonatomic,strong   ) NSString             *devIp;
+@property (nonatomic,strong   ) HETSmartLinkMangerAPI *manager;
+@property (nonatomic          ) UInt16               packetNum;//小循环的报文号
+@property (nonatomic,strong   ) NSData               *repeatData;
+@property (nonatomic,strong   ) NSString             *authUserId;//小循环控制的key
+@property (nonatomic,readwrite) NSString             *deviceId;
+@property (nonatomic,strong   ) NSString             *deviceMac;
+@property (nonatomic,strong   ) NSString             *devicetypeId;
+@property (nonatomic,strong   ) NSString             *deviceSubtypeId;
+@property (nonatomic, assign  ) NSUInteger            ConfigDataLength; //控制数据的长度
+@property (nonatomic, assign  ) NSUInteger            RunDataLength;//运行数据的长度
+
+
+//设置报文的间隔
+@property (nonatomic, assign  ) NSInteger  nextPacketSendInterval;
+//失败次数
+@property (nonatomic, assign  ) NSInteger  failCount;
+//忽略次数
+@property (nonatomic, assign  ) NSInteger  ignoreCount;
+
+
+//
+@property (nonatomic,copy     ) SuccessBlock successBlock;
+//
+@property (nonatomic,copy     ) FailureBlock   failureBlock;
+
+
+@property (nonatomic,copy     )FailureBlock  rundataFailBlock;
+
+@property (nonatomic,copy     )FailureBlock  cfgdataFailBlock;
+
+@end
+
+@implementation HETDeviceControlBusiness
+- (instancetype)init{
+    self = [super init];
+    if (self) {
+        _isLittleLoop = NO;
+        _devIp = @"";
+        //_packetNum = ((NSInteger)([NSDate date].timeIntervalSince1970*1000))%100000;
+        _packetNum = ((UInt16)([NSDate date].timeIntervalSince1970*1000))%65535;//报文号取一个时间(ms)相关的随机数
+        self.failCount = 7;
+        self.ignoreCount = 0;
+
+        self.checkLoopCount = 15;
+        self.nextPacketSendInterval = 2;
+        _sendCount=10+self.nextPacketSendInterval;
+        _protocolArray=[[NSMutableArray alloc]init];
+    }
+    return self;
+}
+
+- (instancetype)initWithUserId:(NSString *)authUserId
+                  withDeviceId:(NSString *)deviceId
+                 withDeviceMac:(NSString *)deviceMac
+              withDeviceTypeId:(NSString *)deviceTypeId
+           withDeviceSubtypeId:(NSString *)deviceSubtypeId
+          withDeviceRunXmlPath:(NSString *)deviceRunXmlpath
+      withDeviceControlXmlPath:(NSString *)deviceControlXmlpath
+           isSupportLittleLoop:(BOOL)bsupport
+          deviceRunDataSuccess:(void(^)(id responseObject))runDataSuccessBlock
+             deviceRunDataFail:(void(^)(NSError *error))runDataFailBlock
+          deviceCfgDataSuccess:(void(^)(id responseObject))cfgDataSuccessBlock
+             deviceCfgDataFail:(void(^)(NSError *error))cfgDataFailBlock
+{
+    self=[super init];
+    if(self)
+    {
+        _isLittleLoop = NO;
+        _devIp = @"";
+        //_packetNum = ((NSInteger)([NSDate date].timeIntervalSince1970*1000))%100000;
+        _packetNum = ((UInt16)([NSDate date].timeIntervalSince1970*1000))%65535;//报文号取一个时间(ms)相关的随机数
+        self.failCount = 7;
+        self.ignoreCount = 0;
+        self.checkLoopCount = 15;
+        self.nextPacketSendInterval = 2;
+        _sendCount=10+self.nextPacketSendInterval;
+        _protocolArray=[[NSMutableArray alloc]init];
+        self.authUserId=authUserId;
+        self.deviceId=deviceId;
+        self.deviceMac=deviceMac;
+        self.deviceSubtypeId=deviceSubtypeId;
+        self.devicetypeId=deviceTypeId;
+        self.runDataBlock=runDataSuccessBlock;
+        self.cfgDataBlock=cfgDataSuccessBlock;
+        self.rundataFailBlock=runDataFailBlock;
+        self.cfgdataFailBlock=cfgDataFailBlock;
+        _bSupportLittleLoop=bsupport;
+        _business=[[HETDeviceRequestBusiness alloc]init];
+        if ([HETAccounts shared].currentAccount) {
+            if(bsupport)//支持小循环
+            {
+                //控制数据协议
+                NSString *configXmlpath=deviceControlXmlpath;
+                NSString *configstr=[NSString stringWithFormat:@"%@ 文件不存在",configXmlpath];
+                NSAssert(configXmlpath,configstr);
+                NSData *configdata =[NSData dataWithContentsOfFile:configXmlpath];
+                NSError *error = nil;
+                _encodeDic = [HETXMLReader dictionaryForXMLData:configdata error:&error];
+                NSAssert(!error, @"控制数据的XML格式错误");
+                
+                
+                //运行数据协议
+                NSString *runXmlpath=deviceRunXmlpath;
+                NSString *runstr=[NSString stringWithFormat:@"%@ 文件不存在",runXmlpath];
+                NSAssert(runXmlpath,runstr);
+                NSData *rundata =[NSData dataWithContentsOfFile:runXmlpath];
+                _runDecondeDic = [HETXMLReader dictionaryForXMLData:rundata error:&error];
+                NSAssert(!error, @"运行数据的XML格式错误");
+                [self findContentLength:_encodeDic :YES];
+                [self findContentLength:_runDecondeDic :NO];
+            }
+        }
+        else
+        {
+            NSLog(@"设备控制界面账号未登录");
+        }
+    }
+    return self;
+    
+}
+
+- (void)start{
+    
+    
+    [self refreshRunData];
+    [self refreshCfgInfo];
+    [self refreshDeviceInfo];
+    
+    if (!self.getRunDataTimer)
+    {
+        self.getRunDataTimer=[NSTimer scheduledTimerWithTimeInterval:5 target:self selector:@selector(refreshRunData) userInfo:nil repeats:YES];
+    }
+    if (!self.getCfgInfoTimer)
+    {
+        self.getCfgInfoTimer=[NSTimer scheduledTimerWithTimeInterval:5 target:self selector:@selector(refreshCfgInfo) userInfo:nil repeats:YES];
+    }
+    if(!self.getDeviceInfoTimer)
+    {
+        
+        self.getDeviceInfoTimer=[NSTimer scheduledTimerWithTimeInterval:5 target:self selector:@selector(refreshDeviceInfo) userInfo:nil repeats:YES];
+    }
+    
+    if (!self.checkLoopTimer&&_bSupportLittleLoop)
+    {
+        self.checkLoopTimer=[NSTimer scheduledTimerWithTimeInterval:1.0 target:self selector:@selector(checkLoopChange) userInfo:nil repeats:YES];
+    }
+    if (!self.checkPacketTimer&&_bSupportLittleLoop&&self.needReplay)
+    {
+        self.checkPacketTimer=[NSTimer scheduledTimerWithTimeInterval:1.0 target:self selector:@selector(checkPacketAction) userInfo:nil repeats:YES];
+    }
+    
+    if(_bSupportLittleLoop)
+    {
+        if (self.manager) {
+            [self.manager stop_smartLink];
+            self.manager = nil;
+        }
+        if(self.wifiProtocolType==WIFIPROTOCOLTYPE_PT)
+        {
+            self.manager = [[HETSmartLinkMangerAPI alloc] initWithBindPort:18899];
+        }
+        else
+        {
+            self.manager = [[HETSmartLinkMangerAPI alloc] initWithBindPort:28899];
+ 
+        }
+        self.manager.delegate = self;
+        if (![self IsEnableWIFI]) {
+            return;
+        }
+        [self broadcast];
+    }
+    
+}
+/**
+ *  broadcast for getting device info that have connected current wifi
+ */
+-(void)broadcast{
+    if(self.wifiProtocolType==WIFIPROTOCOLTYPE_PT)
+    {
+       [self sendHFCMDwithCount:1];
+    }
+    else
+    {
+        [self sendTICMDwithCount:1];
+    }
+}
+//普通协议，查询配置数据
+-(BOOL)sendHFCMDwithCount:(NSInteger)count{
+    NSString *boardIP = [self getIpAddressInfo];
+    
+    if (boardIP == nil) {
+        return NO;
+    }
+    NSString *md5 =self.authUserId;
+    if (!md5) {
+        return NO;
+    }
+    char content[1+32];
+    memset(content, 0, 1+32);
+    memset(content, 1, 1);
+    memcpy(content+1, [md5 UTF8String], 32);
+    HETWIFICommonReform * deviceObj=[[HETWIFICommonReform alloc]init];
+    deviceObj.body=[NSData dataWithBytes:content length:33];
+    deviceObj.body_length=33;
+    deviceObj.device_cmdtype=0x4007;
+    deviceObj.protocol_version=0x41;
+    deviceObj.protocol_type=0x02;
+    deviceObj.device_type=0;
+    deviceObj.device_subtype=0;
+    deviceObj.device_mac=@"000000000000";
+
+    
+    NSData *data=[HETWIFICommonProtocol fetchLittleLoopPacketWithObj:deviceObj];
+    while (count>0) {
+        [self.manager sendData:data toHost:boardIP withPort:18899 withTimeout:-1 tag:300];
+        count--;
+        [NSThread sleepForTimeInterval:0.5];
+    }
+    return YES;
+}
+//开放平台协议,查询配置数据
+-(BOOL)sendTICMDwithCount:(NSInteger)count{
+    NSString *boardIP = [self getIpAddressInfo];
+    
+    if (boardIP == nil) {
+        return NO;
+    }
+    NSString *md5 =self.authUserId;
+    if (!md5) {
+        return NO;
+    }
+    char content[32];
+    memset(content, 0, 32);
+    memcpy(content, [md5 UTF8String], 32);
+    HETWIFICommonReform * deviceObj=[[HETWIFICommonReform alloc]init];
+    deviceObj.body=[NSData dataWithBytes:content length:32];
+    deviceObj.body_length=32;
+    deviceObj.device_cmdtype=0x0404;
+    deviceObj.protocol_version=0x40;
+    deviceObj.protocol_type=0x01;
+    deviceObj.device_type=0;
+    deviceObj.device_subtype=0;
+    deviceObj.device_mac=@"000000000000";
+    
+    
+    NSData *data=[HETWIFIOpenSDKProtocol fetchLittleLoopPacketWithObj:deviceObj];
+    while (count>0) {
+        [self.manager sendData:data toHost:boardIP withPort:28899 withTimeout:-1 tag:300];
+        count--;
+        [NSThread sleepForTimeInterval:0.5];
+    }
+    return YES;
+}
+//停止服务
+- (void)stop{
+
+    [self.manager stop_smartLink];
+        if (self.getCfgInfoTimer) {
+            [self.getCfgInfoTimer invalidate];
+            self.getCfgInfoTimer = nil;
+        }
+        if (self.getRunDataTimer) {
+            [self.getRunDataTimer invalidate];
+            self.getRunDataTimer = nil;
+        }
+        if (self.checkLoopTimer) {
+            [self.checkLoopTimer invalidate];
+            self.checkLoopTimer = nil;
+        }
+    
+        if (self.getDeviceInfoTimer) {
+            [self.getDeviceInfoTimer invalidate];
+            self.getDeviceInfoTimer = nil;
+        }
+        if(self.checkPacketTimer)
+        {
+            [self.checkPacketTimer invalidate];
+            self.checkPacketTimer=nil;
+        }
+        
+        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(deviceControlRequestWithJson:withSuccessBlock:withFailBlock:) object:nil];
+        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(repeatSendData) object:nil];
+        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sendDataFail) object:nil];
+}
+//大循环获取配置数据
+- (void)refreshCfgInfo{
+    if (self.isLittleLoop) {
+        return;
+    }
+    [_business fetchDeviceConfigDataWithDeviceID:self.deviceId success:self.cfgDataBlock failure:self.cfgdataFailBlock];
+    }
+//查询运行数据
+- (void)refreshRunData{
+    if (self.isLittleLoop) {
+        return;
+    }
+    
+    [_business fetchDeviceRunDataWithDeviceID:self.deviceId success:self.runDataBlock failure:self.rundataFailBlock];
+    }
+//查询设备基本信息
+- (void)refreshDeviceInfo{
+    
+    
+}
+
+//提供给native界面的设备控制
+- (void)deviceControlRequestWithJson:(NSString *)jsonString withSuccessBlock:(void(^)(id responseObject))successBlock withFailBlock:(void(^)( NSError *error))failureBlock
+{
+    self.successBlock=successBlock;
+    self.failureBlock=failureBlock;
+    
+    
+    if (self.isLittleLoop) {
+        
+        
+        
+        NSDictionary *dic=[self jsonToDic:jsonString];
+        if(dic)
+        {
+            [self sendDataUseNSDictionary:dic];
+        }
+        else
+        {
+            failureBlock(nil);
+            
+        }
+
+    }
+    else {
+        
+        [_business deviceControlWithJSON:jsonString withDeviceID:self.deviceId success:successBlock failure:failureBlock];
+        
+    }
+    
+}
+//合并当前发送的数据和上一次没发送完毕的数据
+-(NSDictionary *)merge:(NSDictionary *)currentDic :(NSDictionary *)lastDic
+{
+    NSMutableDictionary *mutdic = [[NSMutableDictionary alloc] init];
+    NSArray *akeyArray=[currentDic allKeys];
+    NSArray *bkeyArray=[lastDic allKeys];
+    [akeyArray enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+         NSString *vaule=[currentDic objectForKey:obj];
+       if([bkeyArray containsObject:obj])//如果两个字典键值都有，则合并值
+       {
+          
+           if(vaule.integerValue==0)//如果当前值为0，则取上一次的值
+           {
+               //vaule=[lastDic objectForKey:obj];
+           }
+           else//如果当前值不为0，则取当前的值
+           {
+               
+           }
+           [mutdic setObject:vaule forKey:obj];
+       }
+        else//如果当前字典键值有不存在的，则合并值
+        {
+             [mutdic setObject:vaule forKey:obj];
+        }
+        
+    }];
+    return mutdic;
+}
+//检测大小循环
+-(void)checkLoopChange{
+    if (self.isLittleLoop) {
+        if (![self IsEnableWIFI]) {
+            self.checkLoopCount = 15;
+        }
+    }
+    self.checkLoopCount++;
+    if (self.checkLoopCount > 0xfffffff0) {
+        self.checkLoopCount = 20;
+    }
+    if (self.checkLoopCount > 15) {
+        self.isLittleLoop = NO;
+    }else{
+        self.isLittleLoop = YES;
+    }
+    if (self.checkLoopCount > 10 && self.checkLoopCount < 16) {
+        //[self  sendHFCMDwithCount:1];
+        [self broadcast];
+    }
+}
+//重新发送数据
+- (void)repeatSendData{
+    if(self.repeatData)
+    {
+      if(self.wifiProtocolType==WIFIPROTOCOLTYPE_PT)
+      {
+         [self.manager sendData:self.repeatData toHost:self.devIp withPort:18899 withTimeout:-1 tag:400];
+      }
+      else
+      {
+          [self.manager sendData:self.repeatData toHost:self.devIp withPort:28899 withTimeout:-1 tag:400];
+  
+      }
+        
+    }
+}
+
+
+//计算运行或配置数据内容的长度
+
+-(void)findDefinitions:(NSDictionary*)dic block:(void (^)(NSDictionary*defDic))block
+{
+    
+    [dic enumerateKeysAndObjectsUsingBlock:^(id definekey, id objt, BOOL *stop) {
+        if ([definekey rangeOfString:@"text"].length) {
+            return ;//ignore text key;
+        }
+        if([definekey rangeOfString:kdefinitions].length) {
+            *stop=YES;
+            block(objt);
+            
+        }else if ([objt isKindOfClass:[NSDictionary class]]){
+            [self findDefinitions:objt block:block];
+        }
+    }];
+    
+}
+-(void)findContentLength:(NSDictionary *)dict :(BOOL) bcfgData
+{
+    [self findDefinitions:dict block:^(NSDictionary *defDic)
+     {
+         id objArray=[defDic objectForKey:kbyteDef];
+         __block  int bufIndex=0;
+         
+         [objArray enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop)
+          {
+              if([obj isKindOfClass:[NSDictionary class]])
+              {
+                  //解析xml定义的数据类型,可在此处扩展
+                  BOOL (^analysType)(NSDictionary *body)= ^BOOL(NSDictionary*body)
+                  {
+                      
+                      NSString *lengthStr=[body objectForKey:klength];
+                      NSInteger length=lengthStr.integerValue;
+                      NSString *javaType=[body objectForKey:kjavaType];
+                      NSString *key = [body objectForKey:kproperty];
+                      
+                      BOOL result = NO;
+                      NSString *ignore = [body objectForKey:kignore];
+                      if (ignore.boolValue) {
+                          bufIndex+=length;
+                          return YES;
+                      }
+                      
+                      if (length&&key&&javaType) {
+                          
+                          if([[javaType uppercaseString] rangeOfString:@"INTEGER"].length)
+                          {
+                              bufIndex+=length;
+                              result = YES;
+                          }
+                          else if ([[javaType uppercaseString] rangeOfString:@"LONG"].length)
+                          {
+                              bufIndex+=length;
+                              result = YES;
+                          }else if ([[javaType uppercaseString] rangeOfString:@"BYTE"].length)
+                          {
+                              result = YES;
+                          }
+                          else
+                          {
+                              bufIndex+=length;
+                              result = YES;
+                          }
+                          
+                      }
+                      return result;
+                      
+                  };
+                  
+                  id bitDefList=nil;
+                  id bitDef=nil;
+                  if ((bitDefList=[obj objectForKey:kbitDefList])&&(bitDef = [bitDefList objectForKey:kbitDef]))
+                  {
+                      [bitDef enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop)
+                       {
+                           if (!analysType(obj))//解析bit
+                           {
+                               *stop = YES;
+                           }
+                       }];
+                      bufIndex+=1;//bitDefList定义一个字节
+                      
+                  }
+                  else
+                  {
+                      if (!analysType(obj))//解析byte
+                      {
+                          *stop = YES;
+                      }
+                  }
+              }
+              
+              if(idx==[objArray count]-1)
+              {
+                  if(bcfgData)
+                  {
+                      _ConfigDataLength=bufIndex;
+                      NSLog(@"配置数据长度:%lu",(unsigned long)_ConfigDataLength);
+                   }
+                  else
+                  {
+                      _RunDataLength=bufIndex;
+                       NSLog(@"运行数据长度:%lu",(unsigned long)_RunDataLength);
+                  }
+                  
+              }
+          }];
+     }];
+
+}
+
+//解码运行数据或配置数据,nsdata--->json
+-(void)encodeDataToJson:(NSData *)data :(NSDictionary *)dict :(BOOL) bcfgData
+{
+    //如果收到数据与XML里面协议数据长度不一致则不解析
+    if(bcfgData)
+    {
+        if(data.length!=_ConfigDataLength)
+        {
+            if(self.cfgDataBlock)
+            {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    self.cfgDataBlock(nil);
+                });
+                
+                
+            }
+            return;
+        }
+    }
+    else
+    {
+        if(data.length!=_RunDataLength)
+        {
+            if(self.runDataBlock)
+            {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    
+                    self.runDataBlock(nil);
+                });
+                
+                
+            }
+            return;
+        }
+        
+    }
+
+    const char* bytes = [data bytes];
+    NSUInteger dataLength = [data length];
+    [self findDefinitions:dict block:^(NSDictionary *defDic)
+     {
+         NSMutableDictionary *ret = [[NSMutableDictionary alloc] init];
+         id objArray=[defDic objectForKey:kbyteDef];
+         __block  int bufIndex=0;
+         
+         [objArray enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop)
+          {
+              if([obj isKindOfClass:[NSDictionary class]])
+              {
+                  //解析xml定义的数据类型,可在此处扩展
+                  BOOL (^analysType)(NSDictionary *body)= ^BOOL(NSDictionary*body)
+                  {
+
+                      if (bufIndex>dataLength) {
+                          return NO;
+                      }
+                      
+                      NSString *lengthStr=[body objectForKey:klength];
+                      NSInteger length=lengthStr.integerValue;
+                      NSString *javaType=[body objectForKey:kjavaType];
+                      NSString *key = [body objectForKey:kproperty];
+                      
+                      BOOL result = NO;
+                      NSString *ignore = [body objectForKey:kignore];
+                      if (ignore.boolValue) {
+                          bufIndex+=length;
+                        return YES;
+                      }
+                      
+                      if (length&&key&&javaType) {
+                          
+                          if([[javaType uppercaseString] rangeOfString:@"INTEGER"].length)
+                          {
+                              NSInteger propertyvalue=0;
+                              NSData *intdata =[data subdataWithRange:NSMakeRange(bufIndex, length)];
+                              [intdata getBytes: &propertyvalue length: length];
+                              [ret setObject:@(propertyvalue) forKey:key];
+                              bufIndex+=length;
+                              result = YES;
+                          }
+                          else if ([[javaType uppercaseString] rangeOfString:@"LONG"].length)
+                          {
+                             long propertyvalue=0;
+                              NSData *longdata =[data subdataWithRange:NSMakeRange(bufIndex, length)];
+                              [longdata getBytes: &propertyvalue length: length];
+                              [ret setObject:@(propertyvalue) forKey:key];
+                              bufIndex+=length;
+                              result = YES;
+                          }else if ([[javaType uppercaseString] rangeOfString:@"BYTE"].length)
+                          {
+                              NSInteger maskLength = ((NSString*)[body objectForKey:klength]).integerValue;
+                              NSInteger maskShift = ((NSString*)[body objectForKey:kshift]).integerValue;
+                              Byte propertyvalue=*(bytes+bufIndex);
+                              //取1byte中 maskShift ~ maskShift+maskLength 位的值
+                              propertyvalue=   (propertyvalue >> (maskShift)) & ~(~0 << maskLength);
+                              [ret setObject:@(propertyvalue) forKey:key];
+                              result = YES;
+                          }
+                          else if ([[javaType uppercaseString] rangeOfString:@"HEXSTRING"].length)//注意与STRING顺序
+                          {
+                              NSData *stringdata=[data subdataWithRange:NSMakeRange(bufIndex, length)];
+                              [ret setObject:[self nsdataToHexString:stringdata] forKey:key];
+                              bufIndex+=length;
+                              result = YES;
+                          }
+                          else if ([[javaType uppercaseString] rangeOfString:@"STRING"].length)
+                          {
+                              
+                              NSData *stringdata=[data subdataWithRange:NSMakeRange(bufIndex, length)];
+                              NSString *resultStr= [[NSString alloc] initWithData:stringdata  encoding:NSUTF8StringEncoding];
+                              [ret setObject:resultStr forKey:key];
+                              
+                              bufIndex+=length;
+                              result = YES;
+                          }
+                        
+                          else if ([[javaType uppercaseString] rangeOfString:@"BYTEARRAY"].length)
+                          {
+                              NSData *stringdata=[data subdataWithRange:NSMakeRange(bufIndex, length)];
+                              [ret setObject:[self nsdataToHexString:stringdata] forKey:key];
+                              bufIndex+=length;
+                              result = YES;
+                          }
+                          
+                      }
+                      return result;
+                      
+                  };
+                  
+                  id bitDefList=nil;
+                  id bitDef=nil;
+                  if ((bitDefList=[obj objectForKey:kbitDefList])&&(bitDef = [bitDefList objectForKey:kbitDef]))
+                  {
+                      [bitDef enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop)
+                       {
+                           if (!analysType(obj))//解析bit
+                           {
+                               *stop = YES;
+                           }
+                       }];
+                      bufIndex+=1;//bitDefList定义一个字节
+                      
+                  }
+                  else
+                  {
+                      if (!analysType(obj))//解析byte
+                      {
+                          *stop = YES;
+                      }
+                  }
+              }
+              
+              if(idx==[objArray count]-1)
+              {
+                  if(bcfgData)
+                  {
+                      //NSLog(@"配置数据解码成功:%@",ret);
+                      if(self.cfgDataBlock)
+                      {
+                          dispatch_async(dispatch_get_main_queue(), ^{
+                              self.cfgDataBlock(ret);
+                          });
+
+                          
+                      }
+                  }
+                  else
+                  {
+                      //NSLog(@"运行数据解码成功:%@",ret);
+                      if(self.runDataBlock)
+                      {
+                          dispatch_async(dispatch_get_main_queue(), ^{
+                              self.runDataBlock(ret);
+                          });
+                          
+                      }
+                      
+                  }
+
+              }
+          }];
+     }];
+    
+}
+//F2协议的编码组包 json->nsdata
+-(void)jsonToNSData:(NSDictionary *)dict withCmd:(UInt16)cmd
+{
+    
+    [self findDefinitions:_encodeDic block:^(NSDictionary *defDic)
+     {
+         
+         id objArray=[defDic objectForKey:kbyteDef];
+         __block int bufIndex=33;
+         char buf[256];
+         memset(buf, 0, 256);
+         buf[0] = 2;
+         memcpy(&buf[1], [self.authUserId UTF8String], 32);
+         
+         buf[33] =self.needReplay?0x40:0x41;
+         /*buf[34] = (_packetNum&0xff0000)>>16;
+          buf[35] = (_packetNum&0x00ff00)>>8;
+          buf[36] = (_packetNum&0x0000ff);*/
+         
+         //生成报文号
+         _packetNum++;
+         UInt32 tempPacketNum = 0x41000000+_packetNum;
+         NSString *Ipstr = [self getMyHostIp];
+         unsigned char lastIP = [[[Ipstr componentsSeparatedByString:@"."] lastObject] integerValue];
+         //tempPacketNum = tempPacketNum + (lastIP<<16);
+         //tempPacketNum = htonl(tempPacketNum);
+         buf[34]=lastIP;
+         buf[35]=(tempPacketNum&0x00ff00)>>8;
+         buf[36]=(tempPacketNum&0x0000ff);
+        //__block char * bufHead = &buf;//会报警告
+        __block char * bufHead = buf;
+         
+         [objArray enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop)
+         {
+              if([obj isKindOfClass:[NSDictionary class]])
+              {
+                  NSString *propertyName=[obj objectForKey:@"propertyName"];
+                  if([propertyName rangeOfString:@"数据类型设置"].length)
+                  {
+                      bufHead[37] = 0x01;
+                      bufHead[38] = 0x00;
+                      *stop=YES;
+                  }
+              }
+              
+         }];
+         
+         [objArray enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop)
+          {
+              if([obj isKindOfClass:[NSDictionary class]])
+              {
+                  //解析xml定义的数据类型,可在此处扩展
+                  BOOL (^analysType)(NSDictionary *body)= ^BOOL(NSDictionary*body)
+                  {
+                      
+                      BOOL result = NO;
+                      NSString *propertyvalue=[dict objectForKey:[obj objectForKey:kproperty]];
+                      //NSString *indexStr=[obj objectForKey:korder];
+                      //NSInteger index=j;//indexStr.integerValue;
+                      NSString *lengthStr=[obj objectForKey:klength];
+                      NSInteger length=lengthStr.integerValue;
+                      NSString *javaType=[obj objectForKey:kjavaType];
+                      
+                      if([[dict allKeys] containsObject:[obj objectForKey:kproperty]])
+                      {
+                          
+                          //NSLog(@"obj:%@,sendDictionaryKeysArray:%@,%@,%@,%d",obj,sendDictionaryKeysArray,[obj objectForKey:kproperty],propertyvalue,bufIndex);
+                          if([[javaType uppercaseString] rangeOfString:@"INTEGER"].length)
+                          {
+                             
+                              NSInteger tmpValue=0;
+                              //tmpValue= ((NSString *)propertyvalue).integerValue;
+                              //NSData *data = [NSData dataWithBytes: &tmpValue length: length];
+                              //memcpy(bufHead+bufIndex, data.bytes, length);
+                              
+                              
+                              
+                               tmpValue = ((NSString *)propertyvalue).integerValue;
+//                              for(int i = 0; i < length;i++){
+//                                  bufHead[bufIndex++] = tmpValue&0xff;
+//                                  tmpValue = tmpValue>>8;
+//                              }
+                              //bufHead[bufIndex]=((NSString *)propertyvalue).integerValue;
+                              //bufIndex+=length;
+                              
+                              for(int i = 0; i < length;i++){
+                                  //NSLog(@"%d",((tmpValue>>((length-1-i)*8))&0xff));
+                                  bufHead[bufIndex++] =(tmpValue>>((length-1-i)*8))&0xff;
+                              }
+
+                              result = YES;
+                              
+                          }
+                          else if ([[javaType uppercaseString] rangeOfString:@"LONG"].length)
+                          {
+                              long long tmpValue=0;
+                              tmpValue= ((NSString *)propertyvalue).longLongValue;
+                             // NSData *data = [NSData dataWithBytes: &tmpValue length: length];
+                              //memcpy(bufHead+bufIndex, data.bytes, length);
+                              
+                              
+                              
+                              //bufHead[bufIndex]=((NSString *)propertyvalue).integerValue;
+                              //bufIndex+=length;
+                              for(int i = 0; i < length;i++){
+                                  //NSLog(@"%lld",((tmpValue>>((length-1-i)*8))&0xff));
+                                  bufHead[bufIndex++] =(tmpValue>>((length-1-i)*8))&0xff;
+                              }
+
+                              result = YES;
+                          }
+                          else if ([[javaType uppercaseString]  rangeOfString:@"BYTE"].length)
+                          {
+                              //NSInteger maskLength = ((NSString*)[body objectForKey:klength]).integerValue;
+                              NSInteger maskShift = ((NSString*)[body objectForKey:kshift]).integerValue;
+                              NSInteger value = propertyvalue.integerValue;
+                              value = value<<maskShift;
+                              char bufvalue = bufHead[bufIndex];
+                              
+                              bufvalue |= value;
+                              result = YES;
+                          }
+                          else if ([[javaType uppercaseString]  rangeOfString:@"HEXSTRING"].length)//注意与STRING顺序
+                          {
+                              NSData *data=[self dataFromHexString:propertyvalue];
+                              memcpy(bufHead+bufIndex, data.bytes, length);
+                              bufIndex+=length;
+                              result = YES;
+                          }
+
+                          else if ([[javaType uppercaseString]  rangeOfString:@"STRING"].length)
+                          {
+                              NSData *data=[propertyvalue dataUsingEncoding:NSUTF8StringEncoding];
+                              memcpy(bufHead+bufIndex, data.bytes, length);
+                              bufIndex+=length;
+                              result = YES;
+                          }
+                          else if ([[javaType uppercaseString]  rangeOfString:@"BYTEARRAY"].length)
+                          {
+                              NSData *data=[self dataFromHexString:propertyvalue];
+                              memcpy(bufHead+bufIndex, data.bytes, length);
+                              bufIndex+=length;
+                              result = YES;
+                          }
+                      }
+                      else
+                      {
+                          if([[javaType uppercaseString]  rangeOfString:@"INTEGER"].length)
+                          {
+                              
+                              bufIndex+=length;
+                              
+                          }
+                          else if ([[javaType uppercaseString]  rangeOfString:@"LONG"].length)
+                          {
+                              
+                              bufIndex+=length;
+                          }
+                          else
+                          {
+                               bufIndex+=length;
+                          }
+                          
+                      }
+                      
+                      
+                      return result;
+                      
+                  };
+                  
+                  
+                  id bitDefList=nil;
+                  id bitDef=nil;
+                  if ((bitDefList=[obj objectForKey:kbitDefList])&&(bitDef = [bitDefList objectForKey:kbitDef]))
+                  {
+                      [bitDef enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop)
+                       {
+                           if (!analysType(obj))//解析bit
+                           {
+                               //*stop = YES;
+                           }
+                       }];
+                      bufIndex+=1;//bitDefList定义一个字节
+                      
+                  }
+                  else
+                  {
+                      if (!analysType(obj))//解析byte
+                      {
+                          //*stop = YES;
+                      }
+                  }
+                  if(idx==[objArray count]-1)
+                  {
+                      //数据内容部分
+                      _lastdeviceControlDic=dict;
+                      //NSLog(@"数据内容部分:%@",[NSData dataWithBytes:bufHead length:bufIndex]);
+                      
+                      _sendCount=10+self.nextPacketSendInterval;
+                      HETWIFICommonReform *obj=[[HETWIFICommonReform alloc]init];
+                      obj.body=[NSData dataWithBytes:bufHead length:bufIndex];
+                      obj.body_length=bufIndex;
+                      obj.device_cmdtype=cmd;//0x4007;
+                      obj.protocol_type=0x00;
+                      obj.protocol_version=0x41;
+                      obj.device_type=self.devicetypeId.integerValue;
+                      obj.device_subtype=self.deviceSubtypeId.integerValue;
+                      obj.device_mac=self.deviceMac;
+                      self.repeatData=[HETWIFICommonProtocol fetchLittleLoopPacketWithObj:obj];
+                      NSLog(@"小循环整个数据包内容:%@,设备大类:%04d,设备小类:%04d,数据内容部分:%@",self.repeatData,obj.device_type,obj.device_subtype,obj.body);
+                      [self.manager sendData:self.repeatData toHost:self.devIp withPort:18899 withTimeout:-1 tag:400];
+                      if(!self.needReplay)
+                      {
+                        dispatch_async(dispatch_get_main_queue(), ^{
+                          [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(repeatSendData) object:nil];
+                          [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sendDataFail) object:nil];
+                        [self performSelector:@selector(repeatSendData) withObject:nil afterDelay:3];
+                        [self performSelector:@selector(sendDataFail) withObject:nil afterDelay:7];
+                        });
+                      }
+                      if(ABS(_nextPacketSendInterval)>0.01){
+                          
+                          //  [self performSelector:@selector(ChangeSendFlag) withObject:nil afterDelay:_nextPacketSendInterval];
+                      }
+                      
+                      
+                  }
+              }
+          }];
+     }];
+    
+}
+
+
+-(void)sendDataUseNSDictionary:(NSDictionary *)dict{
+    
+    [self analysisNSDictionaryToNSData:dict withSuccessBlock:^(NSData *data) {
+        NSLog(@"开放平台协议数据内容部分组成的数据:%@,%@",dict,data);
+        if(data)
+        {
+           _lastdeviceControlDic=dict;
+           [self sendPacketData:data];
+        }
+        
+    }];
+    
+}
+//发送数据
+-(void)sendPacketData:(NSData *)data
+{
+    if(self.wifiProtocolType==WIFIPROTOCOLTYPE_KF)
+    {
+        //数据内容部分
+        
+        //NSLog(@"数据内容部分:%@",[NSData dataWithBytes:bufHead length:bufIndex]);
+        
+        //生成报文号
+        _packetNum++;
+        UInt32 tempPacketNum = 0x41000000+_packetNum;
+        //数据内容前面需要加上32字节userkey
+        char buf[256];
+        memset(buf, 0, 256);
+        memcpy(&buf[0], [self.authUserId UTF8String], 32);
+        NSData *userKeyData=[NSData dataWithBytes:&buf length:32];
+        NSMutableData  *contentData=[[NSMutableData alloc]init];
+        [contentData appendData:userKeyData];
+        [contentData appendData:data];
+            
+        
+        _sendCount=10+self.nextPacketSendInterval;
+        HETWIFICommonReform *obj=[[HETWIFICommonReform alloc]init];
+        obj.body=contentData;
+        obj.body_length=contentData.length;
+        obj.device_cmdtype=HET_OPENSDK_CONFIG_SEND;
+        obj.protocol_version=0x40;
+        obj.protocol_type=0x01;
+        obj.device_type=self.devicetypeId.integerValue;
+        obj.device_subtype=self.deviceSubtypeId.integerValue;
+        obj.device_mac=self.deviceMac;
+        obj.packetNum=tempPacketNum;
+        self.repeatData=[HETWIFIOpenSDKProtocol fetchLittleLoopPacketWithObj:obj];
+        NSLog(@"开放平台协议的小循环整个数据包内容:%@,设备大类:%04d,设备小类:%04d,数据内容部分:%@",self.repeatData,obj.device_type,obj.device_subtype,obj.body);
+        [self.manager sendData:self.repeatData toHost:self.devIp withPort:28899 withTimeout:-1 tag:400];
+   
+    }
+    else
+    {
+        char buf[256];
+        memset(buf, 0, 256);
+        buf[0] = 2;
+        memcpy(&buf[1], [self.authUserId UTF8String], 32);
+        
+        
+        NSData *userKeyData=[NSData dataWithBytes:&buf length:33];
+        
+        NSMutableData  *contentData=[[NSMutableData alloc]init];
+        [contentData appendData:userKeyData];
+        [contentData appendData:data];
+        _sendCount=10+self.nextPacketSendInterval;
+        HETWIFICommonReform *obj=[[HETWIFICommonReform alloc]init];
+        obj.body=contentData;
+        obj.body_length=contentData.length;
+        obj.device_cmdtype=0x4007;
+        obj.protocol_type=0x00;
+        obj.protocol_version=0x41;
+        obj.device_type=self.devicetypeId.integerValue;
+        obj.device_subtype=self.deviceSubtypeId.integerValue;
+        obj.device_mac=self.deviceMac;
+        self.repeatData=[HETWIFICommonProtocol fetchLittleLoopPacketWithObj:obj];
+        NSLog(@"普通协议的小循环整个数据包内容:%@,设备大类:%04d,设备小类:%04d,数据内容部分:%@",self.repeatData,obj.device_type,obj.device_subtype,obj.body);
+        [self.manager sendData:self.repeatData toHost:self.devIp withPort:18899 withTimeout:-1 tag:400];
+        if(!self.needReplay)
+        {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(repeatSendData) object:nil];
+                [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sendDataFail) object:nil];
+                [self performSelector:@selector(repeatSendData) withObject:nil afterDelay:3];
+                [self performSelector:@selector(sendDataFail) withObject:nil afterDelay:7];
+            });
+        }
+
+ 
+    }
+ 
+}
+//将字典转换为二进制数据,根据字典与XML关系组成二进制数据
+-(void)analysisNSDictionaryToNSData:(NSDictionary *)dict withSuccessBlock:(void(^)(NSData *data))successBlock
+{
+    [self findDefinitions:_encodeDic block:^(NSDictionary *defDic)
+     {
+         
+         id objArray=[defDic objectForKey:kbyteDef];
+         __block int bufIndex=0;
+         char buf[256];
+         memset(buf, 0, 256);
+         //__block char * bufHead = &buf;//会报警告
+         __block char * bufHead = buf;
+         
+         [objArray enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop)
+          {
+              if([obj isKindOfClass:[NSDictionary class]])
+              {
+                  NSString *propertyStr=[obj objectForKey:@"property"];
+                  if([[propertyStr uppercaseString] rangeOfString:[@"sourceFlag" uppercaseString]].length)
+                  {
+                      
+                      bufHead[0] =self.needReplay?0x40:0x41;
+                      //生成报文号
+                      _packetNum++;
+                      UInt32 tempPacketNum = 0x41000000+_packetNum;
+                      NSString *Ipstr = [self getMyHostIp];
+                      unsigned char lastIP = [[[Ipstr componentsSeparatedByString:@"."] lastObject] integerValue];
+                      bufHead[1]=lastIP;
+                      bufHead[2]=(tempPacketNum&0x00ff00)>>8;
+                      bufHead[3]=(tempPacketNum&0x0000ff);
+                  }
+                  NSString *propertyName=[obj objectForKey:@"propertyName"];
+                  if([propertyName rangeOfString:@"数据类型设置"].length)
+                  {
+                      bufHead[4] = 0x01;
+                      bufHead[5] = 0x00;
+                      *stop=YES;
+                  }
+              }
+              
+          }];
+         
+         [objArray enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop)
+          {
+              if([obj isKindOfClass:[NSDictionary class]])
+              {
+                  //解析xml定义的数据类型,可在此处扩展
+                  BOOL (^analysType)(NSDictionary *body)= ^BOOL(NSDictionary*body)
+                  {
+                      
+                      BOOL result = NO;
+                      NSString *propertyvalue=[dict objectForKey:[obj objectForKey:kproperty]];
+                      //NSString *indexStr=[obj objectForKey:korder];
+                      //NSInteger index=j;//indexStr.integerValue;
+                      NSString *lengthStr=[obj objectForKey:klength];
+                      NSInteger length=lengthStr.integerValue;
+                      NSString *javaType=[obj objectForKey:kjavaType];
+                      
+                      if([[dict allKeys] containsObject:[obj objectForKey:kproperty]])
+                      {
+                          
+                          //NSLog(@"obj:%@,sendDictionaryKeysArray:%@,%@,%@,%d",obj,sendDictionaryKeysArray,[obj objectForKey:kproperty],propertyvalue,bufIndex);
+                          if([[javaType uppercaseString] rangeOfString:@"INTEGER"].length)
+                          {
+                              
+                              NSInteger tmpValue=0;
+                              //tmpValue= ((NSString *)propertyvalue).integerValue;
+                              //NSData *data = [NSData dataWithBytes: &tmpValue length: length];
+                              //memcpy(bufHead+bufIndex, data.bytes, length);
+                              
+                              
+                              
+                              tmpValue = ((NSString *)propertyvalue).integerValue;
+                              //                              for(int i = 0; i < length;i++){
+                              //                                  bufHead[bufIndex++] = tmpValue&0xff;
+                              //                                  tmpValue = tmpValue>>8;
+                              //                              }
+                              //bufHead[bufIndex]=((NSString *)propertyvalue).integerValue;
+                              //bufIndex+=length;
+                              
+                              for(int i = 0; i < length;i++){
+                                  //NSLog(@"%d",((tmpValue>>((length-1-i)*8))&0xff));
+                                  bufHead[bufIndex++] =(tmpValue>>((length-1-i)*8))&0xff;
+                              }
+                              
+                              result = YES;
+                              
+                          }
+                          else if ([[javaType uppercaseString] rangeOfString:@"LONG"].length)
+                          {
+                              long long tmpValue=0;
+                              tmpValue= ((NSString *)propertyvalue).longLongValue;
+                              // NSData *data = [NSData dataWithBytes: &tmpValue length: length];
+                              //memcpy(bufHead+bufIndex, data.bytes, length);
+                              
+                              
+                              
+                              //bufHead[bufIndex]=((NSString *)propertyvalue).integerValue;
+                              //bufIndex+=length;
+                              for(int i = 0; i < length;i++){
+                                  //NSLog(@"%lld",((tmpValue>>((length-1-i)*8))&0xff));
+                                  bufHead[bufIndex++] =(tmpValue>>((length-1-i)*8))&0xff;
+                              }
+                              
+                              result = YES;
+                          }
+                          else if ([[javaType uppercaseString]  rangeOfString:@"BYTE"].length)
+                          {
+                              //NSInteger maskLength = ((NSString*)[body objectForKey:klength]).integerValue;
+                              NSInteger maskShift = ((NSString*)[body objectForKey:kshift]).integerValue;
+                              NSInteger value = propertyvalue.integerValue;
+                              value = value<<maskShift;
+                              char bufvalue = bufHead[bufIndex];
+                              
+                              bufvalue |= value;
+                              result = YES;
+                          }
+                          else if ([[javaType uppercaseString]  rangeOfString:@"HEXSTRING"].length)//注意与STRING顺序
+                          {
+                              NSData *data=[self dataFromHexString:propertyvalue];
+                              memcpy(bufHead+bufIndex, data.bytes, length);
+                              bufIndex+=length;
+                              result = YES;
+                          }
+                          
+                          else if ([[javaType uppercaseString]  rangeOfString:@"STRING"].length)
+                          {
+                              NSData *data=[propertyvalue dataUsingEncoding:NSUTF8StringEncoding];
+                              memcpy(bufHead+bufIndex, data.bytes, length);
+                              bufIndex+=length;
+                              result = YES;
+                          }
+                          else if ([[javaType uppercaseString]  rangeOfString:@"BYTEARRAY"].length)
+                          {
+                              NSData *data=[self dataFromHexString:propertyvalue];
+                              memcpy(bufHead+bufIndex, data.bytes, length);
+                              bufIndex+=length;
+                              result = YES;
+                          }
+                      }
+                      else
+                      {
+                          if([[javaType uppercaseString]  rangeOfString:@"INTEGER"].length)
+                          {
+                              
+                              bufIndex+=length;
+                              
+                          }
+                          else if ([[javaType uppercaseString]  rangeOfString:@"LONG"].length)
+                          {
+                              
+                              bufIndex+=length;
+                          }
+                          else
+                          {
+                              bufIndex+=length;
+                          }
+                          
+                      }
+                      
+                      
+                      return result;
+                      
+                  };
+                  
+                  
+                  id bitDefList=nil;
+                  id bitDef=nil;
+                  if ((bitDefList=[obj objectForKey:kbitDefList])&&(bitDef = [bitDefList objectForKey:kbitDef]))
+                  {
+                      [bitDef enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop)
+                       {
+                           if (!analysType(obj))//解析bit
+                           {
+                               //*stop = YES; 这个有bug
+                           }
+                       }];
+                      bufIndex+=1;//bitDefList定义一个字节
+                      
+                  }
+                  else
+                  {
+                      if (!analysType(obj))//解析byte
+                      {
+                          //*stop = YES; 这个有bug
+                      }
+                  }
+                  if(idx==[objArray count]-1)//解析完毕
+                  {
+                      NSLog(@"解析数据组包完毕");
+                      NSData *data=[NSData dataWithBytes:bufHead length:bufIndex];
+                      successBlock(data);
+                      
+                      
+                      
+                  }
+              }
+          }];
+     }];
+
+}
+
+
+-(void)sendDataFail
+{
+    if(self.failureBlock)
+    {
+            NSError *error=[[NSError alloc]initWithDomain:NSStringFromClass([self class]) code:0 userInfo:@{@"msg":@"数据没有发送成功"}];
+            self.failureBlock(error);
+    }
+    self.failureBlock=nil;
+
+}
+
+-(void)replayDeviceACKPacket:(UInt16)sendCmdData
+{
+    NSString *boardIP = [self getIpAddressInfo];
+    
+    if (boardIP == nil) {
+        return;
+    }
+    NSString *md5 = [[[HETAccounts shared]currentAccount]userKey];
+    if (!md5) {
+        return;
+    }
+    char content[1+32];
+    memset(content, 0, 1+32);
+    memset(content, 2, 1);
+    memcpy(content+1, [md5 UTF8String], 32);
+    HETWIFICommonReform *deviceObj=[[HETWIFICommonReform alloc]init];
+    deviceObj.body=[NSData dataWithBytes:content length:33];
+    deviceObj.body_length=33;
+    deviceObj.device_cmdtype=sendCmdData;//0x4007;
+    deviceObj.protocol_version=0x41;
+    deviceObj.protocol_type=0x02;
+    deviceObj.device_type=_deviceObj.device_type;
+    deviceObj.device_subtype=_deviceObj.device_subtype;
+    deviceObj.device_mac=_deviceObj.device_mac;
+    NSData *data=[HETWIFICommonProtocol fetchLittleLoopPacketWithObj:deviceObj];
+    [self.manager sendData:data toHost:_devIp withPort:18899 withTimeout:-1 tag:0];
+}
+//报文重发机制
+-(void)checkPacketAction{
+    if(_lastdeviceControlDic&&_sendCount==0)//数据没有发送成功
+    {
+        [self sendDataFail];
+    }
+    if(!_lastdeviceControlDic||_sendCount==0){
+        return;
+    }
+    if (self.isLittleLoop) {
+        _sendCount--;
+    }
+    
+    if (self.isLittleLoop&&self.repeatData) {
+        if(self.wifiProtocolType==WIFIPROTOCOLTYPE_PT)
+        {
+          [self.manager sendData:self.repeatData toHost:_devIp withPort:18899 withTimeout:-1 tag:0];
+        }
+        else if(self.wifiProtocolType==WIFIPROTOCOLTYPE_KF)
+        {
+           [self.manager sendData:self.repeatData toHost:_devIp withPort:28899 withTimeout:-1 tag:0];
+        }
+    }
+}
+
+
+//--------自定义命令字，并自定编码解码   命令字-解码xml-编码XML-对应block关系表
+/**
+ *  初始化自定义命令字与解码编码XML协议的关系
+ *
+ *  @param sendCmdData    发送数据的命令字，如4007
+ *  @param recvCmdData    接收数据的命令字，如0007
+ *  @param encodeXmlpath  编码的XML路径
+ *  @param decodeXmlpath  解码的XML路径
+ */
+-(void)setCustomCmdBusinessWithsendCmd:(UInt16)sendCmdData WithRecvcmd:(UInt16)recvCmdData withEncodeXmlPath:(NSString *)encodeXmlpath withDecodeXmlPath:(NSString *)decodeXmlpath
+{
+    //编码数据协议
+    NSString *encodeXmlpathStr=[NSString stringWithFormat:@"%@ 文件不存在",encodeXmlpath];
+    NSAssert(encodeXmlpath,encodeXmlpathStr);
+    NSData *encodeXmldata =[NSData dataWithContentsOfFile:encodeXmlpath];
+    NSError *error = nil;
+    NSDictionary *encodeXmlTodic = [HETXMLReader dictionaryForXMLData:encodeXmldata error:&error];
+    //解码数据协议
+    NSString *decodeXmlpathStr=[NSString stringWithFormat:@"%@ 文件不存在",decodeXmlpath];
+    NSAssert(encodeXmlpath,decodeXmlpathStr);
+    NSData *decodeXmldata =[NSData dataWithContentsOfFile:decodeXmlpath];
+    NSDictionary *decodeXmlTodic = [HETXMLReader dictionaryForXMLData:decodeXmldata error:&error];
+    if(sendCmdData&&encodeXmlTodic&&decodeXmlTodic&&recvCmdData)
+    {
+    
+        NSDictionary *itemdic=[NSDictionary dictionaryWithObjectsAndKeys:@(sendCmdData),ksendCmd,@(recvCmdData),krecvCmd,encodeXmlTodic,kencodeXMLToDic,decodeXmlTodic,kdecodeXMLToDic, nil];
+        if(![_protocolArray containsObject:itemdic])//如果不存在这个协议，则新增
+        {
+           [_protocolArray addObject:itemdic];
+        }
+    }
+    
+}
+
+/**
+ *  发送自定义命令
+ *
+ *  @param sendCmdData      发送数据的命令字，如4007
+ *  @param jsonString       发送数据的json
+ *  @param decodeDataBlock  解码收到的数据为字典，block回调
+ *  @param successBlock     数据发送成功，block回调
+ *  @param failureBlock     数据发送失败，block回调
+ */
+-(void)fetchCustomCmdBusinessWithsendCmd:(UInt16)sendCmdData  deviceControlRequestWithJson:(NSString *)jsonString   decodeData:(void(^)(id responseObject))decodeDataBlock  withSuccessBlock:(void(^)(id responseObject))successBlock withFailBlock:(void(^)( NSError *error))failureBlock
+{
+   //查看命令字是否已经定义了，如果定义了则将该命令字的block回调暂存
+   __block NSDictionary *storedic=nil;
+    __block NSUInteger  index=0;
+    [_protocolArray enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+        
+      NSDictionary  *tempstoredic=obj;
+        if(tempstoredic)
+        {
+            NSString *storecmdData=tempstoredic[ksendCmd];
+            if(storecmdData.integerValue ==sendCmdData)
+            {
+                storedic=tempstoredic;
+                index=idx;
+                *stop=YES;
+            }
+        }
+        
+        
+    }];
+    
+    if(storedic)
+    {
+        NSMutableDictionary *dic=[[NSMutableDictionary alloc]initWithDictionary:storedic];
+        [dic setObject:[decodeDataBlock copy] forKey:kcmdBlock];
+        [dic setObject:[successBlock copy] forKey:ksuccessBlock];
+        [dic setObject:[failureBlock copy] forKey:kfailBlock];
+        [_protocolArray replaceObjectAtIndex:index withObject:dic];
+        
+        //开始发送数据,将json转成data发送
+        [self deviceControlRequestWithCmd:sendCmdData WithJson:jsonString withSuccessBlock:successBlock withFailBlock:failureBlock];
+        
+    }
+    else
+    {
+        failureBlock(nil);
+    }
+}
+//自定义协议----根据自定义的协议表中命令字发送数据
+-(void)deviceControlRequestWithCmd:(UInt16)cmdData WithJson:(NSString *)jsonString withSuccessBlock:(void(^)(id responseObject))successBlock withFailBlock:(void(^)( NSError *error))failureBlock
+{
+    if (self.isLittleLoop) {
+        NSDictionary *dic=[self jsonToDic:jsonString];
+        if(dic)
+        {
+          [self jsonToNSData:dic withCmd:cmdData];
+        }
+        else
+        {
+            failureBlock(nil);
+         
+
+        }
+        
+    }
+    else {
+        
+        
+        
+    }
+
+}
+
+//将json字符串转换为NSDictionary
+-(NSDictionary *)jsonToDic:(NSString *)jsonString
+{
+    NSError *error;
+    NSData *jsonData = [jsonString dataUsingEncoding:NSUTF8StringEncoding];
+    if(!jsonData)
+    {
+        return nil;
+    }
+    id object = [NSJSONSerialization JSONObjectWithData:jsonData options:0 error:&error];
+    NSMutableDictionary *mutdic = [[NSMutableDictionary alloc] init];
+    if(object)
+    {
+        NSString *currentflagStr=[object objectForKey:@"updateFlag"];
+        NSInteger currentTempFlag=currentflagStr.integerValue;
+        if(_lastdeviceControlDic)//如果上一次数据还没发完，对两次数据合并后再发送数据
+        {
+            NSString *lastflagStr=[_lastdeviceControlDic objectForKey:@"updateFlag"];
+            NSInteger lastTempFlag=lastflagStr.integerValue;
+            currentTempFlag = currentTempFlag|lastTempFlag;
+            NSDictionary *merge=[self merge:object :_lastdeviceControlDic];
+            [mutdic addEntriesFromDictionary:merge];
+            [mutdic setObject:@(currentTempFlag) forKey:@"updateFlag"];
+            
+        }
+        else
+        {
+            mutdic=object;
+        }
+    }
+    
+    return mutdic;
+    
+}
+
+//解码收到的二进制数据,nsdata--->json
+-(void)transFromDataToJson:(NSData *)data withXMLDic :(NSDictionary *)dict  decodeData:(void(^)(id responseObject))decodeDataBlock
+{
+    const char* bytes = [data bytes];
+    NSUInteger dataLength = [data length];
+    [self findDefinitions:dict block:^(NSDictionary *defDic)
+     {
+         NSMutableDictionary *ret = [[NSMutableDictionary alloc] init];
+         id objArray=[defDic objectForKey:kbyteDef];
+         __block  int bufIndex=0;
+         
+         [objArray enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop)
+          {
+              if([obj isKindOfClass:[NSDictionary class]])
+              {
+                  //解析xml定义的数据类型,可在此处扩展
+                  BOOL (^analysType)(NSDictionary *body)= ^BOOL(NSDictionary*body)
+                  {
+                      
+                      
+                      NSString *lengthStr=[body objectForKey:klength];
+                      NSInteger length=lengthStr.integerValue;
+                      NSString *javaType=[body objectForKey:kjavaType];
+                      NSString *key = [body objectForKey:kproperty];
+                      if (bufIndex+length>dataLength) {
+                          return NO;
+                      }
+                      BOOL result = NO;
+                      NSString *ignore = [body objectForKey:kignore];
+                      if (ignore.boolValue) {
+                          bufIndex+=length;
+                          return YES;
+                      }
+                      
+                      if (length&&key&&javaType) {
+                          
+                          if([[javaType uppercaseString] rangeOfString:@"INTEGER"].length)
+                          {
+                              NSInteger propertyvalue=0;
+                              //NSData *intdata =[data subdataWithRange:NSMakeRange(bufIndex, length)];
+                              //[intdata getBytes: &propertyvalue length: length];
+                              for(int i = 0; i < length;i++){
+                                  Byte temp= *(bytes+bufIndex+i);
+                                  //NSLog(@"INTEGERtemp :%d",temp<<(8*(length-1-i)));
+                                  propertyvalue|=temp<<(8*(length-1-i));
+                              }
+
+                              [ret setObject:@(propertyvalue) forKey:key];
+                              bufIndex+=length;
+                              result = YES;
+                          }
+                          else if ([[javaType uppercaseString] rangeOfString:@"LONG"].length)
+                          {
+                              long propertyvalue=0;
+                              //NSData *longdata =[data subdataWithRange:NSMakeRange(bufIndex, length)];
+                             // [longdata getBytes: &propertyvalue length: length];
+                              
+                              for(int i = 0; i < length;i++){
+                                  Byte temp= *(bytes+bufIndex+i);
+                                  //NSLog(@"LONGtemp :%d",temp<<(8*(length-1-i)));
+                                  propertyvalue|=temp<<(8*(length-1-i));
+                              }
+
+                              [ret setObject:@(propertyvalue) forKey:key];
+                              bufIndex+=length;
+                              result = YES;
+                          }else if ([[javaType uppercaseString] rangeOfString:@"BYTE"].length)
+                          {
+                              NSInteger maskLength = ((NSString*)[body objectForKey:klength]).integerValue;
+                              NSInteger maskShift = ((NSString*)[body objectForKey:kshift]).integerValue;
+                              Byte propertyvalue=*(bytes+bufIndex);
+                              //取1byte中 maskShift ~ maskShift+maskLength 位的值
+                              propertyvalue=   (propertyvalue >> (maskShift)) & ~(~0 << maskLength);
+                              [ret setObject:@(propertyvalue) forKey:key];
+                              result = YES;
+                          }
+                          else if ([[javaType uppercaseString] rangeOfString:@"HEXSTRING"].length)//注意与STRING顺序
+                          {
+                              NSData *stringdata=[data subdataWithRange:NSMakeRange(bufIndex, length)];
+                              [ret setObject:[self nsdataToHexString:stringdata] forKey:key];
+                              bufIndex+=length;
+                              result = YES;
+                          }
+                          else if ([[javaType uppercaseString] rangeOfString:@"STRING"].length)
+                          {
+                              
+                              NSData *stringdata=[data subdataWithRange:NSMakeRange(bufIndex, length)];
+                              NSString *resultStr= [[NSString alloc] initWithData:stringdata  encoding:NSUTF8StringEncoding];
+                              [ret setObject:resultStr forKey:key];
+                              
+                              bufIndex+=length;
+                              result = YES;
+                          }
+                          
+                          else if ([[javaType uppercaseString] rangeOfString:@"BYTEARRAY"].length)
+                          {
+                              NSData *stringdata=[data subdataWithRange:NSMakeRange(bufIndex, length)];
+                              [ret setObject:[self nsdataToHexString:stringdata] forKey:key];
+                              bufIndex+=length;
+                              result = YES;
+                          }
+                          
+                      }
+                      return result;
+                      
+                  };
+                  
+                  id bitDefList=nil;
+                  id bitDef=nil;
+                  if ((bitDefList=[obj objectForKey:kbitDefList])&&(bitDef = [bitDefList objectForKey:kbitDef]))
+                  {
+                      [bitDef enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop)
+                       {
+                           if (!analysType(obj))//解析bit
+                           {
+                               *stop = YES;
+                           }
+                       }];
+                      bufIndex+=1;//bitDefList定义一个字节
+                      
+                  }
+                  else
+                  {
+                      if (!analysType(obj))//解析byte
+                      {
+                          *stop = YES;
+                      }
+                  }
+              }
+              
+              if(idx==[objArray count]-1)
+              {
+                      //NSLog(@"配置数据解码成功:%@",ret);
+                          dispatch_async(dispatch_get_main_queue(), ^{
+                              decodeDataBlock(ret);
+                          });
+                  
+              }
+          }];
+     }];
+    
+}
+
+//-------------------------------------
+//============================================================================
+
+//============================================================================
+// NSData to a Hex string
+//
+-(NSString *) nsdataToHexString: (NSData *) data {
+    
+    if (data==nil)
+        return (@"");
+    
+    const unsigned char *bytes = [data bytes];
+    NSMutableString *string = [NSMutableString stringWithCapacity:(data.length*2)];
+    for (int loop=0; loop<(data.length); loop++) {
+        [string appendFormat:@"%02X", *bytes];
+        bytes++;
+    }
+    return (string);
+}
+
+// convert a hex NSString to NSData, spaces and angled brackets are ignored
+- (NSData *)dataFromHexString:(NSString *)string
+{
+    string = [string lowercaseString];
+    NSMutableData *data= [NSMutableData new];
+    unsigned char whole_byte;
+    char byte_chars[3] = {'\0','\0','\0'};
+    int i = 0;
+    int length = (int) string.length;
+    while (i < length-1) {
+        char c = [string characterAtIndex:i++];
+        if (c < '0' || (c > '9' && c < 'a') || c > 'f')
+            continue;
+        byte_chars[0] = c;
+        byte_chars[1] = [string characterAtIndex:i++];
+        whole_byte = strtol(byte_chars, NULL, 16);
+        [data appendBytes:&whole_byte length:1];
+    }
+    return data;
+}
+// 是否wifi
+-(BOOL) IsEnableWIFI {
+    return ([[Reachability reachabilityForLocalWiFi] currentReachabilityStatus] != NotReachable);
+}
+
+// 是否3G
+- (BOOL) IsEnable3G {
+    return ([[Reachability reachabilityForInternetConnection] currentReachabilityStatus] != NotReachable);
+}
+
+// 是否能连接到服务器
+- (BOOL) IsEnableToHost{
+    
+#if DEBUG
+    NSString *const kURLDomainHostName                                      = @"https://200.200.200.50";   // 服务器域名
+#else
+    NSString *const kURLDomainHostName                                      = @"https://api.clife.cn";    // 服务器域名
+#endif
+    return ([[Reachability reachabilityWithHostName: kURLDomainHostName] currentReachabilityStatus] != NotReachable);
+}
+
+/*double MachTimeToSecs(uint64_t time)
+{
+    mach_timebase_info_data_t timebase;
+    mach_timebase_info(&timebase);
+    return (double)time * (double)timebase.numer /  (double)timebase.denom / 1e9;
+}*/
+#pragma mark 接收数据
+-(void)didReceiveData:(NSData *)data fromAddress:(NSData *)address
+{
+    NSString *host = nil;
+    uint16_t port = 0;
+    [HETGCDAsyncUdpSocket getHost:&host port:&port fromAddress:address];
+    
+    const char* bytes = [data bytes];
+    Byte protocolStart =*(Byte *)(bytes);
+    Byte protocolVersions =*(Byte *)(bytes +1);
+    HETWIFICommonReform *deviceReformObj=[[HETWIFICommonReform alloc]init];
+    if(protocolStart==0xf2)
+    {
+    if(protocolVersions==0x41)
+    {
+        deviceReformObj=[HETWIFICommonProtocol transformData:data];
+    }
+    else if(protocolVersions==0x42)
+    {
+        deviceReformObj=[HETWIFINewProtocol transformData:data];
+    }
+   
+    NSString *devMac = deviceReformObj.device_mac;
+    if ([[devMac uppercaseString] isEqualToString:[self.deviceMac uppercaseString]])
+    {
+         NSLog(@"来自:%@---收到数据:%@,协议类型:%04x,扫描的设备大分类:%d，小分类:%d,命令类型:%04x",host,data,deviceReformObj.protocol_version ,deviceReformObj.device_type,deviceReformObj.device_subtype,deviceReformObj.device_cmdtype);
+        if (!self.isLittleLoop) {
+            //当设备从大循环切换到小循环，需要主动拉取一次配置数据
+            //[self sendHFCMDwithCount:1];
+            [self broadcast];
+
+        }
+        self.isLittleLoop = YES;
+        _deviceObj=deviceReformObj;
+        self.checkLoopCount = 0;
+        self.devIp = host;
+    }
+    else {
+        return;
+    }
+    
+    if(deviceReformObj.device_cmdtype==0x0007){//收到配置数据
+            
+            //如果收到的报文号等于设置报文的报文号，那么就清除缓存
+            if (deviceReformObj.packetNum==_packetNum) {
+                
+                 _lastdeviceControlDic = nil;
+                self.repeatData=nil;
+                _sendCount=0;
+                dispatch_async(dispatch_get_main_queue(), ^{
+                if(self.successBlock)
+                {
+                    self.successBlock(nil);
+                }
+                self.successBlock=nil;
+                [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(repeatSendData) object:nil];
+                [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sendDataFail) object:nil];
+                });
+            }
+
+            
+            //if(self.ignoreCount<0)
+            //{
+              // NSLog(@"获取当前小循环设备的配置数据%@",obj.body);
+               //const char *buf = [_deviceObj.body bytes];
+               //NSInteger packetNum = ((buf[1]<<16)&0xff0000)|((buf[2]<<8)&0x00ff00)|(buf[3]&0x0000ff);
+               //NSLog(@"origin packetNum:0x%lx\n receive packetNum:0x%lx",(unsigned long)_packetNum,(long)packetNum);
+               //if (_packetNum == packetNum && packetNum!=0) {
+                  //[NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(repeatSendData) object:nil];
+               //}
+
+               _cfgData=deviceReformObj.body;
+               //[self encodeDataToJson:_cfgData :_encodeDic :YES];
+                [self transFromDataToJson:_cfgData withXMLDic:_encodeDic decodeData:self.cfgDataBlock];
+            //}
+            if(deviceReformObj.replay)//ACK回复
+            {
+                [self replayDeviceACKPacket:0x4007];
+            }
+            
+        }
+    else if (deviceReformObj.device_cmdtype==0x0005)
+    {//收到运行数据
+            //if(self.ignoreCount<0)
+           // {
+               NSLog(@"获取当前小循环设备的运行数据%@",deviceReformObj.body);
+               //const char *buf = [_deviceObj.body bytes];
+//               NSInteger packetNum = ((buf[1]<<16)&0xff0000)|((buf[2]<<8)&0x00ff00)|(buf[3]&0x0000ff);
+//               NSLog(@"origin packetNum:0x%lx\n receive packetNum:0x%lx",(unsigned long)_packetNum,(long)packetNum);
+//               if (_packetNum == packetNum && packetNum!=0) {
+//                   [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(repeatSendData) object:nil];
+//               }
+
+              _runData=deviceReformObj.body;
+             // [self encodeDataToJson:_runData :_runDecondeDic :NO];
+            [self transFromDataToJson:_runData withXMLDic:_runDecondeDic decodeData:self.runDataBlock];
+           // }
+    }
+    else if (deviceReformObj.device_cmdtype==0x0017&&deviceReformObj.body.length&&_RunDataLength&&_ConfigDataLength)
+    {
+           if (deviceReformObj.body.length!=(_RunDataLength+_ConfigDataLength)) {
+               NSLog(@"＊＊＊＊＊＊DeviceControl ERROR  运行数据和配置数据长度错误");
+               return;
+           }
+           NSData *configData=[deviceReformObj.body subdataWithRange:NSMakeRange(0, _ConfigDataLength)];
+           //if(self.ignoreCount<0&&configData)
+           if(configData)
+           {
+               //[self encodeDataToJson:configData :_encodeDic :YES];;
+               [self transFromDataToJson:configData withXMLDic:_encodeDic decodeData:self.cfgDataBlock];
+           }
+//           else if (self.ignoreCount==0)
+//           {
+//               [self sendHFCMDwithCount:1];
+//           }
+           NSData *runData=[deviceReformObj.body subdataWithRange:NSMakeRange(_ConfigDataLength,_RunDataLength)];
+           //if(self.ignoreCount<0&&runData)
+           if(runData)
+           {
+              //[self encodeDataToJson:runData :_runDecondeDic :NO];
+               [self transFromDataToJson:runData withXMLDic:_runDecondeDic decodeData:self.runDataBlock];
+           }
+
+    }
+    else
+    {
+         [self analysisCustom:deviceReformObj];
+     }
+    }
+    else if (protocolStart==0x5a)
+    {
+        deviceReformObj=[HETWIFIOpenSDKProtocol transformData:data];
+        NSString *devMac = deviceReformObj.device_mac;
+        if ([[devMac uppercaseString] isEqualToString:[self.deviceMac uppercaseString]]) {
+            NSLog(@"来自:%@---收到数据:%@,协议类型:%04x,扫描的设备大分类:%d，小分类:%d,命令类型:%04x",host,data,deviceReformObj.protocol_version ,deviceReformObj.device_type,deviceReformObj.device_subtype,deviceReformObj.device_cmdtype);
+            if (!self.isLittleLoop) {
+                //当设备从大循环切换到小循环，需要主动拉取一次配置数据
+                //[self sendTICMDwithCount:1];
+                 [self broadcast];
+                
+            }
+            self.isLittleLoop = YES;
+            _deviceObj=deviceReformObj;
+            self.checkLoopCount = 0;
+            self.devIp = host;
+        }else {
+            return;
+        }
+        
+        if(deviceReformObj.device_cmdtype==HET_OPENSDK_CONFIG_RECV||deviceReformObj.device_cmdtype==HET_OPENSDK_CONFIG_RES){//收到配置数据
+            
+            //如果收到的报文号等于设置报文的报文号，那么就清除缓存
+            if (deviceReformObj.packetNum==_packetNum) {
+                
+                _lastdeviceControlDic = nil;
+                self.repeatData=nil;
+                _sendCount=0;
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    if(self.successBlock)
+                    {
+                        self.successBlock(nil);
+                    }
+                    self.successBlock=nil;
+                    [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(repeatSendData) object:nil];
+                    [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sendDataFail) object:nil];
+                });
+            }
+            
+            
+            _cfgData=deviceReformObj.body;
+            [self transFromDataToJson:_cfgData withXMLDic:_encodeDic decodeData:self.cfgDataBlock];
+        }
+        else if (deviceReformObj.device_cmdtype==HET_OPENSDK_RUN_RES||deviceReformObj.device_cmdtype==HET_OPENSDK_RUN_RECV) {//收到运行数据
+            NSLog(@"获取当前小循环设备的运行数据%@",deviceReformObj.body);
+            _runData=deviceReformObj.body;
+            [self transFromDataToJson:_runData withXMLDic:_runDecondeDic decodeData:self.runDataBlock];
+        
+        }
+        else
+        {
+            [self analysisCustom:deviceReformObj];
+        }
+ 
+    }
+    
+    
+}
+//解析自定义协议
+-(void)analysisCustom:(HETWIFICommonReform *)deviceReformObj
+{
+    __block NSDictionary *storedic=nil;
+    __block NSUInteger  index=0;
+    [_protocolArray enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+        
+        NSDictionary  *tempstoredic=obj;
+        if(tempstoredic)
+        {
+            NSString *storeRecvCmd=tempstoredic[krecvCmd];
+            NSString *storeSendCmd=tempstoredic[ksendCmd];
+            if(storeRecvCmd.integerValue== deviceReformObj.device_cmdtype)
+            {
+                storedic=tempstoredic;
+                index=idx;
+                *stop=YES;
+                //如果收到的报文号等于设置报文的报文号，那么就清除缓存
+                if (deviceReformObj.packetNum==_packetNum) {
+                    
+                    _lastdeviceControlDic = nil;
+                    self.repeatData=nil;
+                    _sendCount=0;
+                    self.successBlock=nil;
+                    self.successBlock=tempstoredic[ksuccessBlock];
+                    if(deviceReformObj.replay)//ACK回复
+                    {
+                        [self replayDeviceACKPacket:storeSendCmd.integerValue];
+                    }
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        if(self.successBlock)
+                        {
+                            self.successBlock(nil);
+                        }
+                        self.successBlock=nil;
+                        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(repeatSendData) object:nil];
+                        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sendDataFail) object:nil];
+                    });
+                }
+                
+                NSDictionary *xmlTodic=tempstoredic[kdecodeXMLToDic];
+                void (^ decodeBlock)(id  responseObject)=nil;
+                decodeBlock=tempstoredic[kcmdBlock];
+                [self transFromDataToJson:deviceReformObj.body withXMLDic:xmlTodic decodeData:decodeBlock];
+            }
+        }
+        
+        
+        
+    }];
+
+}
+
+//获取广播地址
+-(NSString *)getIpAddressInfo{
+    struct ifaddrs *interfaces = NULL;
+    struct ifaddrs *temp_addr = NULL;
+    NSString *address;
+    getifaddrs(&interfaces);
+    temp_addr = interfaces;
+    while (temp_addr!=NULL) {
+        NSString *ifa_name = [NSString stringWithUTF8String:temp_addr->ifa_name];
+        if ([ifa_name isEqualToString:@"en0"]&&temp_addr->ifa_addr->sa_family == AF_INET) {
+            unsigned int IP = ((struct sockaddr_in *)temp_addr->ifa_addr)->sin_addr.s_addr;
+            unsigned int mask = ((struct sockaddr_in *)temp_addr->ifa_netmask)->sin_addr.s_addr;
+            //myHost = [NSString stringWithUTF8String:inet_ntoa(((struct sockaddr_in *)temp_addr->ifa_addr)->sin_addr)];
+            unsigned int temp = (IP&mask)|(~mask);//计算广播地址
+            struct in_addr inaddr;
+            inaddr.s_addr = temp;
+            address = [NSString stringWithUTF8String:inet_ntoa(inaddr)];
+            return address;
+        }
+        temp_addr = temp_addr->ifa_next;
+    }
+    return nil;
+}
+/**
+ *  获取本机地址
+ *
+ *  @return 本机地址
+ */
+-(NSString *)getMyHostIp{
+    struct ifaddrs *interfaces = NULL;
+    struct ifaddrs *temp_addr = NULL;
+    getifaddrs(&interfaces);
+    temp_addr = interfaces;
+    while (temp_addr!=NULL) {
+        NSString *ifa_name = [NSString stringWithUTF8String:temp_addr->ifa_name];
+        if ([ifa_name isEqualToString:@"en0"]&&temp_addr->ifa_addr->sa_family == AF_INET) {
+            
+            NSString *myHost = [NSString stringWithUTF8String:inet_ntoa(((struct sockaddr_in *)temp_addr->ifa_addr)->sin_addr)];
+            
+            return myHost;
+        }
+        temp_addr = temp_addr->ifa_next;
+    }
+    return nil;
+}
+
+-(NSString*)DataTOjsonString:(id)object
+{
+    NSString *jsonString = nil;
+    NSError *error;
+    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:object
+                                                       options:NSJSONWritingPrettyPrinted // Pass 0 if you don't care about the readability of the generated string
+                                                         error:&error];
+    if (! jsonData) {
+        NSLog(@"Got an error: %@", error);
+    } else {
+        jsonString = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
+    }
+    jsonString = [jsonString stringByReplacingOccurrencesOfString:@"\\" withString:@"\\\\"];
+    jsonString = [jsonString stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""];
+    jsonString = [jsonString stringByReplacingOccurrencesOfString:@"\'" withString:@"\\\'"];
+    jsonString = [jsonString stringByReplacingOccurrencesOfString:@"\n" withString:@"\\n"];
+    jsonString = [jsonString stringByReplacingOccurrencesOfString:@"\r" withString:@"\\r"];
+    jsonString = [jsonString stringByReplacingOccurrencesOfString:@"\f" withString:@"\\f"];
+    jsonString = [jsonString stringByReplacingOccurrencesOfString:@"\u2028" withString:@"\\u2028"];
+    jsonString = [jsonString stringByReplacingOccurrencesOfString:@"\u2029" withString:@"\\u2029"];
+    
+    return jsonString;
+}
+
+
+- (void)dealloc{
+    [self stop];
+    NSLog(@"%@ dealloc",[self class]);
+}
+
+@end
