@@ -19,10 +19,14 @@
         <true/> 
     </dict>
 	```
-3. pod导入FMDB库和HETOpenSDK库,pod 'FMDB','2.5'
+3. pod导入FMDB库和HETOpenSDK库
+
+	```
+   platform :ios, '7.0'
+   pod 'FMDB','2.5'
    pod 'HETOpenSDK','0.0.1'
-
-
+   inhibit_all_warnings!
+  ```
 ##4.在代码中使用
 1.  注册AppID和AppSecret     
 
