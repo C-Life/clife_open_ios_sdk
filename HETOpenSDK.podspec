@@ -14,7 +14,7 @@ Pod::Spec.new do |s|
   s.homepage     = "https://github.com/C-Life/clife_open_ios_sdk"
   s.license      = 'Apache License, Version 2.0'
   s.author       = { "mr.cao" => "340395573@qq.com" }
-  s.source       = { :git => "https://github.com/C-Life/clife_open_ios_sdk.git", :tag => "#{s.version}" }
+  s.source       = { :git => "https://github.com/C-Life/clife_open_ios_sdk.git", :tag => "v#{s.version}" }
   s.platform     = :ios
   s.ios.deployment_target = '7.0'
   s.requires_arc = true
