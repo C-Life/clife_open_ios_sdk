@@ -8,7 +8,7 @@
 
 
 #import "ScanWIFIViewController.h"
-#import <HETOpenSDK/HETOpenSDK.h>
+#import  <HETOpenSDK/HETOpenSDK.h>
 #import "ALLWIFIDeviceViewController.h"
 
 

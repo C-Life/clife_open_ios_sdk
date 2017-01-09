@@ -8,6 +8,7 @@
 
 #import "HETWIFIUpgradeViewController.h"
 #import "HETUIConfig.h"
+#import <HETOpenSDK/HETOpenSDK.h>
 #import "HETCommonHelp.h"
 static int checkProgressFailCount = 0; //when check upgrade progress fail , this value plus 1 , if checkProgressFailCount greater than 60 , then consider upgrade fail
 

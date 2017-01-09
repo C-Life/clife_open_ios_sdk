@@ -8,8 +8,7 @@
 
 #import "AppDelegate.h"
 #import "ViewController.h"
-#import <HETOpenSDK/HETOpenSDK.h>
-
+#import  <HETOpenSDK/HETOpenSDK.h>
 @interface AppDelegate ()
 
 @end
@@ -21,7 +20,7 @@
     // Override point for customization after application launch.
      self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
     
-    [HETOpenSDK registerAppId:ktestAPPID appSecret:ktestAPPSECRET];
+    [HETOpenSDK registerAppId:ktestAPPKEY appSecret:ktestAPPSECRET];
 
     ViewController *rootvc=[[ViewController alloc]init];
     

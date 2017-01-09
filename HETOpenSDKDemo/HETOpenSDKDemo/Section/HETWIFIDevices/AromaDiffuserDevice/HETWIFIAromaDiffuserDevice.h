@@ -8,7 +8,6 @@
 
 #import <Foundation/Foundation.h>
 #import "HETBaseModel.h"
-#import <HETOpenSDK/HETOpenSDK.h>
 
 @interface AromaDiffuserDeviceConfigModel :HETBaseModel
 
@@ -115,11 +114,16 @@
  */
 
 
-- (instancetype)initWithHetDeviceModel:(HETDevice *)device
-                  deviceRunDataSuccess:(void(^)(AromaDiffuserDeviceRunModel *model))runDataSuccessBlock
-                     deviceRunDataFail:(void(^)(NSError *error))runDataFailBlock
-                  deviceCfgDataSuccess:(void(^)(AromaDiffuserDeviceConfigModel *model))cfgDataSuccessBlock
-                     deviceCfgDataFail:(void(^)(NSError *error))cfgDataFailBlock;
+- (instancetype)initWithUserKey:(NSString *)userKey
+                  withProductId:(NSString *)productId
+                       deviceId:(NSString *)deviceId
+                      deviceMac:(NSString *)deviceMac
+                   deviceTypeId:(NSString *)deviceTypeId
+                deviceSubtypeId:(NSString *)deviceSubtypeId
+           deviceRunDataSuccess:(void(^)(AromaDiffuserDeviceRunModel *model))runDataSuccessBlock
+              deviceRunDataFail:(void(^)(NSError *error))runDataFailBlock
+           deviceCfgDataSuccess:(void(^)(AromaDiffuserDeviceConfigModel *model))cfgDataSuccessBlock
+              deviceCfgDataFail:(void(^)(NSError *error))cfgDataFailBlock;
 
 
 

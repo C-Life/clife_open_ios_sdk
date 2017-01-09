@@ -7,6 +7,7 @@
 //
 
 #import "ALLWIFIDeviceViewController.h"
+#import <HETOpenSDK/HETOpenSDK.h>
 #import "CLDeviceTableViewCell.h"
 #import "HETDeviceObject.h"
 #import "MainViewController.h"
@@ -15,7 +16,7 @@
 #import "HFSmartLinkDeviceInfo.h"
 #import <SystemConfiguration/CaptiveNetwork.h>
 
-@interface ALLWIFIDeviceViewController ()<UITableViewDelegate,UITableViewDataSource>
+@interface ALLWIFIDeviceViewController ()<HETWIFIBindBusinessDelegate,UITableViewDelegate,UITableViewDataSource>
 {
      NSMutableArray *selectedDevArray;
     HETWIFIBindBusiness *manager;
@@ -38,9 +39,9 @@
     [super viewDidLoad];
     
     // Do any additional setup after loading the view.
-//    [self.view addSubview:self.scanDeviceTableView];
-//    [self.view addSubview:self.bottomView];
-//    [self.view addSubview:self.beginBindButton];
+    [self.view addSubview:self.scanDeviceTableView];
+    [self.view addSubview:self.bottomView];
+    [self.view addSubview:self.beginBindButton];
    
     
 }
@@ -48,12 +49,13 @@
 {
     [super viewWillAppear:animated];
     
+  _devicesDataSource=[[NSMutableArray alloc]initWithCapacity:1];
     
     //HF WiFi模块接入路由
-    smtlk =[[HFSmartLink alloc]init];
+    smtlk =[[HFSmartLink alloc]init];// [HFSmartLink shareInstence];
     smtlk.isConfigOneDevice = false;
     
-    smtlk.waitTimers = 30;
+    smtlk.waitTimers = 30;//15;
     [smtlk startWithKey:self.wifiPassword processblock:^(NSInteger process) {
         
     } successBlock:^(HFSmartLinkDeviceInfo *dev) {
@@ -66,30 +68,15 @@
     }];
     
 
-    [HETCommonHelp showCustomHudtitle:@"开始绑定设备"];
+ 
     manager=[HETWIFIBindBusiness sharedInstance];
-    [manager startBindDeviceWithProductId:self.productId withTimeOut:100 completionHandler:^(HETWIFICommonReform *deviceObj, NSError *error) {
-        NSLog(@"设备mac地址:%@,%@",deviceObj.device_mac,error);
-        [smtlk closeWithBlock:^(NSString *closeMsg, BOOL isOK) {
-            
-        }];
-        [smtlk stopWithBlock:^(NSString *stopMsg, BOOL isOk) {
-            
-        }];
-        smtlk=nil;
-       if(error)
-       {
-           [HETCommonHelp HidHud];
-           [self.navigationController popViewControllerAnimated:YES];
-       }
-        else
-        {
-            [HETCommonHelp HidHud];
-            MainViewController *vc=[[MainViewController alloc]init];
-            [self.navigationController pushViewController:vc animated:YES];
-        }
-    }];
+
+    manager.delegate=self;
+    [manager startScanDevicewithDeviceType:0];//扫描所有设备
     
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self performSelector:@selector(checkScanWIFIDevice) withObject:nil afterDelay:100];
+    });
     
 }
 
@@ -99,6 +86,14 @@
     [super viewWillDisappear:animated];
     //停止扫描
     [manager stop];
+    manager.delegate=nil;
+    
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(checkScanWIFIDevice) object:nil];
+        
+    });
+    
+    
 }
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
@@ -109,10 +104,31 @@
     [[NSNotificationCenter defaultCenter]removeObserver:self];
 }
 
-
 -(void)bindAction
 {
+    if(selectedDevArray)
+    {
+        
+        [manager bindDevices:selectedDevArray withProductId:self.productId withDeviceId:nil withTimeOut:100];
+          [HETCommonHelp showCustomHudtitle:@"绑定中"];
+    }
     
+}
+-(void)checkScanWIFIDevice
+{
+    if(_devicesDataSource.count)
+    {
+     
+        
+        
+    }
+    else
+    {
+        manager.delegate=nil;
+        [manager stop];
+        NSLog(@"没有扫描到设备");
+        [self.navigationController popViewControllerAnimated:YES];
+    }
 }
 /*
 #pragma mark - Navigation
@@ -206,6 +222,64 @@
 }
 
 
+#pragma mark WIFIBindBusinessDelegate
+/**
+ *  绑定失败代理
+ */
+-(void)HETWIFIBindBusinessFail:(HETWIFICommonReform *)obj
+{
+     [HETCommonHelp HidHud];
+    [self.navigationController popViewControllerAnimated:YES];
+    return;
+    NSString *reason = [NSString stringWithFormat:@"设备%@绑定失败",obj.device_mac];
+    
+    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"提示" message:reason delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil, nil];
+    
+    [alert show];
+    
+}
+
+/**
+ *  绑定成功代理
+ *
+ *  @param obj  绑定成功的设备信息HETWIFICommonReform对象
+ */
+-(void)HETWIFIBindBusinessSuccess:(HETWIFICommonReform *)obj
+{
+    [HETCommonHelp HidHud];
+    MainViewController *vc=[[MainViewController alloc]init];
+    [self.navigationController pushViewController:vc animated:YES];
+   
+    return;
+    NSString *reason = [NSString stringWithFormat:@"设备%@绑定成功",obj.device_mac];
+    
+    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"提示" message:reason delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil, nil];
+    
+    [alert show];
+    
+}
+
+
+/**
+ *  扫描到设备代理
+ *
+ *  @param HETWIFIBindBusiness HETWIFIBindBusiness对象
+ *  @param obj                 设备信息HETWIFICommonReform对象
+ */
+- (void)scanWIFIDevice:(id)HETWIFIBindBusiness bindDeviceInfo:(HETWIFICommonReform *)obj
+{
+    NSLog(@"obj:%@,%@",obj,obj.device_mac);
+    if(!obj)
+    {
+        return;
+    }
+    if(![_devicesDataSource containsObject:obj])
+    {
+        [_devicesDataSource addObject:obj];
+        [self.scanDeviceTableView reloadData];
+    }
+    
+}
 
 #pragma mark 初始化UITableView
 -(UITableView *)scanDeviceTableView

@@ -8,10 +8,8 @@
 
 #import <UIKit/UIKit.h>
 #import "BaseViewController.h"
-
-
 @interface AromaDiffuserViewController :BaseViewController
 
-@property(nonatomic,strong)HETDevice *hetDeviceModel;
+@property(nonatomic,strong)NSDictionary  *deviceDic;
 
 @end

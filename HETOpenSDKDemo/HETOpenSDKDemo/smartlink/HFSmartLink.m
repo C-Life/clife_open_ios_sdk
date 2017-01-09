@@ -215,7 +215,7 @@
             usleep(50000);
         }
         sendTime++;
-        NSLog(@"send time %ld",(long)sendTime);
+        NSLog(@"send time %d",sendTime);
         dispatch_async(dispatch_get_main_queue(), ^(){
             processBlock(sendTime);
         });
@@ -226,8 +226,8 @@
         NSLog(@"start recv");
         [self recvNewModule];
     }];
-  
-    NSLog(@"start waitting module msg ");*/
+    
+    NSLog(@"start waitting module msg ");
     /*NSInteger waitCount = 0;
     while (waitCount < self.waitTimers&&isconnnecting) {
         [udp sendSmartLinkFind];
@@ -285,7 +285,7 @@
 
         if (isconnnecting){
             sendTime++;
-            NSLog(@"send time %ld",(long)sendTime);
+            NSLog(@"send time %d",sendTime);
             dispatch_async(dispatch_get_main_queue(), ^(){
                 processBlock(sendTime);
             });

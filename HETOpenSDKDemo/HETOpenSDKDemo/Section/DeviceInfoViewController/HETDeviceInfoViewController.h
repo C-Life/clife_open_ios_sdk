@@ -8,9 +8,9 @@
 
 #import "BaseViewController.h"
 
-
 @interface HETDeviceInfoViewController : BaseViewController
 
-@property(nonatomic,strong)HETDevice *hetDeviceModel;
 
+
+@property (nonatomic ,strong) NSDictionary * deviceInformation;
 @end
