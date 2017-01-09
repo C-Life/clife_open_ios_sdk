@@ -1,12 +1,13 @@
 //
-//  DeviceControlBusiness.h
-//  openSDK
+//  HETDeviceControlBusiness.h
+//  HETOpenSDK
 //
 //  Created by mr.cao on 15/8/13.
 //  Copyright (c) 2015年 mr.cao. All rights reserved.
 //
 #import <Foundation/Foundation.h>
-
+#import <UIKit/UIKit.h>
+#import "HETDevice.h"
 
 typedef void(^SuccessBlock)(id responseObject);
 typedef void(^FailureBlock)( NSError *error);
@@ -22,7 +23,7 @@ typedef void(^DataBlock)(id responseObject);
 //设置小循环数据发送最大次数，默认发送10次
 @property (nonatomic, assign  ) NSUInteger  packetSendTimes;
 
-//设置小循环数据包重发的间隔时间，默认一秒发送一次
+//设置小循环数据包重发的间隔时间，默认2秒发送一次
 @property (nonatomic, assign  )NSTimeInterval  packetSendTimeInterval;
 
 
@@ -35,33 +36,23 @@ typedef void(^DataBlock)(id responseObject);
 //故障数据网络请求失败的回调
 @property (nonatomic,copy     )FailureBlock  errordataFailBlock;
 
-
+@property (nonatomic ,readonly,assign ) UInt16  packetNum;//小循环的报文号
 
 /**
  *
  *
- *  @param userKey               设备控制的key
- *  @param productId             设备产品型号ID
- *  @param deviceId              设备ID号
- *  @param deviceMac             设备mac地址
- *  @param devicetypeId          设备主类型
- *  @param deviceSubtypeId       设备子类型
+ *  @param device                设备的对象
  *  @param bsupport              是否需要支持小循环，默认为NO，如不需支持小循环，设置为NO
  *  @param deviceControlBusiness 设备控制业务类
  *  @param runDataBlock          设备运行数据block回调
  *  @param cfgDataBlock          设备配置数据block回调
  *  @param errorDataBlock        设备故障数据block回调
  */
-- (void)setUserKey:(NSString *)userKey
-        withProductId:(NSString *)productId
-         withDeviceId:(NSString *)deviceId
-        withDeviceMac:(NSString *)deviceMac
-     withDevicetypeId:(NSString *)devicetypeId
-  withDeviceSubtypeId:(NSString *)deviceSubtypeId
-  isSupportLittleLoop:(BOOL)bsupport
-        deviceRunData:(void(^)(id responseObject))runDataBlock
-        deviceCfgData:(void(^)(id responseObject))cfgDataBlock
-        deviceErrorData:(void(^)(id responseObject))errorDataBlock;
+- (instancetype)initWithHetDeviceModel:(HETDevice *)device
+                  isSupportLittleLoop:(BOOL)bsupport
+                        deviceRunData:(void(^)(id responseObject))runDataBlock
+                        deviceCfgData:(void(^)(id responseObject))cfgDataBlock
+                      deviceErrorData:(void(^)(id responseObject))errorDataBlock;
 
 
 
@@ -78,6 +69,8 @@ typedef void(^DataBlock)(id responseObject);
 
 //启动服务
 - (void)start;
+
+
 //停止服务
 - (void)stop;
 

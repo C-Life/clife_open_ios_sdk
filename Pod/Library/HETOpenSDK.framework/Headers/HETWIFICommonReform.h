@@ -1,6 +1,6 @@
 //
 //  HFWIFICommonReform.h
-//  NewBindDeviceProject
+//  HETOpenSDK
 //
 //  Created by mr.cao on 15/6/29.
 //  Copyright (c) 2015年 mr.cao. All rights reserved.
@@ -28,12 +28,12 @@ typedef NS_ENUM(UInt8, DataDirection) {
 @property(nonatomic,assign)UInt8        device_type;//设备的主类型
 @property(nonatomic,assign)UInt8        device_subtype;//设备的子类型
 @property(nonatomic,assign)UInt16       device_cmdtype;//相关操作命令字
-@property(nonatomic,assign)UInt32       device_brand;//设备的品牌
+@property(nonatomic,assign)unsigned long  device_brand;//设备的品牌
 @property(nonatomic,assign)UInt16       body_length;//数据长度
 @property(nonatomic,strong)NSData*      body;//数据内容
 @property(nonatomic,assign)UInt16       device_wifiStatus;//WIFI信号强度
 @property(nonatomic,strong)NSString     *deviceID;//设备标示
-@property(nonatomic,assign)UInt32       packetNum;//报文号
+@property(nonatomic,assign)unsigned long  packetNum;//报文号
 @property(nonatomic,assign)ReplayStat   replay;//是否需要回复
 @property(nonatomic,assign)DataDirection   direction;//数据方向
 

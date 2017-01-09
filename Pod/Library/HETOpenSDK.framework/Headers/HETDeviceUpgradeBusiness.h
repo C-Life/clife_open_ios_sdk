@@ -1,6 +1,6 @@
 //
 //  HETDeviceUpgradeBusiness.h
-//  HETOpenSDKDemo
+//  HETOpenSDK
 //  WIFI设备升级类
 //  Created by mr.cao on 16/7/6.
 //  Copyright © 2016年 mr.cao. All rights reserved.
