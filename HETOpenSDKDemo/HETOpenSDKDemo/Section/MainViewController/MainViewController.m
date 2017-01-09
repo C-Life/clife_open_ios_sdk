@@ -8,10 +8,10 @@
 
 #import "MainViewController.h"
 #import "SVPullToRefresh.h"
-#import <HETOpenSDK/HETOpenSDK.h>
+
 #import "ScanWIFIViewController.h"
 #import "AromaDiffuserViewController.h"
-#import "HETChooseDeviceViewController.h"
+
 @interface MainViewController ()<UITableViewDataSource,UITableViewDelegate>
 {
     NSArray *_allDeviceDataSouce;
@@ -62,20 +62,15 @@
          //获取绑定的设备列表
          
          HETDeviceRequestBusiness *bussiness=[[HETDeviceRequestBusiness alloc]init];
-         [bussiness fetchAllBindDeviceSuccess:^(id responseObject) {
-             NSLog(@"%@",responseObject);
-             _allDeviceDataSouce=[responseObject objectForKey:@"data"];
+         [bussiness fetchAllBindDeviceSuccess:^(NSArray<HETDevice *> *deviceArray) {
+             _allDeviceDataSouce=[deviceArray copy];
              [weakSelf.scanDeviceTableView reloadData];
              [weakSelf.scanDeviceTableView.pullToRefreshView stopAnimating];
-
-             
          } failure:^(NSError *error) {
              _allDeviceDataSouce=nil;
-            [weakSelf.scanDeviceTableView reloadData];
+             [weakSelf.scanDeviceTableView reloadData];
              [weakSelf.scanDeviceTableView.pullToRefreshView stopAnimating];
-
          }];
- 
          
      }];
     
@@ -89,7 +84,8 @@
 - (void)wifiBindAction
 {
     
-    HETChooseDeviceViewController *vc=[[HETChooseDeviceViewController alloc]init];
+    ScanWIFIViewController *vc=[[ScanWIFIViewController alloc]init];
+    vc.productId=@"1374";
     [self.navigationController pushViewController:vc animated:YES];
 }
 
@@ -146,9 +142,9 @@
             [subView removeFromSuperview];
         }
         
-        NSDictionary *dic=[_allDeviceDataSouce objectAtIndex:indexPath.row];
+       HETDevice *deviceModel=[_allDeviceDataSouce objectAtIndex:indexPath.row];
         
-        NSString *imageUrl=[dic objectForKey:@"deviceIcon"];
+        NSString *imageUrl=deviceModel.productIcon;
         UIImage *iconImage=nil;
         NSData *imageData=[NSData dataWithContentsOfURL:[NSURL URLWithString:imageUrl]];
         if(!imageData&&imageData.length)
@@ -160,9 +156,9 @@
             iconImage=[UIImage imageNamed:@"bingxiang_deviceBind"];
         }
         
-        NSString *deviceName=[dic objectForKey:@"deviceName"];
-        NSString *deviceMac=[dic objectForKey:@"macAddress"];
-        NSString *deviceOnOff=[dic objectForKey:@"onlineStatus"];
+        NSString *deviceName=deviceModel.deviceName;
+        NSString *deviceMac=deviceModel.macAddress;
+        NSNumber *deviceOnOff=deviceModel.onlineStatus;
         UIImageView *iconImageView=[[UIImageView alloc]initWithFrame:CGRectMake(5, 44/2.0-34/2.0, 34*iconImage.size.width/iconImage.size.height, 34)];
         iconImageView.image=iconImage;
         [cell.contentView addSubview:iconImageView];
@@ -200,29 +196,18 @@
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
 {
     [tableView deselectRowAtIndexPath:indexPath animated:YES];
-    NSMutableDictionary *deviceDic =_allDeviceDataSouce[indexPath.row];
-    NSString *deviceId=[deviceDic objectForKey:@"deviceId"];
-    
-    NSString *deviceBindType=[deviceDic objectForKey:@"moduleType"];
-    NSString *deviceTypeId=[deviceDic objectForKey:@"deviceTypeId"];
-    
-    NSString *userKey=[deviceDic objectForKey:@"userKey"];
-    NSString *macAddress=[deviceDic objectForKey:@"macAddress"];
-    NSString *deviceSubtypeId=[deviceDic objectForKey:@"deviceSubtypeId"];
-    NSString *deviceOnOff=[deviceDic objectForKey:@"onlineStatus"];
-    if(deviceBindType.integerValue==1)//WIFI设备
+    HETDevice *deviceModel=[_allDeviceDataSouce objectAtIndex:indexPath.row];
+    NSNumber *deviceBindType=deviceModel.moduleType;
+    NSNumber *deviceTypeId=deviceModel.deviceTypeId;
+    NSNumber *deviceOnOff=deviceModel.onlineStatus;
+    if(deviceBindType.integerValue==1&&deviceTypeId.integerValue==11&&deviceOnOff.integerValue==1)//WIFI设备,香薰机设备并且在线
     {
         
-        if(deviceTypeId.integerValue==11&&deviceOnOff.integerValue==1)//香薰机设备并且在线
-        {
             AromaDiffuserViewController *vc=[[AromaDiffuserViewController alloc]init];
-            vc.deviceDic=deviceDic;
+            vc.hetDeviceModel=deviceModel;
             [self.navigationController pushViewController:vc animated:YES];
-            
-        }
     }
 
-    
 }
 
 

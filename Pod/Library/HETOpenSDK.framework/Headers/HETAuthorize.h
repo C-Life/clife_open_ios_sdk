@@ -1,6 +1,6 @@
 //
 //  HETAuthorize.h
-//  openSDK
+//  HETOpenSDK
 //
 //  Created by peng on 6/25/15.
 //  Copyright (c) 2015 peng All rights reserved.

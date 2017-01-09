@@ -8,6 +8,7 @@
 
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
+#import "HETDevice.h"
 #import "HETAccount.h"
 #import "HETAuthorize.h"
 #import "HETDeviceRequestBusiness.h"

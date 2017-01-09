@@ -11,8 +11,6 @@
 
 #import "HETWIFIUpgradeViewController.h"
 
-#import  <HETOpenSDK/HETOpenSDK.h>
-
 @interface HETDeviceInfoViewController ()
 
 
@@ -81,7 +79,7 @@
 }
 -(void)upgradeBtnAction
 {
-     NSString *deviceId=[self.deviceInformation objectForKey:@"deviceId"];
+    NSString *deviceId=self.hetDeviceModel.deviceId;
     HETDeviceUpgradeBusiness *upgradeBusiness=[[HETDeviceUpgradeBusiness alloc]init];
     [upgradeBusiness deviceUpgradeCheckWithDeviceId:deviceId success:^(id dictValue) {
         
@@ -115,7 +113,7 @@
 -(void)runBtnAction
 {
     HETDeviceRequestBusiness *request=[[HETDeviceRequestBusiness alloc]init];
-    NSString *deviceId=[self.deviceInformation objectForKey:@"deviceId"];
+    NSString *deviceId=self.hetDeviceModel.deviceId;
     NSDate *senddate = [NSDate date];
     NSDateFormatter *dateformatter = [[NSDateFormatter alloc] init];
     [dateformatter setDateFormat:@"YYYY-MM-dd"];
@@ -152,10 +150,10 @@
 -(void) modifyDeviceInfoBtnAction
 {
     HETDeviceRequestBusiness *request=[[HETDeviceRequestBusiness alloc]init];
-    NSString *deviceId=[self.deviceInformation objectForKey:@"deviceId"];
+     NSString *deviceId=self.hetDeviceModel.deviceId;
     
     
-    [request updateDeviceInfoWithDeviceID:deviceId deviceName:@"123fsdg" roomId:@"12" success:^(id responseObject) {
+    [request updateDeviceInfoWithDeviceId:deviceId deviceName:@"123fsdg" roomId:@"12" success:^(id responseObject) {
         
     } failure:^(NSError *error) {
         
@@ -177,10 +175,9 @@
         return ;
     }
     if (self.oldDeviceVersion && self.devNewVersion && ![self.devNewVersion isEqualToString:self.oldDeviceVersion]){
-        if (self.deviceInformation) {
-            NSInteger deviceTypeId = [[self.deviceInformation objectForKey:@"deviceTypeId"] intValue];
+        if (self.hetDeviceModel) {
             HETWIFIUpgradeViewController * wifiUpgrade = [[HETWIFIUpgradeViewController alloc] init];
-            wifiUpgrade.deviceId = [self.deviceInformation objectForKey:@"deviceId"];
+            wifiUpgrade.deviceId =self.hetDeviceModel.deviceId;
             wifiUpgrade.versionType = self.devNewVersion;
             wifiUpgrade.deviceVersionId = self.deviceVersionId;
             [self.navigationController pushViewController:wifiUpgrade animated:YES];

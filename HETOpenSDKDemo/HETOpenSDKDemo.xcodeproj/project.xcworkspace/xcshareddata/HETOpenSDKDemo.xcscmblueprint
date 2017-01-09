@@ -1,24 +1,25 @@
 {
+  "DVTSourceControlWorkspaceBlueprintPrimaryRemoteRepositoryKey" : "ffd52dd8-f388-1a41-b216-bbc1e5282019++855",
   "DVTSourceControlWorkspaceBlueprintWorkingCopyRepositoryLocationsKey" : {
-    "ffd52dd8-f388-1a41-b216-bbc1e5282019++3406" : {
+    "ffd52dd8-f388-1a41-b216-bbc1e5282019++855" : {
 
     }
   },
   "DVTSourceControlWorkspaceBlueprintWorkingCopyStatesKey" : {
-    "ffd52dd8-f388-1a41-b216-bbc1e5282019++3406" : 0
+    "ffd52dd8-f388-1a41-b216-bbc1e5282019++855" : 0
   },
-  "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "668FDBD3-B7DF-4AB6-A91A-5D622A48E69F",
+  "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "A183C0B3-4F67-46E0-9F17-AD3C7444FA1F",
   "DVTSourceControlWorkspaceBlueprintWorkingCopyPathsKey" : {
-    "ffd52dd8-f388-1a41-b216-bbc1e5282019++3406" : "HETOpenSDKDemo\/"
+    "ffd52dd8-f388-1a41-b216-bbc1e5282019++855" : "HETOpenSDK1.0\/"
   },
   "DVTSourceControlWorkspaceBlueprintNameKey" : "HETOpenSDKDemo",
   "DVTSourceControlWorkspaceBlueprintVersion" : 204,
-  "DVTSourceControlWorkspaceBlueprintRelativePathToProjectKey" : "HETOpenSDKDemo.xcodeproj",
+  "DVTSourceControlWorkspaceBlueprintRelativePathToProjectKey" : "HETOpenSDK1.0Demo\/HETOpenSDKDemo.xcodeproj",
   "DVTSourceControlWorkspaceBlueprintRemoteRepositoriesKey" : [
     {
       "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "http:\/\/200.200.200.40\/svn\/repositories",
       "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Subversion",
-      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "ffd52dd8-f388-1a41-b216-bbc1e5282019++3406"
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "ffd52dd8-f388-1a41-b216-bbc1e5282019++855"
     }
   ]
 }

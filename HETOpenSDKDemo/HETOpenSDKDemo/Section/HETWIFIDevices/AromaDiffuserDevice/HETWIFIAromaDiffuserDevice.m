@@ -7,7 +7,7 @@
 //
 
 #import "HETWIFIAromaDiffuserDevice.h"
-#import  <HETOpenSDK/HETOpenSDK.h>
+
 
 
 
@@ -54,12 +54,7 @@
 
 @implementation HETWIFIAromaDiffuserDevice
 
-- (instancetype)initWithUserKey:(NSString *)userKey
-                  withProductId:(NSString *)productId
-                       deviceId:(NSString *)deviceId
-                      deviceMac:(NSString *)deviceMac
-                   deviceTypeId:(NSString *)deviceTypeId
-                deviceSubtypeId:(NSString *)deviceSubtypeId
+- (instancetype)initWithHetDeviceModel:(HETDevice *)device
            deviceRunDataSuccess:(void(^)(AromaDiffuserDeviceRunModel *model))runDataSuccessBlock
               deviceRunDataFail:(void(^)(NSError *error))runDataFailBlock
            deviceCfgDataSuccess:(void(^)(AromaDiffuserDeviceConfigModel *model))cfgDataSuccessBlock
@@ -70,18 +65,17 @@
     {
         
         
-        _business=[[HETDeviceControlBusiness alloc]init];
-        [_business  setUserKey:userKey withProductId:productId withDeviceId:deviceId withDeviceMac:deviceMac withDevicetypeId:deviceTypeId withDeviceSubtypeId:deviceSubtypeId isSupportLittleLoop:NO deviceRunData:^(id responseObject) {
+        _business=[[HETDeviceControlBusiness alloc]initWithHetDeviceModel:(HETDevice *)device isSupportLittleLoop:YES deviceRunData:^(id responseObject) {
             NSLog(@"----------运行数据:%@",responseObject);
             //----这里结果根据自己设备在开放平台录入的运行数据协议的字段来处理结果-----//
-            //AromaDiffuserDeviceRunModel *model=[[AromaDiffuserDeviceRunModel alloc]initWithDic:responseObject];
-            //runDataSuccessBlock(model);
+            AromaDiffuserDeviceRunModel *model=[[AromaDiffuserDeviceRunModel alloc]initWithDic:responseObject];
+            runDataSuccessBlock(model);
            //--------------------------------------------------------------//
         } deviceCfgData:^(id responseObject) {
             NSLog(@"配置数据:%@",responseObject);
             //----这里结果根据自己设备在开放平台录入的控制数据的协议的字段来处理结果-----//
-            //AromaDiffuserDeviceConfigModel *model=[[AromaDiffuserDeviceConfigModel alloc]initWithDic:responseObject];
-            //cfgDataSuccessBlock(model);
+            AromaDiffuserDeviceConfigModel *model=[[AromaDiffuserDeviceConfigModel alloc]initWithDic:responseObject];
+            cfgDataSuccessBlock(model);
             //--------------------------------------------------------------//
         } deviceErrorData:^(id responseObject) {
             NSLog(@"====故障数据:%@",responseObject);

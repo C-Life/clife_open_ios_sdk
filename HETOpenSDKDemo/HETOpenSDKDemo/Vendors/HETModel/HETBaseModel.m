@@ -173,9 +173,9 @@
                                                                  //  encoding:[NSString defaultCStringEncoding]];
             
             //获取该property的数据类型
-            const char* attries = property_getAttributes(property);
+            //const char* attries = property_getAttributes(property);
             //数据类型的string
-            NSString *attrString = [NSString stringWithUTF8String:attries];
+            //NSString *attrString = [NSString stringWithUTF8String:attries];
             [properListarray addObject:propertyName];
             
             //            NSLog(@"propName is %@",propertyName);
