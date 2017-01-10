@@ -1,0 +1,334 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		6902CBFA9C8998185BC296EE4FCDA756 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CBB3DE36805AF21409EC968A9691732F /* Foundation.framework */; };
+		F9CF5DFAE19B15B077477BC8AC6A5A3A /* Pods-HETOpenSDKDemo-dummy.m in Sources */ = {isa = PBXBuildFile; fileRef = 22B0E5636902421B345C6581E03654C9 /* Pods-HETOpenSDKDemo-dummy.m */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		134118468F5996BE26CDB1F930577F8E /* Pods-HETOpenSDKDemo-resources.sh */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.script.sh; path = "Pods-HETOpenSDKDemo-resources.sh"; sourceTree = "<group>"; };
+		1E3A834C5DB64A1EEA2DAF59C7605E0C /* libPods-HETOpenSDKDemo.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; name = "libPods-HETOpenSDKDemo.a"; path = "libPods-HETOpenSDKDemo.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		22B0E5636902421B345C6581E03654C9 /* Pods-HETOpenSDKDemo-dummy.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = "Pods-HETOpenSDKDemo-dummy.m"; sourceTree = "<group>"; };
+		27088E21DF6B35150949143A360D1F8E /* Pods-HETOpenSDKDemo-acknowledgements.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "Pods-HETOpenSDKDemo-acknowledgements.plist"; sourceTree = "<group>"; };
+		4A348E17177FD615901CB5044F496FD4 /* Pods-HETOpenSDKDemo-acknowledgements.markdown */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; path = "Pods-HETOpenSDKDemo-acknowledgements.markdown"; sourceTree = "<group>"; };
+		7D46267ABA5039D4623F76B9A14BC658 /* HETOpenSDK.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = HETOpenSDK.framework; path = Pod/HETOpenSDK.framework; sourceTree = "<group>"; };
+		93A4A3777CF96A4AAC1D13BA6DCCEA73 /* Podfile */ = {isa = PBXFileReference; explicitFileType = text.script.ruby; includeInIndex = 1; lastKnownFileType = text; name = Podfile; path = ../Podfile; sourceTree = SOURCE_ROOT; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
+		9E8CB48B2EC39E403CBB852C2BFA52F0 /* Pods-HETOpenSDKDemo.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = "Pods-HETOpenSDKDemo.release.xcconfig"; sourceTree = "<group>"; };
+		A327A15AA4D0B587C5C771921E49BB4A /* Pods-HETOpenSDKDemo-frameworks.sh */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.script.sh; path = "Pods-HETOpenSDKDemo-frameworks.sh"; sourceTree = "<group>"; };
+		A84B53A6FC1003364380D689155D96A8 /* Pods-HETOpenSDKDemo.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = "Pods-HETOpenSDKDemo.debug.xcconfig"; sourceTree = "<group>"; };
+		CBB3DE36805AF21409EC968A9691732F /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS10.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		A98E5D52D5EB95E166D24C73280CCD8D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6902CBFA9C8998185BC296EE4FCDA756 /* Foundation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		11DBD75B27E2F7B6CF0BE68E36480ACF /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				7D46267ABA5039D4623F76B9A14BC658 /* HETOpenSDK.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		7531C8F8DE19F1AA3C8A7AC97A91DC29 /* iOS */ = {
+			isa = PBXGroup;
+			children = (
+				CBB3DE36805AF21409EC968A9691732F /* Foundation.framework */,
+			);
+			name = iOS;
+			sourceTree = "<group>";
+		};
+		7DB346D0F39D3F0E887471402A8071AB = {
+			isa = PBXGroup;
+			children = (
+				93A4A3777CF96A4AAC1D13BA6DCCEA73 /* Podfile */,
+				BC3CA7F9E30CC8F7E2DD044DD34432FC /* Frameworks */,
+				836993A390FA8BDAF30BB2D77906D782 /* Pods */,
+				D05AFA4B67D704502A1557BE7EE855C3 /* Products */,
+				EC3227A27D880DC0FF1F4660248239DB /* Targets Support Files */,
+			);
+			sourceTree = "<group>";
+		};
+		836993A390FA8BDAF30BB2D77906D782 /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				D7A8BCEFAD799E4F6AF43F5103A7FE7F /* HETOpenSDK */,
+			);
+			name = Pods;
+			sourceTree = "<group>";
+		};
+		BC3CA7F9E30CC8F7E2DD044DD34432FC /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				7531C8F8DE19F1AA3C8A7AC97A91DC29 /* iOS */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		C669B2E8A58AF9399BC092C495FED94B /* Pods-HETOpenSDKDemo */ = {
+			isa = PBXGroup;
+			children = (
+				4A348E17177FD615901CB5044F496FD4 /* Pods-HETOpenSDKDemo-acknowledgements.markdown */,
+				27088E21DF6B35150949143A360D1F8E /* Pods-HETOpenSDKDemo-acknowledgements.plist */,
+				22B0E5636902421B345C6581E03654C9 /* Pods-HETOpenSDKDemo-dummy.m */,
+				A327A15AA4D0B587C5C771921E49BB4A /* Pods-HETOpenSDKDemo-frameworks.sh */,
+				134118468F5996BE26CDB1F930577F8E /* Pods-HETOpenSDKDemo-resources.sh */,
+				A84B53A6FC1003364380D689155D96A8 /* Pods-HETOpenSDKDemo.debug.xcconfig */,
+				9E8CB48B2EC39E403CBB852C2BFA52F0 /* Pods-HETOpenSDKDemo.release.xcconfig */,
+			);
+			name = "Pods-HETOpenSDKDemo";
+			path = "Target Support Files/Pods-HETOpenSDKDemo";
+			sourceTree = "<group>";
+		};
+		D05AFA4B67D704502A1557BE7EE855C3 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				1E3A834C5DB64A1EEA2DAF59C7605E0C /* libPods-HETOpenSDKDemo.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		D7A8BCEFAD799E4F6AF43F5103A7FE7F /* HETOpenSDK */ = {
+			isa = PBXGroup;
+			children = (
+				11DBD75B27E2F7B6CF0BE68E36480ACF /* Frameworks */,
+			);
+			name = HETOpenSDK;
+			path = HETOpenSDK;
+			sourceTree = "<group>";
+		};
+		EC3227A27D880DC0FF1F4660248239DB /* Targets Support Files */ = {
+			isa = PBXGroup;
+			children = (
+				C669B2E8A58AF9399BC092C495FED94B /* Pods-HETOpenSDKDemo */,
+			);
+			name = "Targets Support Files";
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		F7F9C35F2AEE798FC457290AD5A6BC85 /* Pods-HETOpenSDKDemo */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 8AB507335A4FB44B5DA1CAE2810F21FF /* Build configuration list for PBXNativeTarget "Pods-HETOpenSDKDemo" */;
+			buildPhases = (
+				9836A4DFF08C89DED590492CB54EA228 /* Sources */,
+				A98E5D52D5EB95E166D24C73280CCD8D /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "Pods-HETOpenSDKDemo";
+			productName = "Pods-HETOpenSDKDemo";
+			productReference = 1E3A834C5DB64A1EEA2DAF59C7605E0C /* libPods-HETOpenSDKDemo.a */;
+			productType = "com.apple.product-type.library.static";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		D41D8CD98F00B204E9800998ECF8427E /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastSwiftUpdateCheck = 0730;
+				LastUpgradeCheck = 0700;
+			};
+			buildConfigurationList = 2D8E8EC45A3A1A1D94AE762CB5028504 /* Build configuration list for PBXProject "Pods" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = 7DB346D0F39D3F0E887471402A8071AB;
+			productRefGroup = D05AFA4B67D704502A1557BE7EE855C3 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				F7F9C35F2AEE798FC457290AD5A6BC85 /* Pods-HETOpenSDKDemo */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		9836A4DFF08C89DED590492CB54EA228 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F9CF5DFAE19B15B077477BC8AC6A5A3A /* Pods-HETOpenSDKDemo-dummy.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		79B0C2E66EFA9917ED6EDDB8FC6A7684 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGNING_REQUIRED = NO;
+				COPY_PHASE_STRIP = YES;
+				ENABLE_NS_ASSERTIONS = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"POD_CONFIGURATION_RELEASE=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
+				PROVISIONING_PROFILE_SPECIFIER = NO_SIGNING/;
+				STRIP_INSTALLED_PRODUCT = NO;
+				SYMROOT = "${SRCROOT}/../build";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		C557BA70296DE3FA36ECA2C2474B29FE /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 9E8CB48B2EC39E403CBB852C2BFA52F0 /* Pods-HETOpenSDKDemo.release.xcconfig */;
+			buildSettings = {
+				"CODE_SIGN_IDENTITY[sdk=appletvos*]" = "";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "";
+				"CODE_SIGN_IDENTITY[sdk=watchos*]" = "";
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_NO_COMMON_BLOCKS = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
+				MACH_O_TYPE = staticlib;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				OTHER_LDFLAGS = "";
+				OTHER_LIBTOOLFLAGS = "";
+				PODS_ROOT = "$(SRCROOT)";
+				PRODUCT_BUNDLE_IDENTIFIER = "org.cocoapods.${PRODUCT_NAME:rfc1034identifier}";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+			};
+			name = Release;
+		};
+		CF7953F66E785E8876EB4D370D777D50 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGNING_REQUIRED = NO;
+				COPY_PHASE_STRIP = NO;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"POD_CONFIGURATION_DEBUG=1",
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
+				ONLY_ACTIVE_ARCH = YES;
+				PROVISIONING_PROFILE_SPECIFIER = NO_SIGNING/;
+				STRIP_INSTALLED_PRODUCT = NO;
+				SYMROOT = "${SRCROOT}/../build";
+			};
+			name = Debug;
+		};
+		E234939B1F43577C51560A84A9CC8BE8 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = A84B53A6FC1003364380D689155D96A8 /* Pods-HETOpenSDKDemo.debug.xcconfig */;
+			buildSettings = {
+				"CODE_SIGN_IDENTITY[sdk=appletvos*]" = "";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "";
+				"CODE_SIGN_IDENTITY[sdk=watchos*]" = "";
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_NO_COMMON_BLOCKS = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
+				MACH_O_TYPE = staticlib;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				OTHER_LDFLAGS = "";
+				OTHER_LIBTOOLFLAGS = "";
+				PODS_ROOT = "$(SRCROOT)";
+				PRODUCT_BUNDLE_IDENTIFIER = "org.cocoapods.${PRODUCT_NAME:rfc1034identifier}";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		2D8E8EC45A3A1A1D94AE762CB5028504 /* Build configuration list for PBXProject "Pods" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CF7953F66E785E8876EB4D370D777D50 /* Debug */,
+				79B0C2E66EFA9917ED6EDDB8FC6A7684 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		8AB507335A4FB44B5DA1CAE2810F21FF /* Build configuration list for PBXNativeTarget "Pods-HETOpenSDKDemo" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E234939B1F43577C51560A84A9CC8BE8 /* Debug */,
+				C557BA70296DE3FA36ECA2C2474B29FE /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = D41D8CD98F00B204E9800998ECF8427E /* Project object */;
+}

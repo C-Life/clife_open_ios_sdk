@@ -1,0 +1,1 @@
+../../../../HETOpenSDK/Pod/HETOpenSDK.framework/Headers/HETWIFIBindBusiness.h

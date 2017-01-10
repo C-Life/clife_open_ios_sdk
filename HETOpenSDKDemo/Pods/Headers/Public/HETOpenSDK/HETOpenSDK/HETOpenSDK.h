@@ -1,0 +1,1 @@
+../../../../HETOpenSDK/Pod/HETOpenSDK.framework/Headers/HETOpenSDK.h
