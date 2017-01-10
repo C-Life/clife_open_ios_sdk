@@ -1,0 +1,13 @@
+//
+//  HETWIFIAromaDiffuserDevice.m
+//  HETOpenSDKDemo
+//
+//  Created by mr.cao on 16/2/29.
+//  Copyright © 2016年 mr.cao. All rights reserved.
+//
+
+#import "HETWIFIAromaDiffuserDevice.h"
+
+@implementation HETWIFIAromaDiffuserDevice
+
+@end

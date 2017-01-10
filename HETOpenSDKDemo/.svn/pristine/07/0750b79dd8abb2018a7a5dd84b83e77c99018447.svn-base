@@ -1,0 +1,47 @@
+//
+//  HETAccount.m
+//  openSDK
+//
+//  Created by peng on 6/25/15.
+//  Copyright (c) 2015 peng All rights reserved.
+//
+
+#import "HETAccount.h"
+
+@implementation HETAccount
+
+- (id)init {
+    self = [super init];
+    return self;
+}
+
+
+//===========================================================
+//  Keyed Archiving
+//
+//===========================================================
+- (void)encodeWithCoder:(NSCoder *)encoder
+{
+
+    [encoder encodeObject:self.accessToken forKey:@"openId"];
+    [encoder encodeObject:self.accessToken forKey:@"accessToken"];
+    [encoder encodeObject:self.accessToken forKey:@"refreshToken"];
+    [encoder encodeObject:self.expirationDate forKey:@"expirationDate"];
+    [encoder encodeBool:self.selected forKey:@"selected"];
+}
+
+- (id)initWithCoder:(NSCoder *)decoder
+{
+    self = [super init];
+    if (self) {
+
+        self.openId = [decoder decodeObjectForKey:@"openId"];
+        self.accessToken = [decoder decodeObjectForKey:@"accessToken"];
+        self.refreshToken = [decoder decodeObjectForKey:@"refreshToken"];
+        self.expirationDate = [decoder decodeObjectForKey:@"expirationDate"];
+        self.selected = [decoder decodeBoolForKey:@"selected"];
+    }
+    return self;
+}
+
+@end

@@ -1,0 +1,22 @@
+//
+//  URLRequestHelper.h
+//  openSDK
+//
+//  Created by peng on 6/25/15.
+//  Copyright (c) 2015 peng All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+@interface HETURLRequestHelper : NSObject
+
++ (NSMutableURLRequest *)postRequestWithUrl:(NSString *)url
+                                     params:(NSDictionary *)params;
+
++ (NSMutableURLRequest *)getRequestWithUrl:(NSString *)url
+                                    params:(NSDictionary *)params;
+
++ (NSMutableURLRequest *)postMultipartFormDataRequestWithUrl:(NSString *)url
+                                                      params:(NSDictionary *)params;
++(NSString *)currentTimeOffset;
+@end

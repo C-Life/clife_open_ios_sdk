@@ -1,0 +1,50 @@
+//
+//  HETBLESleepButtonDevice.h
+//  HETOpenSDKDemo
+//
+//  Created by mr.cao on 16/2/18.
+//  Copyright © 2016年 mr.cao. All rights reserved.
+//   睡眠扣子业务类
+
+#import <Foundation/Foundation.h>
+
+@interface HETBLESleepButtonDeviceInfo : NSObject
+
+@property (nonatomic, strong) NSString * deviceId;//设备标示
+@property (nonatomic, strong) NSNumber * battery;//电池电量
+@property (nonatomic, strong) NSString * bleVersion;//蓝牙设备版本号
+
+@end
+
+@implementation HETBLESleepButtonDeviceInfo
+
+@end
+
+
+
+@interface HETBLESleepButtonDevice : NSObject
+
+
++ (HETBLESleepButtonDevice *)sharedInstance;
+
+- (void)initBLEBroadName:(NSString *)broadName  withDeviceId:(NSString*)deviceId;
+
+
+/**
+ *  获取历史数据
+ *
+ *  @param success
+ *  @param fail
+ */
+- (void )fetchHistoryDataWithSuccessBlock:(void(^)(HETBLESleepButtonDeviceInfo *deviceInfo))successBlock
+                                FailBlock:(void(^)(NSError* error))failBlock
+                         ProgressiveBlock:(void(^)(NSInteger totalBytesRead, NSInteger totalBytesExpected))progressiveBlock;
+
+
+
+
+
+
+
+
+@end

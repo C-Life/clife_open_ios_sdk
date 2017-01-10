@@ -1,0 +1,761 @@
+//
+//  CLALLWIFIDeviceViewController.m
+//  NewBindDeviceProject
+//
+//  Created by mr.cao on 15/6/25.
+//  Copyright (c) 2015年 mr.cao. All rights reserved.
+//
+
+#import "ALLWIFIDeviceViewController.h"
+#import "HETWIFIBindBusiness.h"
+#import "OpenSDKCommonProtocol.h"
+#import "CLDeviceTableViewCell.h"
+
+
+
+#import "CLBLEManager.h"
+#import "MattressBLEManagerApi.h"
+#import "HETDeviceObject.h"
+#import "HETDeviceControlBusiness.h"
+
+
+
+#import "HFSmartLink.h"
+#import "HFSmartLinkDeviceInfo.h"
+#import <SystemConfiguration/CaptiveNetwork.h>
+#include "hf-pmk-generator.h"
+
+@interface ALLWIFIDeviceViewController ()<HETWIFIBindBusinessDelegate,UITableViewDelegate,UITableViewDataSource>
+{
+     NSMutableArray *selectedDevArray;
+     HETWIFIBindBusiness *manager;
+     HFSmartLink * smtlk;
+    
+    
+    
+    int _progress;
+    NSMutableArray *_selectedDevArray;
+    NSInteger _realTimeFailCount;
+    NSInteger _zeroRealTimeFailCount;
+    UILabel *_progressLable;
+}
+@property(strong,nonatomic)UITableView *scanDeviceTableView;
+@property(strong,nonatomic)UIView      *bottomView;
+@property(strong,nonatomic)UIButton    *beginBindButton;
+
+@property(strong,nonatomic)MattressBLEManagerApi *mattressBLEApi;
+@property(strong,nonatomic)UIAlertView *blueToothPowerAlert;
+
+@end
+
+@implementation ALLWIFIDeviceViewController
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    // Do any additional setup after loading the view.
+    [self.view addSubview:self.scanDeviceTableView];
+    [self.view addSubview:self.bottomView];
+    [self.view addSubview:self.beginBindButton];
+   
+    
+}
+-(void)viewWillAppear:(BOOL)animated
+{
+    [super viewWillAppear:animated];
+    
+     [self scanBleDeviceAction];
+    
+    
+ 
+    manager=[HETWIFIBindBusiness sharedInstance];
+    manager.appKey=ktestAPPKEY;
+    manager.delegate=self;
+    [manager startScanDevicewithDeviceType:0];//扫描所有设备
+    
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self performSelector:@selector(checkScanWIFIDevice) withObject:nil afterDelay:60];
+    });
+    
+
+    
+    //------------------第三方设备接入路由------------------------------
+    smtlk =[[HFSmartLink alloc]init];
+    smtlk.isConfigOneDevice = false;
+    
+    smtlk.waitTimers = 30;
+    [smtlk startWithKey:self.wifiPassword processblock:^(NSInteger process) {
+        
+    } successBlock:^(HFSmartLinkDeviceInfo *dev) {
+        //[self  showAlertWithMsg:[NSString stringWithFormat:@"%@:%@",dev.mac,dev.ip] title:@"OK"];
+    } failBlock:^(NSString *failmsg) {
+        //[self  showAlertWithMsg:failmsg title:@"error"];
+    } endBlock:^(NSDictionary *deviceDic) {
+        
+        
+    }];
+    //----------------------------------------------------------------
+
+    
+    
+}
+
+
+
+-(void)scanBleDeviceAction{
+    if ([CLBLEManager sharedInstance].manager.state==CBCentralManagerStatePoweredOff) {
+        [self.blueToothPowerAlert show];
+        return;
+    }
+    [[CLBLEManager sharedInstance] removeBleDelegate:self delegateQueue:dispatch_get_main_queue()];
+    
+    [[CLBLEManager sharedInstance] disconntectPeripheral:self.mattressBLEApi.currentPeripheral  withResultBlock:^(NSError *error) {
+                
+    }];
+   if(_mattressBLEApi)
+   {
+       [_mattressBLEApi stopFetchRealTimeData];
+        _mattressBLEApi=nil;
+    }
+    _mattressBLEApi=[[MattressBLEManagerApi alloc] init];
+    [[CLBLEManager sharedInstance] scanbleWithObject:self.mattressBLEApi withScanTimeOut:5];
+    
+    [[CLBLEManager sharedInstance] addBleDelegate:self delegateQueue:dispatch_get_main_queue()];
+}
+
+#pragma mark 蓝牙搜索到设备
+-(void)scanAllPeripherals:(NSArray *)allLGPeripherals{
+   
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(checkScanBleDevice) object:nil];
+    });
+    
+    NSArray* filterArray=nil;
+  
+    /* {
+     bindType = 1;
+     deviceBrandId = 1;
+     deviceIcon = "http://200.200.200.50/v1/device/icon";
+     deviceModel = "http://200.200.200.50/v1/device/icon";
+     deviceSubtypeId = 3;
+     deviceSubtypeName = "\U52a0\U6e7f\U5668\Uff08\U4e03\U8272\U706f\Uff09";
+     deviceTypeId = 5;
+     }
+     */
+    
+    /*HETDeviceObject *obj=[self.deviceTypeArray objectAtIndex:0];
+    NSString *deviceTypeID=obj.deviceTypeId;//[deviceTypeDic objectForKey:@"deviceTypeId"];
+    NSString *deviceSubtypeId=obj.deviceSubtypeId;//[deviceTypeDic objectForKey:@"deviceSubtypeId"];
+    NSString *deviceIcon=obj.deviceIcon;//[deviceTypeDic objectForKey:@"deviceIcon"];
+    NSAssert(obj, @"没有设置扫描的设备类型");
+    NSInteger deviceTypeId=0;
+    NSInteger deviceSubTypeId=0;
+    deviceTypeId=deviceTypeID.integerValue;
+    deviceSubTypeId=deviceSubtypeId.integerValue;*/
+    //这个地方要过滤一下对应的设备，设备的广播名规则是het-mac-x-y
+    //x 表示打类型，y表示小类型，如果看不懂这个地方请找Sandywu
+    NSString *deviceStr=[NSString stringWithFormat:@"-%@-",@(26)];
+    NSPredicate* predicate=[NSPredicate predicateWithFormat:@"SELF.name contains[c] %@",deviceStr];
+    filterArray=[allLGPeripherals filteredArrayUsingPredicate:predicate];
+    /*if (deviceTypeId == MattressDeviceType) {
+     NSPredicate* predicate=[NSPredicate predicateWithFormat:@"SELF.name contains[c] %@",@"-6-"];
+     filterArray=[allLGPeripherals filteredArrayUsingPredicate:predicate];
+     }
+     if (deviceTypeId == SnoringdetectionDeviceType) {
+     NSPredicate* predicate=[NSPredicate predicateWithFormat:@"SELF.name contains[c] %@",@"-9-"];
+     filterArray=[allLGPeripherals filteredArrayUsingPredicate:predicate];
+     }
+     if (deviceTypeId == CoughDetectionDeviceType) {
+     NSPredicate* predicate=[NSPredicate predicateWithFormat:@"SELF.name contains[c] %@",@"-29-"];
+     filterArray=[allLGPeripherals filteredArrayUsingPredicate:predicate];
+     }
+     if (deviceTypeId== SleepButtonDeviceType) {
+     NSPredicate* predicate=[NSPredicate predicateWithFormat:@"SELF.name contains[c] %@",@"-26-"];
+     filterArray=[allLGPeripherals filteredArrayUsingPredicate:predicate];
+     }*/
+    if(filterArray.count)
+    {
+        [self bindCurrentSelectedDevice:[filterArray firstObject]];
+        /*CLALLBleDeviceViewController *vc=[[CLALLBleDeviceViewController alloc]init];
+        vc.deviceType=deviceTypeId;
+        vc.deviceSubtypeId=deviceSubTypeId;
+        vc.deviceIcon=deviceIcon;
+        vc.bShowToastView=self.bShowToastView;
+        //vc.bWaterBLEProtocol=self.bWaterBLEProtocol;
+        vc.bleBussinesType=self.bleBussinesType;
+        vc.devicesDataSource=[NSMutableArray arrayWithArray:filterArray];
+        [self.navigationController pushViewController:vc animated:YES];*/
+    }
+    else
+    {
+        
+       /* CLBindFailViewController *vc=[[CLBindFailViewController alloc]init];
+        [self.navigationController pushViewController:vc animated:YES];*/
+    }
+    
+    
+}
+
+-(void)checkScanBleDevice
+{
+   
+    
+}
+
+- (void)bindCurrentSelectedDevice:(LGPeripheral *)curPeripheral {
+    __weak ALLWIFIDeviceViewController* weakSelf=self;
+
+        _mattressBLEApi=nil;
+        _mattressBLEApi=[[MattressBLEManagerApi alloc] init];
+        //NSString *currentMacKey=[NSString stringWithFormat:@"%ld_currentMacKey",(long)self.deviceType];
+        //[[NSUserDefaults standardUserDefaults] setObject:curPeripheral.name forKey:currentMacKey];
+        
+        self.mattressBLEApi.currentBroadName=curPeripheral.name;
+        self.mattressBLEApi.currentPeripheral=curPeripheral;
+        [self.mattressBLEApi fetchRealTimeDataWithInterVal:9
+                                                 WithTimes:3
+                                              SuccessBlock:^(NSData *data) {
+                                                  [weakSelf receiveBleRealTimeData:data withPeripheral:curPeripheral];
+                                              } FailBlock:^(NSError *error) {
+                                                  if (_realTimeFailCount+_zeroRealTimeFailCount>=2) {
+                                                      [weakSelf.mattressBLEApi stopFetchRealTimeData];
+                                                      //[weakSelf gotoBindFailed];
+                                                      _realTimeFailCount=0;
+                                                      _zeroRealTimeFailCount=0;
+                                                  }
+                                                  else{
+                                                      _realTimeFailCount++;
+                                                  }
+                                              }];
+        
+    /*if(self.bWaterBLEProtocol)
+     {
+     _waterBLEApi=nil;
+     _waterBLEApi=[[WaterTapBLEManagerApi alloc]init];
+     __weak CLBindAnimationViewController* weakSelf=self;
+     self.waterBLEApi.currentBroadName=curPeripheral.name;
+     self.waterBLEApi.currentPeripheral=curPeripheral;
+     [self.waterBLEApi fetchBindDataWithSuccessBlock:^(NSData *data) {
+     [weakSelf receiveBleRealTimeData:data withPeripheral:curPeripheral];
+     } FailBlock:^(NSError *error) {
+     [weakSelf gotoBindFailed];
+     
+     }];*/
+    
+    /*[self.waterBLEApi fetchRealTimeDataWithInterVal:9
+     WithTimes:3
+     SuccessBlock:^(NSData *data) {
+     [weakSelf receiveBleRealTimeData:data withPeripheral:curPeripheral];
+     } FailBlock:^(NSError *error) {
+     if (realTimeFailCount+zeroRealTimeFailCount>=2) {
+     [weakSelf.waterBLEApi stopFetchRealTimeData];
+     [weakSelf gotoBindFailed];
+     realTimeFailCount=0;
+     zeroRealTimeFailCount=0;
+     }
+     else{
+     realTimeFailCount++;
+     }
+     }];*/
+    
+    /*
+     }
+     else
+     {
+     _mattressBLEApi=nil;
+     _mattressBLEApi=[[MattressBLEManagerApi alloc] init];
+     //NSString *currentMacKey=[NSString stringWithFormat:@"%ld_currentMacKey",(long)self.deviceType];
+     //[[NSUserDefaults standardUserDefaults] setObject:curPeripheral.name forKey:currentMacKey];
+     __weak CLBindAnimationViewController* weakSelf=self;
+     self.mattressBLEApi.currentBroadName=curPeripheral.name;
+     self.mattressBLEApi.currentPeripheral=curPeripheral;
+     [self.mattressBLEApi fetchRealTimeDataWithInterVal:9
+     WithTimes:3
+     SuccessBlock:^(NSData *data) {
+     [weakSelf receiveBleRealTimeData:data withPeripheral:curPeripheral];
+     } FailBlock:^(NSError *error) {
+     if (realTimeFailCount+zeroRealTimeFailCount>=2) {
+     [weakSelf.mattressBLEApi stopFetchRealTimeData];
+     [weakSelf gotoBindFailed];
+     realTimeFailCount=0;
+     zeroRealTimeFailCount=0;
+     }
+     else{
+     realTimeFailCount++;
+     }
+     }];
+     }*/
+    /*
+     switch (self.deviceType) {
+     case MattressDeviceType:         // 床垫
+     {
+     
+     //[[NSUserDefaults standardUserDefaults] setObject:curPeripheral.name forKey:cCurrentMattressMac];
+     __weak CLBindAnimationViewController* weakSelf=self;
+     self.mattressBLEApi.currentBroadName=curPeripheral.name; //设置广播名
+     self.mattressBLEApi.currentPeripheral=curPeripheral;
+     [self.mattressBLEApi fetchRealTimeDataWithInterVal:5
+     WithTimes:5
+     SuccessBlock:^(NSData *data) {
+     [weakSelf receiveBleRealTimeData:data withPeripheral:curPeripheral];
+     } FailBlock:^(NSError *error) {
+     if (realTimeFailCount+zeroRealTimeFailCount>=4) {
+     [weakSelf.mattressBLEApi stopFetchRealTimeData];
+     [weakSelf gotoBindFailed];
+     realTimeFailCount=0;
+     zeroRealTimeFailCount=0;
+     }
+     else{
+     realTimeFailCount++;
+     }
+     }];
+     }
+     break;
+     case SnoringdetectionDeviceType:        // 打呼: 只需要连接上设备就行
+     {
+     // [[NSUserDefaults standardUserDefaults] setObject:curPeripheral.name forKey:cCurrentSnoreBoxMac];
+     __weak CLBindAnimationViewController* weakSelf=self;
+     
+     self.mattressBLEApi.currentBroadName=curPeripheral.name;
+     self.mattressBLEApi.currentPeripheral=curPeripheral;
+     
+     [self.mattressBLEApi fetchRealTimeDataWithInterVal:5
+     WithTimes:5
+     SuccessBlock:^(NSData *data) {
+     [weakSelf receiveBleRealTimeData:data withPeripheral:curPeripheral];
+     } FailBlock:^(NSError *error) {
+     if (realTimeFailCount+zeroRealTimeFailCount>=4) {
+     [weakSelf.mattressBLEApi stopFetchRealTimeData];
+     [weakSelf gotoBindFailed];
+     realTimeFailCount=0;
+     zeroRealTimeFailCount=0;
+     }
+     else{
+     realTimeFailCount++;
+     }
+     }];
+     }
+     break;
+     case CoughDetectionDeviceType:
+     {
+     //[[NSUserDefaults standardUserDefaults] setObject:curPeripheral.name forKey:cCurrentCoughBoxMac];
+     __weak CLBindAnimationViewController* weakSelf=self;
+     self.mattressBLEApi.currentBroadName=curPeripheral.name;
+     self.mattressBLEApi.currentPeripheral=curPeripheral;
+     [self.mattressBLEApi fetchRealTimeDataWithInterVal:5
+     WithTimes:5
+     SuccessBlock:^(NSData *data) {
+     [weakSelf receiveBleRealTimeData:data withPeripheral:curPeripheral];
+     } FailBlock:^(NSError *error) {
+     if (realTimeFailCount+zeroRealTimeFailCount>=4) {
+     [weakSelf.mattressBLEApi stopFetchRealTimeData];
+     [weakSelf gotoBindFailed];
+     realTimeFailCount=0;
+     zeroRealTimeFailCount=0;
+     }
+     else{
+     realTimeFailCount++;
+     }
+     }];
+     }
+     break;
+     case SleepButtonDeviceType:
+     {
+     //[[NSUserDefaults standardUserDefaults] setObject:curPeripheral.name forKey:cCurrentSleepButtonMac];
+     __weak CLBindAnimationViewController* weakSelf=self;
+     self.mattressBLEApi.currentBroadName=curPeripheral.name;
+     self.mattressBLEApi.currentPeripheral=curPeripheral;
+     [self.mattressBLEApi fetchRealTimeDataWithInterVal:5
+     WithTimes:5
+     SuccessBlock:^(NSData *data) {
+     [weakSelf receiveBleRealTimeData:data withPeripheral:curPeripheral];
+     } FailBlock:^(NSError *error) {
+     if (realTimeFailCount+zeroRealTimeFailCount>=4) {
+     [weakSelf.mattressBLEApi stopFetchRealTimeData];
+     [weakSelf gotoBindFailed];
+     realTimeFailCount=0;
+     zeroRealTimeFailCount=0;
+     }
+     else{
+     realTimeFailCount++;
+     }
+     }];
+     }
+     break;
+     default:
+     break;
+     }*/
+}
+/**
+ *  获取蓝牙设备传过来的实时数据
+ *
+ *  @param dData 实时数据
+ *  绑定类型是床垫时，数据内容包含有心跳、呼吸、翻身、电池电量;
+ *  绑定类型是非床垫时,数据内容包含对应的数据比如打呼次数、咳嗽次数、电池电量.
+ */
+- (void)receiveBleRealTimeData:(NSData *)dData withPeripheral:(LGPeripheral *) peripheral{
+    
+
+        BLEMattressReform* transReform=[BLEMattressProtocol transformData:dData];
+            if (!transReform) {
+                NSLog(@"数据包结构错误");
+                return;
+            }
+            [self.mattressBLEApi stopFetchRealTimeData];
+            
+            [self sendDeviceBindRequest:transReform withPeripheral:peripheral];
+
+    
+}
+-(NSString *)currentTimeOffset{
+    time_t t = time(NULL);
+    struct tm lt = {0};
+    localtime_r(&t, &lt);
+    long hour=lt.tm_gmtoff/3600;
+    long minute=(lt.tm_gmtoff%3600)*60;
+    
+    if (hour<0) {
+        return [NSString stringWithFormat:@"%05ld",hour*100+minute];
+    }
+    return [NSString stringWithFormat:@"%04ld",hour*100+minute];
+}
+//发送绑定关系到服务器
+- (void)sendDeviceBindRequest:(BLEMattressReform *)tranform withPeripheral:(LGPeripheral *) peripheral {
+    
+    NSString *timeZone=[self currentTimeOffset];
+    int zone = timeZone.intValue*60/100;
+    LGPeripheral *pro =peripheral;
+    const unsigned char *CMac = (const  unsigned char *)[tranform.uniqueID bytes];
+    NSString *mac = [NSString stringWithFormat:@"%02X%02X%02X%02X%02X%02X",CMac[0],CMac[1],CMac[2],CMac[3],CMac[4],CMac[5]];
+    NSArray *resultArr = [pro.name componentsSeparatedByString:@"-"];
+    NSString *type=  [resultArr objectAtIndex:2];//[pro.name substringWithRange:NSMakeRange(11, 1)];
+    NSString *deviceSubtypeId=  [resultArr objectAtIndex:3];//[pro.name substringFromIndex:pro.name.length-1];
+    //bleBindDic = [NSDictionary dictionaryWithObjectsAndKeys:userID,@"userId",houseID,@"houseId",timeZone,@"timeZone",mac,@"mac",type,@"deviceType",deviceSubtypeId,@"deviceSubtypeId", @(2), @"bindType", nil];
+    
+    int bindType = 2; //绑定类型（1-WiFi  2-蓝牙）
+    HETDeviceControlBusiness *business=[[HETDeviceControlBusiness alloc]init];
+    business.appKey=ktestAPPKEY;
+    [business bindDeviceWithDeviceMAC:mac deviceBrandId:1 deviceTypeId:type.intValue deviceSubtypeId:deviceSubtypeId.intValue bindType:bindType success:^(id responseObject) {
+        NSDictionary *result = responseObject;
+        NSInteger code= [[(NSDictionary *)result objectForKey:@"code"] integerValue];
+        if (code!=0) {
+           
+            return ;
+        }
+        
+          NSString *deviceId = [(NSDictionary *)result objectForKey:@"data"];
+       
+        
+    } failure:^(NSError *error) {
+        
+    }];
+    
+   /* HETDeviceBindRequest *request=[[HETDeviceBindRequest alloc]initWithAccessToken:[HETUserInfo userInfo].accessToken timeZone:zone mac:mac deviceBrandId:1 deviceTypeId:type.intValue deviceSubtypeId:deviceSubtypeId.intValue bindType:bindType];
+    [request startWithSuccess:^(NSString *stringValue) {
+        //self.deviceId=stringValue;
+        //[self modifyDeviceInfoRequest:stringValue withPeripheral:peripheral];
+        NSDictionary *deviceDic=@{@"deviceID":stringValue,@"deviceMac":mac,@"LGPeripheral":peripheral};
+        [self gotoBindSuccess:deviceDic];
+        
+        
+        
+    } failure:^(NSError *error, NSInteger statusCode) {
+        
+        [self gotoBindFailed];
+        
+        
+    }];*/
+}
+
+/*
+ // 初次绑定, 修改设备信息
+ -(void)modifyDeviceInfoRequest:(NSString *)deviceId withPeripheral:(LGPeripheral *) peripheral{
+ NSString *deviceName=nil;
+ NSString *currentBroadName=peripheral.name;
+ if (self.deviceType == MattressDeviceType) {
+ deviceName=[NSString stringWithFormat:@"%@%@", @"床垫", [currentBroadName substringWithRange:NSMakeRange(6, 4)]];
+ [[NSUserDefaults standardUserDefaults] setObject:deviceId forKey:cCurrentMattressId];
+ [CLDeviceDataBase initDeviceTable:@"mattressInfo" withKeys:[NSArray arrayWithObjects:@"deviceId",@"broadName",@"mac", nil]];
+ [CLDeviceDataBase tableName:@"mattressInfo" addLine:@{@"deviceId":[NSString stringWithFormat:@"%@",deviceId],@"broadName":currentBroadName}];
+ }
+ else if (self.deviceType == SnoringdetectionDeviceType) {
+ deviceName=[NSString stringWithFormat:@"%@%@", @"憨憨盒子", [currentBroadName substringWithRange:NSMakeRange(6, 4)]];
+ [[NSUserDefaults standardUserDefaults] setObject:deviceId forKey:cCurrentSnoreId];
+ [CLDeviceDataBase initDeviceTable:@"snoreInfo" withKeys:[NSArray arrayWithObjects:@"deviceId",@"broadName",@"mac", nil]];
+ [CLDeviceDataBase tableName:@"snoreInfo" addLine:@{@"deviceId":[NSString stringWithFormat:@"%@",deviceId],@"broadName":currentBroadName}];
+ 
+ }
+ else if (self.deviceType == CoughDetectionDeviceType) {
+ deviceName=[NSString stringWithFormat:@"%@%@", @"可可盒子", [currentBroadName substringWithRange:NSMakeRange(6, 4)]];
+ [[NSUserDefaults standardUserDefaults] setObject:deviceId forKey:cCurrentCoughId];
+ [CLDeviceDataBase initDeviceTable:@"coughInfo" withKeys:[NSArray arrayWithObjects:@"deviceId",@"broadName",@"mac", nil]];
+ [CLDeviceDataBase tableName:@"coughInfo" addLine:@{@"deviceId":[NSString stringWithFormat:@"%@",deviceId],@"broadName":currentBroadName}];
+ }
+ else if (self.deviceType == SleepButtonDeviceType) {
+ deviceName=[NSString stringWithFormat:@"%@%@", @"睡眠扣子", [currentBroadName substringWithRange:NSMakeRange(6, 4)]];
+ [[NSUserDefaults standardUserDefaults] setObject:deviceId forKey:cCurrentSButtonId];
+ [CLDeviceDataBase initDeviceTable:@"sleepButtonInfo" withKeys:[NSArray arrayWithObjects:@"deviceId",@"broadName",@"mac", nil]];
+ [CLDeviceDataBase tableName:@"sleepButtonInfo" addLine:@{@"deviceId":[NSString stringWithFormat:@"%@",deviceId],@"broadName":currentBroadName}];
+ }
+ 
+ [[NSUserDefaults standardUserDefaults] synchronize];
+ HETDeviceUpdateRequest *request=[[HETDeviceUpdateRequest alloc]initWithAccessToken:[HETUserInfo userInfo].accessToken deviceId:deviceId deviceName:deviceName roomId:0];
+ [request startWithSuccess:^{
+ [self gotoBindSuccess:deviceId];
+ } failure:^(NSError *error, NSInteger statusCode) {
+ [self gotoBindFailed];
+ 
+ }];
+ }
+ */
+
+
+
+
+
+
+
+
+
+-(void)viewWillDisappear:(BOOL)animated
+{
+    [super viewWillDisappear:animated];
+    manager.delegate=nil;
+}
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+-(void)dealloc{
+    
+    [[NSNotificationCenter defaultCenter]removeObserver:self];
+    if (smtlk) {
+        [smtlk stopWithBlock:^(NSString *stopMsg, BOOL isOk) {
+            
+        }];
+        [smtlk closeWithBlock:^(NSString *closeMsg, BOOL isOK) {
+            
+        }];
+    }
+}
+
+-(void)bindAction
+{
+    if(selectedDevArray)
+    {
+        
+    }
+
+}
+-(void)checkScanWIFIDevice
+{
+    if(_devicesDataSource.count)
+    {
+     
+        [manager bindDevices:_devicesDataSource withTimeOut:100];//绑定设备
+        
+    }
+    else
+    {
+        manager.delegate=nil;
+        [manager stop];
+        NSLog(@"没有扫描到设备");
+    }
+}
+/*
+#pragma mark - Navigation
+
+// In a storyboard-based application, you will often want to do a little preparation before navigation
+- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
+    // Get the new view controller using [segue destinationViewController].
+    // Pass the selected object to the new view controller.
+}
+*/
+#pragma mark - UITableViewDataSource,UITableViewDelegate
+- (NSInteger) tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    return _devicesDataSource.count;
+}
+
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    return 50;
+}
+
+- (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section
+{
+    return 44;
+}
+
+- (UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section
+{
+    UIView *view = [[UIView alloc] initWithFrame:CGRectMake(0, 0,CCViewWidth, 44)];
+    view.backgroundColor = [UIColor clearColor];
+    UILabel *titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(CCViewWidth * 0.05, 15, CCViewWidth * 0.9, 20)];
+    titleLabel.text = @"查找到可绑定的设备";
+    titleLabel.font = [UIFont systemFontOfSize:16];
+    [view addSubview:titleLabel];
+    return view;
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+
+    NSString *cellID = @"myCell";
+    CLDeviceTableViewCell *cell=[tableView dequeueReusableCellWithIdentifier:cellID];
+    if(cell==nil)
+    {
+       cell= [[CLDeviceTableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:cellID];
+    }
+     cell.selectionStyle=UITableViewCellSelectionStyleNone;
+    OpenSDKCommonReform *obj=_devicesDataSource[indexPath.row];
+    [cell setChecked:NO];
+    [cell setMacName:obj.device_mac];
+    [cell setIconName:self.deviceIcon];
+  
+    return cell;
+}
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+    
+    for (int i = 0; i<[tableView numberOfRowsInSection:0]; i++) {
+        NSIndexPath *indexPath = [NSIndexPath indexPathForRow:i inSection:0];
+        CLDeviceTableViewCell *cell = (CLDeviceTableViewCell *)[tableView cellForRowAtIndexPath:indexPath];
+        OpenSDKCommonReform *obj=_devicesDataSource[indexPath.row];
+
+        [_devicesDataSource replaceObjectAtIndex:indexPath.row withObject:obj];
+        [cell setChecked:NO];
+    }
+    
+    CLDeviceTableViewCell *cell = (CLDeviceTableViewCell *)[tableView cellForRowAtIndexPath:indexPath];
+    OpenSDKCommonReform *obj=_devicesDataSource[indexPath.row];
+    selectedDevArray = [[NSMutableArray alloc] init];
+    [_devicesDataSource replaceObjectAtIndex:indexPath.row withObject:obj];
+    [selectedDevArray addObject:obj];
+    [cell setChecked:YES];
+
+}
+-(void)viewDidLayoutSubviews {
+    
+    if ([self.scanDeviceTableView respondsToSelector:@selector(setSeparatorInset:)]) {
+        [self.scanDeviceTableView setSeparatorInset:UIEdgeInsetsZero];
+        
+    }
+    if ([self.scanDeviceTableView respondsToSelector:@selector(setLayoutMargins:)])  {
+        [self.scanDeviceTableView setLayoutMargins:UIEdgeInsetsZero];
+    }
+    
+}
+
+-(void)tableView:(UITableView *)tableView willDisplayCell:(UITableViewCell *)cell forRowAtIndexPath:(NSIndexPath *)indexPat{
+    if ([cell respondsToSelector:@selector(setLayoutMargins:)]) {
+        [cell setLayoutMargins:UIEdgeInsetsZero];
+    }
+    if ([cell respondsToSelector:@selector(setSeparatorInset:)]){
+        [cell setSeparatorInset:UIEdgeInsetsZero];
+    }
+}
+
+
+#pragma mark WIFIBindBusinessDelegate
+/**
+ *  绑定失败代理
+ */
+-(void)HETWIFIBindBusinessFail:(OpenSDKCommonReform *)obj
+{
+    NSString *reason = [NSString stringWithFormat:@"设备%@绑定失败",obj.device_mac];
+    
+    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"提示" message:reason delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil, nil];
+    
+    [alert show];
+
+}
+
+/**
+ *  绑定成功代理
+ *
+ *  @param obj  绑定成功的设备信息OpenSDKCommonReform对象
+ */
+-(void)HETWIFIBindBusinessSuccess:(OpenSDKCommonReform *)obj
+{
+    
+    NSString *reason = [NSString stringWithFormat:@"设备%@绑定成功",obj.device_mac];
+    
+    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"提示" message:reason delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil, nil];
+    
+    [alert show];
+
+}
+
+
+/**
+ *  扫描到设备代理
+ *
+ *  @param HETWIFIBindBusiness HETWIFIBindBusiness对象
+ *  @param obj                 设备信息OpenSDKCommonReform对象
+ */
+- (void)scanWIFIDevice:(id)HETWIFIBindBusiness BindDeviceInfo:(OpenSDKCommonReform *)obj
+{
+    NSLog(@"obj:%@,%@",obj,obj.device_mac);
+    if(!obj)
+    {
+        return;
+    }
+    if(![_devicesDataSource containsObject:obj])
+    {
+        [_devicesDataSource addObject:obj];
+        [self.scanDeviceTableView reloadData];
+    }
+ 
+}
+
+#pragma mark 初始化UITableView
+-(UITableView *)scanDeviceTableView
+{
+  if(!_scanDeviceTableView)
+  {
+      _scanDeviceTableView = [[UITableView alloc] initWithFrame:CGRectMake(0,0,CCViewWidth, (CCViewHeight)-88*CC_scale) style:UITableViewStyleGrouped];
+      _scanDeviceTableView.delegate = self;
+      _scanDeviceTableView.dataSource = self;
+      _scanDeviceTableView.backgroundColor = [UIColor clearColor];
+      _scanDeviceTableView.separatorStyle=UITableViewCellSeparatorStyleSingleLine;
+      _scanDeviceTableView.tableFooterView=[UIView new];
+  }
+  return _scanDeviceTableView;
+}
+#pragma mark-----底部view
+-(UIView *)bottomView
+{
+    if(!_bottomView)
+    {
+        _bottomView=[[UIView alloc]initWithFrame:CGRectMake(0, (CCViewHeight)-88*CC_scale, CCViewWidth, 88*CC_scale)];
+        _bottomView.backgroundColor=[self colorFromHexRGB:@"2E7BD3"];
+        
+    }
+    return _bottomView;
+}
+#pragma mark-----开始绑定按钮
+-(UIButton *)beginBindButton
+{
+    if(!_beginBindButton)
+    {
+        UIButton *nextBtn = [UIButton buttonWithType:UIButtonTypeSystem];
+        nextBtn.frame =  CGRectMake([UIScreen mainScreen].bounds.size.width/2-[UIScreen mainScreen].bounds.size.width*0.7/2, _bottomView.frame.origin.y+_bottomView.frame.size.height/2-_bottomView.frame.size.height/2, CCViewWidth*0.7, _bottomView.frame.size.height);
+        [nextBtn setTitle:@"开始绑定" forState:UIControlStateNormal];
+        [nextBtn setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
+        [nextBtn addTarget:self action:@selector(bindAction) forControlEvents:UIControlEventTouchUpInside];
+        _beginBindButton=nextBtn;
+        
+    }
+    return _beginBindButton;
+    
+}
+-(UIAlertView*)blueToothPowerAlert{
+    if (!_blueToothPowerAlert) {
+        _blueToothPowerAlert = [[UIAlertView alloc] initWithTitle:@"蓝牙设置" message:@"手机蓝牙未开启，请先打开手机蓝牙." delegate:self cancelButtonTitle:@"关闭" otherButtonTitles:nil, nil];
+    }
+    return _blueToothPowerAlert;
+}
+
+@end

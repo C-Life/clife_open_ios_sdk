@@ -1,0 +1,22 @@
+//
+//  CLDeviceDataBase.h
+//  NewBindDeviceProject
+//
+//  Created by 操国庆 on 15/8/2.
+//  Copyright (c) 2015年 mr.cao. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+@interface CLDeviceDataBase : NSObject
++(BOOL)initDeviceTable:(NSString *)tableName withKeys:(NSArray *)keys;
++(BOOL)tableName:(NSString *)tableName addLine:(NSDictionary *)dic;
++(NSDictionary *)tableName:(NSString *)tableName queryWithDeviceId:(NSString *)deviceId;
++ (BOOL)tableName:(NSString *)tableName deleteLineWithDeviceId:(NSString *)deviceId;
+
++(BOOL)initPlanTime:(NSString*)deviceId;
++(BOOL)saveOrUpdatePlanTime:(NSDictionary *)planTimeDic;
++(NSDictionary *)getPlanTimeByDeviceId:(NSString *)deviceId;
++ (BOOL)deletePlanTimeByDeviceId:(NSString *)deviceId ;
+
+@end

@@ -1,0 +1,102 @@
+//
+//  DeviceControlBusiness.h
+//  openSDK
+//
+//  Created by mr.cao on 15/8/13.
+//  Copyright (c) 2015年 mr.cao. All rights reserved.
+//
+#import <Foundation/Foundation.h>
+
+
+//WiFi产品通信协议类型
+typedef NS_ENUM(NSUInteger,WIFIPROTOCOLTYPE)
+{
+    /**
+     *  普通协议，F2开头的协议
+     */
+    WIFIPROTOCOLTYPE_PT=0,
+    
+    /**
+     *  开放平台协议，5A开头的协议
+     */
+    WIFIPROTOCOLTYPE_KF=1,
+    
+};
+
+typedef void(^SuccessBlock)(id responseObject);
+typedef void(^FailureBlock)( NSError *error);
+typedef void(^DataBlock)(id responseObject);
+
+
+
+@interface HETDeviceControlBusiness : NSObject
+//当前是否小循环
+@property (nonatomic,readonly ) BOOL        isLittleLoop;
+//设备ID号
+@property (nonatomic,readonly ) NSString    *deviceId;
+//运行数据block
+@property (nonatomic,copy     ) DataBlock   runDataBlock;
+//配置数据block
+@property (nonatomic,copy     ) DataBlock   cfgDataBlock;
+//是否需要回复
+@property (nonatomic,assign)    BOOL      needReplay;
+
+//通信协议类型
+@property(nonatomic,assign)WIFIPROTOCOLTYPE wifiProtocolType;//WiFi产品通信协议类型
+
+/**
+ *
+ *
+ *  @param authUserId            设备控制的key
+ *  @param deviceId              设备ID号
+ *  @param deviceMac             设备mac地址
+ *  @param deviceTypeId          设备主类型
+ *  @param deviceSubtypeId       设备子类型
+ *  @param deviceRunXmlPath      设备运行数据的xml路径
+ *  @param deviceControlXmlPath  设备控制数据的xml路径
+ *  @param bsupport              是否需要支持小循环，默认为NO，如不需支持小循环，设置为NO
+ *  @param deviceControlBusiness 设备控制业务类
+ *  @param runDataSuccessBlock   设备运行数据成功block回调
+ *  @param runDataFailBlock      设备运行数据失败block回调
+ *  @param cfgDataSuccessBlock   设备配置数据成功block回调
+ *  @param cfgDataFailBlock      设备配置数据失败block回调
+ */
+- (instancetype)initWithUserId:(NSString *)authUserId
+                  withDeviceId:(NSString *)deviceId
+                 withDeviceMac:(NSString *)deviceMac
+              withDeviceTypeId:(NSString *)deviceTypeId
+           withDeviceSubtypeId:(NSString *)deviceSubtypeId
+          withDeviceRunXmlPath:(NSString *)deviceRunXmlpath
+      withDeviceControlXmlPath:(NSString *)deviceControlXmlpath
+           isSupportLittleLoop:(BOOL)bsupport
+          deviceRunDataSuccess:(void(^)(id responseObject))runDataSuccessBlock
+             deviceRunDataFail:(void(^)(NSError *error))runDataFailBlock
+          deviceCfgDataSuccess:(void(^)(id responseObject))cfgDataSuccessBlock
+             deviceCfgDataFail:(void(^)(NSError *error))cfgDataFailBlock;
+
+
+
+
+/**
+ *  设备控制
+ *
+ *  @param jsonString   设备控制的json字符串
+ *  @param successBlock 控制成功的回调
+ *  @param failureBlock 控制失败的回调
+ */
+- (void)deviceControlRequestWithJson:(NSString *)jsonString withSuccessBlock:(void(^)(id responseObject))successBlock withFailBlock:(void(^)( NSError *error))failureBlock;
+
+
+
+//启动服务
+- (void)start;
+
+
+//停止服务
+- (void)stop;
+
+-(NSString*)DataTOjsonString:(id)object;
+@end
+
+
+

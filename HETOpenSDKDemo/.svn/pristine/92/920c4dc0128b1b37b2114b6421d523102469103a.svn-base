@@ -1,0 +1,190 @@
+//
+//  HETWIFIHumidifierDevice.m
+//  HETOpenSDKDemo
+//
+//  Created by mr.cao on 16/2/29.
+//  Copyright © 2016年 mr.cao. All rights reserved.
+//  加湿器控制类
+
+#import "HETWIFIHumidifierDevice.h"
+#import "HETSmartLinkMangerAPI.h"
+#import "HETWIFICommonReform.h"
+#import "HETWIFICommonProtocol.h"
+#import "HETWIFINewProtocol.h"
+#import "HETWIFIOpenSDKProtocol.h"
+
+#import "HETDeviceControlBusiness.h"
+
+#import "HETAccounts.h"
+
+
+
+@implementation HumidifierDeviceRunModel
+
+
+@end
+
+
+
+@implementation HumidifierDeviceConfigModel
+
+
+@end
+
+@interface HETWIFIHumidifierDevice()<smartlinkDelegate>
+
+
+{
+
+    
+    
+    
+}
+
+
+@property (nonatomic,strong   ) HETDeviceControlBusiness *business;
+
+
+
+
+
+
+
+
+//运行数据block
+@property (nonatomic,copy     ) DataBlock   runDataBlock;
+//配置数据block
+@property (nonatomic,copy     ) DataBlock   cfgDataBlock;
+//是否需要回复
+@property (nonatomic,assign   )    BOOL      needReplay;
+
+//通信协议类型
+@property (nonatomic,assign   )WIFIPROTOCOLTYPE wifiProtocolType;//WiFi产品通信协议类型
+
+@end
+
+
+@implementation HETWIFIHumidifierDevice
+
+- (instancetype)initWithUserId:(NSString *)authUserId
+                      deviceId:(NSString *)deviceId
+                     deviceMac:(NSString *)deviceMac
+                  deviceTypeId:(NSString *)deviceTypeId
+               deviceSubtypeId:(NSString *)deviceSubtypeId
+          deviceRunDataSuccess:(void(^)(HumidifierDeviceRunModel *model))runDataSuccessBlock
+             deviceRunDataFail:(void(^)(NSError *error))runDataFailBlock
+          deviceCfgDataSuccess:(void(^)(HumidifierDeviceConfigModel *model))cfgDataSuccessBlock
+             deviceCfgDataFail:(void(^)(NSError *error))cfgDataFailBlock
+{
+    
+       self =[super init];
+       if(self)
+       {
+         
+           _business=[[HETDeviceControlBusiness alloc]initWithUserId:authUserId withDeviceId:deviceId withDeviceMac:deviceMac withDeviceTypeId:deviceTypeId withDeviceSubtypeId:deviceSubtypeId withDeviceRunXmlPath:[[NSBundle mainBundle]pathForResource:@"HumidifierDevice_8005" ofType:@"xml"] withDeviceControlXmlPath:[[NSBundle mainBundle]pathForResource:@"HumidifierDevice_8007" ofType:@"xml"] isSupportLittleLoop:YES deviceRunDataSuccess:^(id responseObject) {
+               NSLog(@"运行数据:%@",responseObject);
+              HumidifierDeviceRunModel *model=[[HumidifierDeviceRunModel alloc]initWithDic:responseObject];
+               runDataSuccessBlock(model);
+           } deviceRunDataFail:runDataFailBlock deviceCfgDataSuccess:^(id responseObject) {
+               NSLog(@"配置数据:%@",responseObject);
+               HumidifierDeviceConfigModel *model=[[HumidifierDeviceConfigModel alloc]initWithDic:responseObject];
+              cfgDataSuccessBlock(model);
+           } deviceCfgDataFail:cfgDataFailBlock];
+       }
+    return self;
+}
+
+
+//启动服务
+- (void)start
+{
+    [_business start];
+}
+//停止服务
+- (void)stop
+{
+    [_business stop];
+}
+-(BOOL)isLittleLoop
+{
+   return [_business isLittleLoop];
+}
+
+/**
+ *  设备控制
+ *
+ *  @param jsonString   设备控制的json字符串
+ *  @param successBlock 控制成功的回调
+ *  @param failureBlock 控制失败的回调
+ */
+- (void)deviceControlRequestWithModel:(HumidifierDeviceConfigModel *)model withSuccessBlock:(void(^)(id responseObject))successBlock withFailBlock:(void(^)( NSError *error))failureBlock
+{
+    
+    
+    if(!model)
+    {
+        NSLog(@"传入的model为nil");
+        return;
+    }
+    NSDictionary *responseObject=[model convertModelToDic];
+    
+    
+    if(!_business.isLittleLoop)
+    {
+        if(!model)
+        {
+            NSLog(@"传入的model为nil");
+            return;
+        }
+        NSMutableDictionary *dic=[[NSMutableDictionary alloc]init];
+        NSDictionary *responseObject=[model convertModelToDic];
+        NSString *appointmentBootTimeH=[responseObject objectForKey:@"appointmentBootTimeH"];
+        NSString *appointmentBootTimeM=[responseObject objectForKey:@"appointmentBootTimeM"];
+        NSInteger appointmentBootTime=(appointmentBootTimeH.integerValue)*60+appointmentBootTimeM.integerValue;
+        [dic setObject:@(appointmentBootTime) forKey:@"appointmentBootTime"];
+        
+        NSString *mist=[responseObject objectForKey:@"mist"];
+        [dic setObject:mist forKey:@"mist"];
+        
+        
+        NSString *light=[responseObject objectForKey:@"light"];
+        [dic setObject:light forKey:@"light"];
+        
+        NSString *timerPresetTimeH=[responseObject objectForKey:@"timerPresetTimeH"];
+        NSString *timerPresetTimeM=[responseObject objectForKey:@"timerPresetTimeM"];
+        
+        NSInteger timerPresetTime=(timerPresetTimeH.integerValue)*60+timerPresetTimeM.integerValue;
+        [dic setObject:@(timerPresetTime) forKey:@"timerPresetTime"];
+        
+        
+        NSString *appointmentOffTimeH=[responseObject objectForKey:@"appointmentOffTimeH"];
+        NSString *appointmentOffTimeM=[responseObject objectForKey:@"appointmentOffTimeM"];
+        
+        NSInteger appointmentOffTime=(appointmentOffTimeH.integerValue)*60+appointmentOffTimeM.integerValue;
+        [dic setObject:@(appointmentOffTime) forKey:@"appointmentOffTime"];
+        
+        NSString *colour=[responseObject objectForKey:@"color"];
+        [dic setObject:colour forKey:@"color"];
+        
+        
+        NSString *level=[responseObject objectForKey:@"level"];
+        [dic setObject:level forKey:@"level"];
+        
+        NSString *updateFlag=[responseObject objectForKey:@"updateFlag"];
+        [dic setObject:updateFlag forKey:@"updateFlag"];
+        
+        NSString *jsonString=[_business DataTOjsonString:dic];
+        
+//        NSError * err;
+//        NSData * tempjsonData = [NSJSONSerialization dataWithJSONObject:dic options:NSJSONWritingPrettyPrinted error:&err];
+//        NSString * json = [[NSString alloc] initWithData:tempjsonData encoding:NSUTF8StringEncoding];
+        [_business deviceControlRequestWithJson:jsonString withSuccessBlock:successBlock withFailBlock:failureBlock];
+    }
+    else
+    {
+        NSString *jsonString=[_business DataTOjsonString:responseObject];
+        [_business deviceControlRequestWithJson:jsonString withSuccessBlock:successBlock withFailBlock:failureBlock];
+    }
+}
+
+@end

@@ -1,0 +1,390 @@
+//
+//  HETAuthorize.m
+//  openSDK
+//
+//  Created by peng on 6/25/15.
+//  Copyright (c) 2015 peng All rights reserved.
+//
+
+#import "HETAuthorize.h"
+#import "HETURLRequestHelper.h"
+//#import "AppDelegate.h"
+
+#import "HETAuthorizeWebView.h"
+
+#import "HETAccounts.h"
+#import "HETNetWorkRequest.h"
+#define AUTHORIZESHOWTAG 100001     //为适配美钞绿ipad而添加
+
+
+
+#define testAuthorizeURL @"https://open.api.clife.cn/oauth2/authorize"
+#define testAccessTokenURL @"https://open.api.clife.cn/oauth2/accessToken"
+#define testRefreshTokenURL @"https://open.api.clife.cn/oauth2/refreshToken"
+
+#define testRedirectURL @"https://www.clife.com"
+#define testCancelAuthorURL @"https://api.weibo.com/oauth2/default.html"
+
+
+enum {
+    openSDKOAuth2JsonParseErrorCode             = 10100,
+
+    openSDKOAuth2ErrorWindowClosed              = -1000,
+    openSDKOAuth2ErrorAuthorizationFailed       = -1001,
+    openSDKOAuth2ErrorTokenExpired              = -1002,
+    openSDKOAuth2ErrorTokenUnavailable          = -1003,
+    openSDKOAuth2ErrorUnauthorizableRequest     = -1004,
+    openSDKOAuth2ErrorAccessTokenRequestFailed  = -1005,
+    openSDKOAuth2ErrorAccessDenied              = -1006,
+    openSDKOAuth2ErrorDialogNotLogin            = -1007,
+
+};
+
+NSString *const openSDKOAuth2ErrorDomain = @"com.Het.openSDK.OAuth2";
+@interface HETAuthorize()<AuthorizeDialogDelegate>
+{
+
+
+}
+@property (nonatomic, copy) NSString *appKey;
+@property (nonatomic, copy) NSString *appSecret;
+@property (nonatomic, copy) NSString *redirectURL;
+@property (nonatomic, copy) NSString *authorizeURL;
+@property (nonatomic, copy) NSString *accessTokenURL;
+@property (nonatomic, copy) NSString *refreshAccessTokenURL;
+
+
+
+@property (nonatomic, strong) HETAuthorizeWebView *authorizeWebView;
+@property (nonatomic, copy)   authenticationCompletedBlock authCompleteBlock;
+@end
+@implementation HETAuthorize
+
+- (NSURLRequest *)authorizeRequestUrl {
+    
+    NSDictionary *params = [NSDictionary dictionaryWithObjectsAndKeys:
+                            self.appKey, @"appId",
+                            self.redirectURL, @"redirectUri",
+                            @"518088865188479f812b973be9648761",@"scope",
+                            @"code",@"state",
+                            nil];
+    return  [HETURLRequestHelper getRequestWithUrl:self.authorizeURL params:params];
+}
+
+- (NSString*)encodeURL:(NSString *)string
+{
+    NSString *newString = (NSString *)CFBridgingRelease(CFURLCreateStringByAddingPercentEscapes(kCFAllocatorDefault, (CFStringRef)string, NULL, CFSTR(":/?&=;+!@#$()',*"), CFStringConvertNSStringEncodingToEncoding(NSUTF8StringEncoding)));
+    if (newString) {
+        return newString;
+    }
+    return @"";
+}
+
+
+- (NSURLRequest *)acessTokenRequestUrl:(NSString*)code
+{
+    NSDictionary *params = [NSDictionary dictionaryWithObjectsAndKeys:
+                            self.appKey, @"appId",
+                            self.appSecret, @"secret",
+                            @"authorization_code", @"grantType",
+                            code, @"code", nil];
+    return  [HETURLRequestHelper postRequestWithUrl:self.accessTokenURL  params:params];
+
+}
+
+- (NSURLRequest *)refreshAcessTokenRequestUrl:(NSString*)refreshToken
+{
+    NSDictionary *params = [NSDictionary dictionaryWithObjectsAndKeys:
+                            self.appKey, @"appId",
+                            refreshToken, @"refreshToken",
+                            @"refreshToken", @"grantType",
+                            nil];
+    return  [HETURLRequestHelper postRequestWithUrl:self.refreshAccessTokenURL  params:params];
+
+}
+
+
+- (id)initWithAppKey:(NSString *)appKey
+           appSecret:(NSString *)appSecret
+         redirectUrl:(NSString *)redirectUrl
+        authorizeUrl:(NSString *)authorizeUrl
+      accessTokenUrl:(NSString*)accessTokenUrl
+  refreshAccessToken:(NSString*)refreshAccessTokenURL
+{
+    if (self = [super init])
+    {
+        self.appKey = appKey;
+        self.appSecret = appSecret;
+        self.redirectURL = redirectUrl;
+        self.authorizeURL = authorizeUrl;
+        self.accessTokenURL = accessTokenUrl;
+        self.refreshAccessTokenURL = refreshAccessTokenURL;
+        [HETNetWorkRequest shared].appSecret=appSecret;
+        [HETNetWorkRequest shared].refreshAccessTokenURL=refreshAccessTokenURL;
+
+    }
+
+    return self;
+}
+- (id)initWithAppKey:(NSString *)appKey
+           appSecret:(NSString *)appSecret
+{
+    if (self = [super init])
+    {
+        self.appKey = appKey;
+        self.appSecret = appSecret;
+        self.redirectURL = testRedirectURL;
+        self.authorizeURL = testAuthorizeURL;
+        self.accessTokenURL = testAccessTokenURL;
+        self.refreshAccessTokenURL = testRefreshTokenURL;
+        [HETNetWorkRequest shared].appSecret=appSecret;
+          [HETNetWorkRequest shared].appKey=appKey;
+        [HETNetWorkRequest shared].refreshAccessTokenURL=testRefreshTokenURL;
+        
+    }
+    
+    return self;
+
+}
+-(authenticationCompletedBlock)authCompleteBlock
+{
+    if (_authCompleteBlock) {
+        return _authCompleteBlock;
+    }
+    return ^(HETAccount *account, NSError *error){};
+}
+
+- (void)authorize
+{
+
+    self.authorizeWebView = [[HETAuthorizeWebView alloc] initWithURL:[self authorizeRequestUrl].URL delegate:self];
+    self.authorizeWebView.tag = AUTHORIZESHOWTAG;
+    [self.authorizeWebView show];
+
+}
+
+- (void)unauthorize
+{
+    [[HETAccounts shared] signOut];
+}
+
+-(BOOL)isAuthenticated
+{
+     return [[HETAccounts shared]currentAccount] != NULL;
+}
+
+-(void)authorizeWithCompleted:(authenticationCompletedBlock)completedBlock
+{
+    self.authCompleteBlock = completedBlock;
+    [self authorize];
+
+}
+
+    /*
+     {
+     code = 0;
+     data =     {
+     accessToken = 2ff412fbed7b4b988c5e71eaf8062951;
+     expiresIn = 7200;
+     openId = D42BF6048E68B75EE31F0A3ACDFAEEE9;
+     refreshToken = d791c339c7304e85972215c4e4f0a603;
+     };
+     }
+
+
+     */
+    /*if ([result isKindOfClass:[NSDictionary class]])
+    {
+        NSDictionary *data=[result objectForKey:@"data"];
+        NSString *token=[data objectForKey:@"accessToken"];
+
+        HETNetWorkRequest *request=[HETNetWorkRequest shared];
+        request.accessToken=token;
+        //获取时间戳
+        NSTimeInterval time = [[NSDate date] timeIntervalSince1970];
+        NSString *_timestamp = [NSString stringWithFormat: @"%lld", (long long)(time * 1000)];
+        
+        NSDictionary *params=[NSDictionary dictionaryWithObjectsAndKeys:testAPPKEY,@"appId",_timestamp,@"timestamp", nil];
+       [request getFromPath:@"/device/getBindConfig" params:params completed:^(id result, NSData *data, NSError *error) {
+           if ([result isKindOfClass:[NSDictionary class]])
+           {
+               NSDictionary *data=[result objectForKey:@"data"];
+               NSString *serverIp=[data objectForKey:@"serverIp"];
+               NSString *serverPort=[data objectForKey:@"serverPort"];
+           }
+        }];
+       [request getFromPath:@"/device/getBindConfig" params:params BlockWithSuccess:^(HETNetWorkRequestOperation *operation, id responseObject) {
+            if ([responseObject isKindOfClass:[NSDictionary class]])
+            {
+                NSDictionary *data=[responseObject objectForKey:@"data"];
+                NSString *serverIp=[data objectForKey:@"serverIp"];
+                NSString *serverPort=[data objectForKey:@"serverPort"];
+            }
+
+        } failure:^(HETNetWorkRequestOperation *operation, NSError *error) {
+            
+        }];
+        
+
+        
+        
+    }
+*/
+
+- (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error
+{
+    
+}
+
+#pragma mark - AuthorizeDialog Delegate
+- (void)AuthorizeDialogLogin:(NSString*)code
+{
+    
+    [[HETNetWorkRequest shared] startRequestWithHTTPMethod:HETRequestMethodPost withRequestUrl:self.accessTokenURL processParams:[NSDictionary dictionaryWithObjectsAndKeys:
+                                                                                                                                  self.appKey, @"appId",
+                                                                                                                                  self.appSecret, @"secret",
+                                                                                                                                  @"authorization_code", @"grantType",
+                                                                                                                                  code, @"code", nil]
+ needSign:NO BlockWithSuccess:^(HETNetWorkRequestOperation *operation, id responseObject) {
+     NSDictionary *result = responseObject;
+     NSInteger code= [[(NSDictionary *)result objectForKey:@"code"] integerValue];
+     if (code!=0) {
+         self.authCompleteBlock(nil,[NSError errorWithDomain:openSDKOAuth2ErrorDomain
+                                                        code:code
+                                                    userInfo:nil]);
+         return ;
+     }
+     
+     NSDictionary *dict = [(NSDictionary *)result objectForKey:@"data"];
+     NSString *accessToken   =  [dict objectForKey:@"accessToken"];
+     NSString *openId        =  [dict objectForKey:@"openId"];
+     NSString * expiresIn    =  [dict objectForKey:@"expiresIn"];
+     NSString *refreshToken  =  [dict objectForKey:@"refreshToken"];
+     NSString *refreshTokenExpires =[dict objectForKey:@"refreshTokenExpires"];
+     
+     if (accessToken.length > 0 && openId.length > 0) {
+         HETAccount *account = [HETAccount new];
+         account.accessToken = accessToken;
+         account.openId = openId;
+         account.refreshToken = refreshToken;
+         account.expirationDate = [NSDate dateWithTimeIntervalSinceNow:[expiresIn integerValue]];
+         account.refreshTokenDate=[NSDate dateWithTimeIntervalSinceNow:[refreshTokenExpires integerValue]];
+         
+         [[HETAccounts shared] addAccount:account];
+         [[HETNetWorkRequest shared] setAccessToken:accessToken];
+         
+         self.authCompleteBlock(account, nil);
+         return;
+     }
+     
+     self.authCompleteBlock(nil, [NSError errorWithDomain:openSDKOAuth2ErrorDomain code:openSDKOAuth2JsonParseErrorCode userInfo:nil]);
+
+     
+ } failure:^(HETNetWorkRequestOperation *operation, NSError *error) {
+     if (error) {
+         self.authCompleteBlock(nil,error);
+         return ;
+     }
+ 
+ }];
+    
+
+   /* [[HETNetWorkRequest shared] requestWithURLRequest:[self acessTokenRequestUrl:code] BlockWithSuccess:^(HETNetWorkRequestOperation *operation, id responseObject) {
+        NSDictionary *result = responseObject;
+        NSInteger code= [[(NSDictionary *)result objectForKey:@"code"] integerValue];
+        if (code!=0) {
+            self.authCompleteBlock(nil,[NSError errorWithDomain:openSDKOAuth2ErrorDomain
+                                                           code:code
+                                                       userInfo:nil]);
+            return ;
+        }
+
+        NSDictionary *dict = [(NSDictionary *)result objectForKey:@"data"];
+        NSString *accessToken   =  [dict objectForKey:@"accessToken"];
+        NSString *openId        =  [dict objectForKey:@"openId"];
+        NSString * expiresIn    =  [dict objectForKey:@"expiresIn"];
+        NSString *refreshToken  =  [dict objectForKey:@"refreshToken"];
+        NSString *refreshTokenExpires =[dict objectForKey:@"refreshTokenExpires"];
+
+        if (accessToken.length > 0 && openId.length > 0) {
+            HETAccount *account = [HETAccount new];
+            account.accessToken = accessToken;
+            account.openId = openId;
+            account.refreshToken = refreshToken;
+            account.expirationDate = [NSDate dateWithTimeIntervalSinceNow:[expiresIn integerValue]];
+            account.refreshTokenDate=[NSDate dateWithTimeIntervalSinceNow:[refreshTokenExpires integerValue]];
+
+            [[HETAccounts shared] addAccount:account];
+            [[HETNetWorkRequest shared] setAccessToken:accessToken];
+
+            self.authCompleteBlock(account, nil);
+            return;
+        }
+
+        self.authCompleteBlock(nil, [NSError errorWithDomain:openSDKOAuth2ErrorDomain code:openSDKOAuth2JsonParseErrorCode userInfo:nil]);
+
+    } failure:^(HETNetWorkRequestOperation *operation, NSError *error) {
+        if (error) {
+            self.authCompleteBlock(nil,error);
+            return ;
+        }
+
+    } ];*/
+
+
+}
+
+- (void)AuthorizeDialogNotLogin:(BOOL)cancel
+{
+    NSString *msg = cancel ? @"User cancelled the login dialog" : @"The login dialog did not response the right code.";
+    self.authCompleteBlock(nil, [NSError errorWithDomain:openSDKOAuth2ErrorDomain
+                                                    code:openSDKOAuth2ErrorDialogNotLogin
+                                                userInfo:@{NSLocalizedDescriptionKey: msg}]);
+}
+//NSURLRequest *url = [URLRequestHelper postRequestWithUrl: self.accessTokenUrl  params:params];
+/*self.authorizeWebView = [[HETAuthorizeWebView alloc] initWithURL:url.URL delegate:self];
+ self.authorizeWebView.tag = AUTHORIZESHOWTAG;
+ [self.authorizeWebView show];*/
+//self.connection = [[NSURLConnection alloc] initWithRequest:url delegate:self startImmediately:YES];
+
+
+
+/*HETNetWorkRequest *request=[HETNetWorkRequest shared];
+ 
+ [request postToUrl:self.accessTokenURL params:params BlockWithSuccess:^(HETNetWorkRequestOperation *operation, id responseObject) {
+ if ([responseObject isKindOfClass:[NSDictionary class]])
+ {
+ NSDictionary *data=[responseObject objectForKey:@"data"];
+ NSString *token=[data objectForKey:@"accessToken"];
+ HETNetWorkRequest *request=[HETNetWorkRequest shared];
+ request.accessToken=token;
+ //获取时间戳
+ NSTimeInterval time = [[NSDate date] timeIntervalSince1970];
+ NSString *_timestamp = [NSString stringWithFormat: @"%lld", (long long)(time * 1000)];
+ 
+ NSDictionary *params=[NSDictionary dictionaryWithObjectsAndKeys:testAPPKEY,@"appId",_timestamp,@"timestamp", nil];
+ [request getFromPath:@"/device/getBindConfig" params:params completed:^(id result, NSData *data, NSError *error) {
+ if ([result isKindOfClass:[NSDictionary class]])
+ {
+ NSDictionary *data=[result objectForKey:@"data"];
+ NSString *serverIp=[data objectForKey:@"serverIp"];
+ NSString *serverPort=[data objectForKey:@"serverPort"];
+ }
+ }];
+[request getFromPath:@"/device/getBindConfig" params:params BlockWithSuccess:^(HETNetWorkRequestOperation *operation, id responseObject) {
+ if ([responseObject isKindOfClass:[NSDictionary class]])
+ {
+ NSDictionary *data=[responseObject objectForKey:@"data"];
+ NSString *serverIp=[data objectForKey:@"serverIp"];
+ NSString *serverPort=[data objectForKey:@"serverPort"];
+ }
+ 
+ } failure:^(HETNetWorkRequestOperation *operation, NSError *error) {
+ 
+ }];
+ 
+ 
+ 
+ }*/
+
+@end

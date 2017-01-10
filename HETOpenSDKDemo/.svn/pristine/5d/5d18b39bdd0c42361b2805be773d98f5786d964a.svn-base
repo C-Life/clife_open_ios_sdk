@@ -1,0 +1,19 @@
+//
+//  CLWIFIOpenSDKProtocol.h
+//  HETPublicSDK_DeviceCore
+//
+//  Created by mr.cao on 16/2/20.
+//  Copyright © 2016年 HET. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+#import "HETWIFICommonReform.h"
+
+@interface HETWIFIOpenSDKProtocol : NSObject
+
++(HETWIFICommonReform*)transformData:(NSData *)data;
+
++(NSData *)fetchBindPacketWithObj:(HETWIFICommonReform *)obj  withUserKey:(NSString *)userKey;
+
++(NSData *)fetchLittleLoopPacketWithObj:(HETWIFICommonReform *)obj;
+@end

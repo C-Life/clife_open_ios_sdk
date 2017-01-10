@@ -1,0 +1,597 @@
+//
+//  BleUpgradeHandle.m
+//  CSleep
+//
+//  Created by Jerry on 15-5-5.
+//  Copyright (c) 2015年 HeT.com. All rights reserved.
+//
+
+#import "BleUpgradeHandle.h"
+#import "CSleepBlueToothDefine.h"
+#import "MattressBLEManagerApi.h"
+
+typedef enum {
+    CHUNK_INIT = 0,
+    CHUNK_WAITING_HAND_RESP,
+    CHUNK_WAITING_UPGRADE_START_RESP,
+    CHUNK_SEND_CHUNKS,
+    CHUNK_WAITING_SEND_RESP,
+    CHUNK_FINISHED_SEND,
+    CHUNK_WAITING_UPGRADE_SUCCESS_RESP,
+    CHUNK_WAITING_UPGRADE_FINISHED_RESP,
+    CHUNK_UPGRADE_ERROR,
+    CHUNK_UPGRADE_END,
+}ChunkState;
+
+@interface BleUpgradeHandle () <CBPeripheralDelegate,CLBLEDataSource>
+{
+  
+    LGPeripheral *currentLGPeripheral;
+
+    
+    /* 处理升级相关的参数 */
+    ChunkState m_chunkState;    // 升级状态
+    int m_chunkDataSize;        // bin文件数据包大小
+    int m_curChunkIndex;        // 当前数据块索引
+    uint8_t *m_chunkData;       // bin文件的数据
+    NSTimer *sendTimer;         // bin文件升级的定时器
+    int packageSeq;
+    int sendSeq;
+    int errSendCount;
+    int errRespCount;
+    NSData  *perPackageData;
+    int    perPackageCount;     //数据包编号
+    int    perPackageTotal;     //数据包总数
+    UInt16 binCrc;              //整个BIN文件的CRC校验
+    int handShakeCount;         //升级前握手操作次数
+    int perPackageSendCount;
+    NSData *sendData;           // 发送的数据内容
+    BOOL bUpgrateComplete;
+}
+@property (strong,nonatomic) NSData *imageFile;
+@property (strong,nonatomic) CLBLEManager* bleManager;
+//@property(nonatomic,strong) MattressBLEManagerApi* mattressBLEApi;
+@property (strong,nonatomic) LGCharacteristic* writeCharacteristic;
+
+@property (strong,nonatomic) LGCharacteristic* readCharacteristic;
+
+@end
+@implementation BleUpgradeHandle
+@synthesize delegate;
+
+- (instancetype)init
+{
+    self = [super init];
+    if (self) {
+        if (sendTimer) {
+            [sendTimer invalidate];
+            sendTimer = nil;
+        }
+        m_chunkState = CHUNK_INIT;
+        errSendCount = 0;
+        errRespCount = 0;
+        if ([self conformsToProtocol:@protocol(CLBLEDataSource)]) {
+             self.child=(id <CLBLEDataSource>)self;
+            //NSLog(@"boardname:%@",self.child.connectedPeripheral.name);
+            self.bleManager=[CLBLEManager sharedInstance];
+
+            //_mattressBLEApi=[[MattressBLEManagerApi alloc] init];
+            bUpgrateComplete=NO;
+            
+            
+        }
+
+    }
+    
+  
+    return self;
+}
+
+
+
+/**
+ *  初始化升级的Bin数据内容
+ *
+ *  @param binData 数据内容
+ */
+- (void)initUpgradeData:(NSData *)binData
+{
+    if (!binData || binData.length <= 0) {
+        return;
+    }
+    if (m_chunkData) {
+        free(m_chunkData);
+    }
+
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:kLGPeripheralDidDisconnect object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(handleDisconnectNotification:)
+                                                 name:kLGPeripheralDidDisconnect
+                                               object:nil];
+
+   //NSLog(@"boardname:%@",self.child.connectedPeripheral.name);
+
+    m_chunkData = malloc(sizeof(uint8_t)*[binData length]);
+    m_chunkDataSize = (int)binData.length;
+    [binData getBytes:&m_chunkData[0] length:m_chunkDataSize];
+    m_curChunkIndex = 0;
+    perPackageCount = 1;
+    packageSeq = 0;
+    sendSeq = 0;
+    perPackageSendCount = 7;
+    perPackageTotal = (m_chunkDataSize%128)?((m_chunkDataSize/128)+1):(m_chunkDataSize/128);
+    
+    // CRC校验
+    binCrc=make_crc16(m_chunkDataSize, m_chunkData);
+    
+    
+   
+    NSLog(@"self.bleManager.currentLGPeripheral:%@,%@",[CLBLEManager sharedInstance].currentLGPeripheral,self.bleManager.currentLGPeripheral);
+     if([CLBLEManager sharedInstance].currentLGPeripheral)
+    {
+        currentLGPeripheral=[CLBLEManager sharedInstance].currentLGPeripheral;
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            [self openReadDataNotify];
+        });
+      
+     
+       
+    }
+    else
+    {
+        
+       
+        if (self.delegate && [self.delegate respondsToSelector:@selector(BleUpgradeHandleFail)]) {
+            [self.delegate BleUpgradeHandleFail];
+        }
+
+        
+      
+    }
+   
+   
+    
+    
+    
+    
+}
+- (void) handleDisconnectNotification:(NSNotification*)notification
+{
+    NSLog(@"BleUpgradeHandlehandleDisconnectNotification");
+    LGPeripheral *peripheral = [notification object];
+    if (peripheral.cbPeripheral.state == CBPeripheralStateConnected) {
+        
+    } else if(peripheral.cbPeripheral.state == CBPeripheralStateDisconnected) {
+        if (peripheral.UUIDString) {
+            currentLGPeripheral=nil;
+            NSDictionary *dic=notification.userInfo;
+             NSError *error=[dic objectForKey:@"error"];
+            if(!bUpgrateComplete)
+            {
+
+            }
+
+             if(![error isKindOfClass:[NSNull class]])
+             {
+                 if(error.code==CBErrorOperationCancelled)
+                 {
+             
+                 }
+                 else
+                 {
+                     
+                 }
+             }
+
+            
+        }
+    }
+}
+
+/**
+ *  开始升级
+ */
+- (void)beginUpgrade{
+    if (sendTimer) {
+        [sendTimer invalidate];
+        sendTimer = nil;
+    }
+    m_chunkState = CHUNK_SEND_CHUNKS;
+    m_curChunkIndex = 0;
+    perPackageCount = 1;
+    packageSeq = 0;
+    sendSeq = 0;
+    perPackageSendCount = 7;
+    // 发送数据的定时器
+    sendTimer = [NSTimer scheduledTimerWithTimeInterval:0.1f target:self selector:@selector(sendChunkData) userInfo:nil repeats:YES];
+}
+
+- (void) sendChunkData {
+    static int waitCount = 0;
+    if(m_chunkState == CHUNK_SEND_CHUNKS && packageSeq <perPackageSendCount) {
+        waitCount = 0;
+        if(packageSeq==0)//初始化每包数据,140个字节
+        {
+            if(m_curChunkIndex < m_chunkDataSize) {
+                
+                
+                if((m_chunkDataSize-m_curChunkIndex)<=128)//最后一包数据
+                {
+                    int bufferSize=14+m_chunkDataSize-m_curChunkIndex;
+                    UInt8 buffer[142]={0};
+                    buffer[0]= 0xF2;//起始标志
+                    buffer[1]=0x01;//协议版本号
+                    buffer[2]=0x03;//命令ID
+                    //已发送数据包编号
+                    buffer[3] = (char)(perPackageCount>>8);
+                    buffer[4] = (char)perPackageCount;
+                    //剩余数据包编号
+                    buffer[5] = (char)((perPackageTotal-perPackageCount)>>8);
+                    buffer[6] = (char)(perPackageTotal-perPackageCount);
+                    
+                    //保留字节
+                    buffer[7] =0;
+                    
+                    //信息长度
+                    buffer[8] =(char)((m_chunkDataSize-m_curChunkIndex)>>8);//(char)((m_chunkDataSize%8+m_chunkDataSize/8)>>8);
+                    buffer[9] =(char)(m_chunkDataSize-m_curChunkIndex);//(char)(m_chunkDataSize%8+m_chunkDataSize/8);
+                    
+                    //信息内容
+                    //memcpy(&buffer[10], (void*)&m_chunkData[curChunkIndex], 140-2-10-2);
+                    memcpy(&buffer[10], (void*)&m_chunkData[m_curChunkIndex], m_chunkDataSize-m_curChunkIndex);
+                    
+                    
+                    uint16_t crc=make_crc16(m_chunkDataSize-m_curChunkIndex, &buffer[10]);
+                    
+                    //校验位
+                    /*buffer[138] = (char)(crc>>8);
+                     buffer[139] = (char)(crc);
+                     
+                     buffer[140] = (char)(binCrc>>8);
+                     buffer[141] = (char)(binCrc);*/
+                    buffer[bufferSize-4] = (char)(crc>>8);
+                    buffer[bufferSize-3] = (char)(crc);
+                    
+                    buffer[bufferSize-2] = (char)(binCrc>>8);
+                    buffer[bufferSize-1] = (char)(binCrc);
+                    
+                    
+                    perPackageData =[NSData dataWithBytes:&buffer length:bufferSize];
+                    perPackageSendCount=(bufferSize%20)?((bufferSize/20)+1):(bufferSize/20);
+                    
+                    
+                    
+                    
+                }
+                else
+                {
+                    UInt8 buffer[140]={0};
+                    buffer[0]= 0xF2;//起始标志
+                    buffer[1]=0x01;//协议版本号
+                    buffer[2]=0x03;//命令ID
+                    //已发送数据包编号
+                    buffer[3] = (char)(perPackageCount>>8);
+                    buffer[4] = (char)perPackageCount;
+                    //剩余数据包编号
+                    buffer[5] = (char)((perPackageTotal-perPackageCount)>>8);
+                    buffer[6] = (char)(perPackageTotal-perPackageCount);
+                    
+                    //保留字节
+                    buffer[7] =0;
+                    
+                    //信息长度
+                    buffer[8] =(char)(128>>8);//(char)((m_chunkDataSize%8+m_chunkDataSize/8)>>8);
+                    buffer[9] =(char)(128);//(char)(m_chunkDataSize%8+m_chunkDataSize/8);
+                    
+                    //信息内容
+                    memcpy(&buffer[10], (void*)&m_chunkData[m_curChunkIndex], 140-2-10);
+                    
+                    
+                    uint16_t crc=make_crc16(128, &buffer[10]);
+                    NSLog(@"%d----%hu",perPackageCount,crc);
+                    
+                    //校验位
+                    buffer[138] = (char)(crc>>8);
+                    buffer[139] = (char)(crc);
+                    perPackageData =[NSData dataWithBytes:&buffer length:140];
+                }
+                
+                //perPackageCount++;
+                
+                uint8_t datatemp[20]={0};
+                [perPackageData getBytes:&datatemp range:NSMakeRange(packageSeq*20, MIN(perPackageData.length-packageSeq*20, 20))];
+                NSData *data = [NSData dataWithBytes:&datatemp  length:MIN(perPackageData.length-packageSeq*20, 20)];
+                //发送数据
+                
+                //
+                [self sendData:data];
+                if (packageSeq == perPackageSendCount-1) {//发完7次数据（一包数据）等待回应
+                    
+                    m_chunkState = CHUNK_WAITING_SEND_RESP;
+                    // todo               self.messageLabel.text = [NSString stringWithFormat:@"等待%d次设备响应",sendSeq+1];
+                }
+                packageSeq++;
+                
+                
+            }
+            else//数据发送完毕
+            {
+                m_chunkState = CHUNK_FINISHED_SEND;
+                
+                NSLog(@"数据发送完毕");
+            }
+        }
+        else
+        {
+            uint8_t datatemp[20]={0};
+            
+            
+            [perPackageData getBytes:&datatemp range:NSMakeRange(packageSeq*20,MIN(perPackageData.length-packageSeq*20, 20))];
+            NSData *data = [NSData dataWithBytes:&datatemp  length:MIN(perPackageData.length-packageSeq*20, 20)];
+            //发送数据
+            
+            //
+            [self sendData:data];
+            if (packageSeq == perPackageSendCount-1) {//发完7次数据（一包数据）等待回应
+                
+                m_chunkState = CHUNK_WAITING_SEND_RESP;
+                // todo         self.messageLabel.text = [NSString stringWithFormat:@"等待%d次设备响应",sendSeq+1];
+            }
+            packageSeq++;
+        }
+        
+        
+    }
+    else if (m_chunkState == CHUNK_FINISHED_SEND) {
+        if(m_chunkData) {
+            free(m_chunkData);
+            m_chunkData = NULL;
+        }
+        
+        //[self sendCommand:0x03];
+        // todo     self.messageLabel.text = [NSString stringWithFormat:@"升级成功"];
+        m_chunkState = CHUNK_UPGRADE_END;
+        if (sendTimer) {
+            [sendTimer invalidate];
+            sendTimer = nil;
+        }
+        //[self setState:CHUNK_UPGRADE_END message:@"升级结束"];
+    } else if (m_chunkState == CHUNK_WAITING_SEND_RESP) {
+        //   todo  self.messageLabel.text = [NSString stringWithFormat:@"等待%d次设备响应,%d次",sendSeq+1,waitCount];
+        
+        waitCount++;
+        if (waitCount >= 125) {
+            if (self.delegate && [self.delegate respondsToSelector:@selector(BleUpgradeHandleFail)]) {
+                [self.delegate BleUpgradeHandleFail];
+                
+                
+            }
+            [sendTimer invalidate];
+            
+            errSendCount ++;
+ 
+        }
+    }
+}
+
+/**
+ *  开始发送数据
+ *
+ *  @param data 将要发送的数据
+ */
+- (void) sendData: (NSData *)data {
+    //NSLog(@"%d-%@",perPackageCount,data);
+    [self.writeCharacteristic writeValue:data completion:nil];
+}
+-(void)openReadDataNotify
+{
+
+    __weak BleUpgradeHandle *weakSelf=self;
+    
+    [self.readCharacteristic setNotifyValue:YES
+                                 completion:^(NSError *error) {
+                                     __strong BleUpgradeHandle* strongSelf=weakSelf;
+                                     if (error) {
+                                         if (strongSelf.delegate && [strongSelf.delegate respondsToSelector:@selector(BleUpgradeHandleFail)]) {
+                                             [strongSelf.delegate BleUpgradeHandleFail];
+                                             
+                                             
+                                         }
+                                     }
+                                    else
+                                    {
+                                             [strongSelf beginUpgrade];
+                                    }
+                                         
+                                
+                                 } onUpdate:^(NSData *data, NSError *error) {
+                                     NSLog(@"升级收到数据:%@-%@",data,error);
+                                     __strong BleUpgradeHandle* strongSelf=weakSelf;
+                                     /*if (error) {
+                                         if (strongSelf.delegate && [strongSelf.delegate respondsToSelector:@selector(BleUpgradeHandleFail)]) {
+                                             [strongSelf.delegate BleUpgradeHandleFail];
+                                             
+                                         }
+                                         
+                                         
+                                     }
+                                     else{
+                                         [strongSelf receiveUpgradeData:data];
+                                     }*/
+                                     [strongSelf receiveUpgradeData:data];
+                                 }];
+   
+  
+}
+- (void)receiveUpgradeData:(NSData *)receiveData {
+    //NSLog(@"receiveData = %@", receiveData);
+    if(receiveData)
+    {
+     [self processChunkData:receiveData];
+    }
+}
+
+- (void) processChunkData:(NSData *)data
+{
+    if(m_chunkState == CHUNK_WAITING_HAND_RESP) {
+
+        handShakeCount++;
+        if(handShakeCount==2)//握手成功开始升级
+        {
+            m_chunkState = CHUNK_SEND_CHUNKS;//CHUNK_WAITING_UPGRADE_START_RESP;//发送启动升级命令
+            [self sendChunkData];
+            
+        }
+        else
+        {
+            m_chunkState = CHUNK_WAITING_HAND_RESP;
+            //    [self handShakeNext:self.activePeripheral recvData:data];
+            
+        }
+    } else if(m_chunkState == CHUNK_WAITING_SEND_RESP || m_chunkState == CHUNK_SEND_CHUNKS) {
+        UInt8 buffer[20]={0};
+        [data getBytes:&buffer length:20];
+        errSendCount = 0;
+        
+        if (buffer[0] == 0xF2) {
+            packageSeq = 0;
+            if(buffer[2] == 0xA1) {//正常应答
+                errRespCount = 0;
+                sendSeq++;
+                m_chunkState = CHUNK_SEND_CHUNKS;
+                m_curChunkIndex += 64*2;
+                perPackageCount++;
+                
+                //int count = m_chunkDataSize/64*2;
+                float progress =m_curChunkIndex*1.00/m_chunkDataSize;// sendSeq/(count * 1.0);
+                NSLog(@"升级进度:%f",progress);
+                if (self.delegate && [self.delegate respondsToSelector:@selector(BleUpgradeHandleProgress:)]) {
+                    [self.delegate BleUpgradeHandleProgress:progress];
+                    
+                }
+                
+                if((progress-1)>=0.000000001)
+                {
+                    if(m_chunkData) {
+                        free(m_chunkData);
+                        m_chunkData = NULL;
+                    }
+                    
+                    if (sendTimer) {
+                        [sendTimer invalidate];
+                        sendTimer = nil;
+                    }
+                    bUpgrateComplete=YES;
+                    NSLog(@"升级ok");
+                    
+                }
+                //    todo            self.progressView.progress = progress;
+            } else if(buffer[2] == 0xA3) {//异常应答重新发送数据
+                m_chunkState=CHUNK_UPGRADE_ERROR;
+                // todo        [self setState:CHUNK_UPGRADE_ERROR message:@"设备返回失败,升级失败。"];
+                if (self.delegate && [self.delegate respondsToSelector:@selector(BleUpgradeHandleFail)]) {
+                    [self.delegate BleUpgradeHandleFail];
+                }
+                
+                if (sendTimer) {
+                    [sendTimer invalidate];
+                    sendTimer = nil;
+                }
+            }
+        }
+    }
+}
+
+// CRC16 校验
+uint16_t make_crc16(uint16_t length, uint8_t *data)
+{
+    char j;
+    int i;
+    unsigned short retCrc16;
+    
+    retCrc16 = 0xffff;
+    
+    for(i=0;i<length;i++)
+    {
+        retCrc16 ^= ((*data++)&0x000000ff);
+        
+        for(j = 0; j < 8; j++)
+        {
+            if(retCrc16&0x01)
+            {
+                retCrc16=(retCrc16>>1)^0x8408;
+            }
+            else
+            {
+                retCrc16>>=0x01;
+            }
+        }
+    }
+    return ~retCrc16;
+}
+#pragma mark - CLBLEDataSource
+-(NSString*)broadName{
+    return self.BLEBroadName;
+}
+-(LGPeripheral*)connectedPeripheral
+{
+   return [CLBLEManager sharedInstance].currentLGPeripheral;
+}
+
+-(NSArray*)scanServiceArray{
+    return @[[CBUUID UUIDWithString:CSLEEP_SERVICE_UUID]];
+}
+
+-(NSString*)readSeriveID{
+    return CSLEEP_SERVICE_UUID;
+}
+
+-(NSString*)readCharacteristicID{
+    return CSLEEP_READ_CHARACTER_UUID;
+}
+
+-(NSString*)writeSeriveID{
+    return CSLEEP_SERVICE_UUID;
+}
+
+-(NSString*)writeCharacteristicID{
+    return CSLEEP_WRITE_CHARACTER_UUID;
+}
+
+-(LGCharacteristic*)writeCharacteristic{
+    if (!_writeCharacteristic) {
+        for (LGService* service in currentLGPeripheral.services) {
+            if ([service.UUIDString isEqualToString:[self.child writeSeriveID]]) {
+                for (LGCharacteristic* character in service.characteristics) {
+                    if ([character.UUIDString isEqualToString:[self.child writeCharacteristicID]]) {
+                        _writeCharacteristic=character;
+                    }
+                }
+            }
+            
+        }
+    }
+    return _writeCharacteristic;
+}
+
+-(LGCharacteristic*)readCharacteristic{
+    if (!_readCharacteristic) {
+        for (LGService* service in currentLGPeripheral.services) {
+            for (LGCharacteristic* character in service.characteristics) {
+                if ([character.UUIDString isEqualToString:[self.child readCharacteristicID]]) {
+                    _readCharacteristic=character;
+                }
+            }
+            
+        }
+    }
+    return _readCharacteristic;
+}
+-(void)dealloc
+{
+    NSLog(@"BleUpgradeHandle dealloc");
+    [[NSNotificationCenter defaultCenter]removeObserver:self name:kLGPeripheralDidDisconnect object:nil];
+    
+}
+
+@end

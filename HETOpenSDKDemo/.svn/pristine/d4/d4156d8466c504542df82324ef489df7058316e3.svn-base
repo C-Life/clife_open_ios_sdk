@@ -1,0 +1,56 @@
+//
+//  HETAuthorize.h
+//  openSDK
+//
+//  Created by peng on 6/25/15.
+//  Copyright (c) 2015 peng All rights reserved.
+//
+#import <Foundation/Foundation.h>
+#import <UIKit/UIKit.h>
+
+#import "HETAccount.h"
+
+
+//#define testAPPKEY @"20001"
+//#define testAPPSECRET @"518088865188479f812b973be9648761"
+
+
+@class HETAuthorize;
+
+
+
+typedef void(^authenticationCompletedBlock)(HETAccount *account, NSError *error);
+
+@interface HETAuthorize : NSObject
+
+/*- (id)initWithAppKey:(NSString *)appKey
+           appSecret:(NSString *)appSecret
+         redirectUrl:(NSString *)redirectUrl
+        authorizeUrl:(NSString *)authorizeUrl
+      accessTokenUrl:(NSString*)accessTokenUrl
+  refreshAccessToken:(NSString*)refreshAccessTokenURL;*/
+/**
+ *  初始化授权认证
+ *
+ *  @param appKey    注册开发者账号时的appKey
+ *  @param appSecret 注册开发者账号时的appSecret
+ *
+ *  @return
+ */
+- (id)initWithAppKey:(NSString *)appKey
+           appSecret:(NSString *)appSecret;
+
+/**
+ *  是否授权认证
+ *
+ *  @return   YES为已经授权登录
+ */
+- (BOOL)isAuthenticated;
+/**
+ *  授权认证
+ *
+ *  @param completedBlock 授权认证回调
+ */
+- (void)authorizeWithCompleted:(authenticationCompletedBlock)completedBlock;
+- (void)unauthorize;
+@end

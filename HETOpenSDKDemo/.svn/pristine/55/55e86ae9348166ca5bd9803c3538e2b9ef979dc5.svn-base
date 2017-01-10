@@ -1,0 +1,500 @@
+
+//
+//  MattressBLEManagerApi.m
+//  CLBlueToothTool
+//
+//  Created by Sandy wu on 15/6/8.
+//  Copyright (c) 2015年 het. All rights reserved.
+//
+
+#import "MattressBLEManagerApi.h"
+#import "CSleepBlueToothDefine.h"
+
+#define WEAKSELF typeof(self) __weak weakSelf = self;
+#define STRONGSELF typeof(weakSelf) __strong strongSelf = weakSelf;
+
+@interface MattressBLEManagerApi()
+{
+    BLEMattressProtocol* sendRealTimeData;
+
+}
+
+@property (nonatomic,copy  ) NSString          * uniqueID;
+@property (nonatomic,strong) dispatch_source_t realDatatimer;
+@end
+
+
+@implementation MattressBLEManagerApi
+
+-(void)dealloc{
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+    [self stopFetchRealTimeData];
+    [[CLBLEManager sharedInstance] disconntectPeripheral:self.currentPeripheral withResultBlock:^(NSError *error) {
+    }];
+    if( self.currentPeripheral)
+    {
+        self.currentPeripheral=nil;
+    }
+
+   
+}
+- (instancetype)init
+{
+    self = [super init];
+    if(self)
+    {
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleDisconnectNotification:) name:kLGPeripheralDidDisconnect object:nil];
+    }
+    return self;
+}
+
+- (void) handleDisconnectNotification:(NSNotification*)notification
+{
+    self.currentPeripheral=nil;
+    
+}
+
+
+-(void)stopFetchRealTimeData
+{
+        if (self.realDatatimer){
+                   dispatch_async(dispatch_get_main_queue(), ^{
+                dispatch_source_cancel(self.realDatatimer);
+            });
+        }
+    
+
+    //self.state=CLBLEStateIdle;
+}
+-(void)suspendFetchRealTimeData
+{
+//    if (self.realDatatimer)
+//        dispatch_suspend(self.realDatatimer);
+}
+-(void)resumeFetchRealTimeData
+{
+//    if (self.realDatatimer)
+//        dispatch_resume(self.realDatatimer);
+}
+-(NSString *)uniqueID
+{
+    NSString* uniqueIDStr=@"000000";
+    if (self.currentPeripheral.name.length>=14) {
+        uniqueIDStr=[self.currentPeripheral.name substringWithRange:NSMakeRange(4, 6)];
+    }
+    return uniqueIDStr;
+}
+-(void)fetchRealTimeDataWithInterVal:(NSTimeInterval)interval
+                           WithTimes:(NSTimeInterval)times
+                        SuccessBlock:(void(^)(NSData* data))success
+                           FailBlock:(void(^)(NSError* error))fail
+{
+    dispatch_async(dispatch_get_main_queue(), ^{
+        if (self.realDatatimer) {
+            return;
+        }
+        __block NSUInteger  tick=0;
+        dispatch_queue_t queue = dispatch_get_main_queue();
+        self.realDatatimer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0,queue);
+        dispatch_source_set_timer(self.realDatatimer,dispatch_walltime(NULL, 0),(interval?:3)*NSEC_PER_SEC, 0);
+        dispatch_source_set_event_handler(self.realDatatimer, ^{
+            if (self.realDatatimer==NULL) {
+                return ;
+            }
+            if (tick < (times?:NSIntegerMax)){
+                
+                if ( self.state != CLBLEStateIdle) {
+                    //NSError* error=[NSError errorWithDomain:@"MattressBLEManagerApi" code:-1 userInfo:@{@"userInfo":@"蓝牙繁忙"}];
+                     NSError* error=[NSError errorWithDomain:kCLBLEManagerErrorDomain code:kBLEBusyErrorCode userInfo:@{@"message":kBLEBusyErrorCodeErrorMessage}];
+                    fail(error);
+                    return ;
+                }
+                NSLog(@"fetchRealTimeDataWithInterVal00");
+                __weak MattressBLEManagerApi* weakSelf=self;
+                if (self.connectedPeripheral.cbPeripheral.state==CBPeripheralStateConnected) {
+                    sendRealTimeData =[BLEMattressProtocol getRequestRealTimePacketData:self.uniqueID];
+                    [self sendBLEDataWithDataPacketProtocol:sendRealTimeData
+                                                    Success:^(NSData *data) {
+                                                        /*获取成功要分三种情况:
+                                                         1.如果是正式版本，只判断上床还是下床，分别调用服务器接口，把
+                                                         这两种状态给服务器，做联动.
+                                                         2.如果是展厅版本，除了要上传上床和下床指令，还要把每一笔实时数据
+                                                         给到服务器。
+                                                         3.上床和下床用KVO来做：初始化的时候，判断呼吸、心跳和翻身，如果
+                                                         任意一个有值，就判断为上床；不是初始化的情况，监控变化，只要有变化，
+                                                         也是判断呼吸、心跳和翻身的值来判断是上床还是下床。
+                                                         */
+                                                        success(data);
+                                                        NSLog(@"data is %@",data);
+                                                    } fail:^(NSError *error) {
+                                                        NSLog(@"error is %@",error);
+                                                        fail(error);
+                                                    }];
+                    
+                }
+                else{
+                    NSLog(@"fetchRealTimeDataWithInterVal001");
+                    self.currentPeripheral=nil;
+                    
+                    [[CLBLEManager sharedInstance] conntectPeripheralWithBLEDataSource:self
+                                                                       withResultBlock:^(LGPeripheral *peripheral, NSError *error) {
+                                                                           NSLog(@"fetchRealTimeDataWithInterVal01");
+                                                                           if (error) {
+                                                                               fail(error);
+                                                                               
+                                                                               NSLog(@"连接失败error%@",error);
+                                                                               
+                                                                           }
+                                                                           else{
+                                                                               weakSelf.currentPeripheral=peripheral;
+                                                                               sendRealTimeData =[BLEMattressProtocol getRequestRealTimePacketData:self.uniqueID];
+                                                                               [self sendBLEDataWithDataPacketProtocol:sendRealTimeData
+                                                                                                               Success:^(NSData *data) {
+                                                                                                                   /*获取成功要分三种情况:
+                                                                                                                    1.如果是正式版本，只判断上床还是下床，分别调用服务器接口，把
+                                                                                                                    这两种状态给服务器，做联动.
+                                                                                                                    2.如果是展厅版本，除了要上传上床和下床指令，还要把每一笔实时数据
+                                                                                                                    给到服务器。
+                                                                                                                    3.上床和下床用KVO来做：初始化的时候，判断呼吸、心跳和翻身，如果
+                                                                                                                    任意一个有值，就判断为上床；不是初始化的情况，监控变化，只要有变化，
+                                                                                                                    也是判断呼吸、心跳和翻身的值来判断是上床还是下床。
+                                                                                                                    */
+                                                                                                                   success(data);
+                                                                                                                   NSLog(@"data is %@",data);
+                                                                                                               } fail:^(NSError *error) {
+                                                                                                                   NSLog(@"error is %@",error);
+                                                                                                                   fail(error);
+                                                                                                               }];
+                                                                           }
+                                                                       }];
+                    
+                }
+        }else{
+            dispatch_source_cancel(self.realDatatimer);
+        }
+         tick ++;
+    });
+    dispatch_source_set_cancel_handler(self.realDatatimer, ^{
+        dispatch_source_set_event_handler_f(self.realDatatimer,NULL);
+#if !OS_OBJECT_USE_OBJC
+            dispatch_release(self.realDatatimer);
+#endif
+        self.realDatatimer = NULL;
+        });
+        dispatch_resume(self.realDatatimer);
+    });
+    
+}
+
+-(void)fetchRealTimeDataSuccessBlock:(void(^)(NSData* data))success
+                           FailBlock:(void(^)(NSError* error))fail{
+    if (self.connectedPeripheral.cbPeripheral.state==CBPeripheralStateConnected){
+        NSLog(@"CBPeripheralStateConnected");
+         sendRealTimeData=[BLEMattressProtocol getRequestRealTimePacketData:self.uniqueID];
+        [self sendBLEDataWithDataPacketProtocol:sendRealTimeData
+                                        Success:^(NSData *data) {
+                                            NSLog(@"data is %@",data);
+                                            success(data);
+                                        } fail:^(NSError *error) {
+                                            NSLog(@"error is %@",error);
+                                            fail(error);
+                                        }];
+
+    }else{
+        self.currentPeripheral=nil;
+        WEAKSELF;
+        [[CLBLEManager sharedInstance] conntectPeripheralWithBLEDataSource:self
+                                                           withResultBlock:^(LGPeripheral *peripheral, NSError *error) {
+           if (error) {
+               fail(error);
+           }
+           else{
+               weakSelf.currentPeripheral=peripheral;
+               sendRealTimeData=[BLEMattressProtocol getRequestRealTimePacketData:self.uniqueID];
+               [self sendBLEDataWithDataPacketProtocol:sendRealTimeData
+                                               Success:^(NSData *data) {
+                                                   NSLog(@"data is %@",data);
+                                                   success(data);
+                                               } fail:^(NSError *error) {
+                                                   NSLog(@"error is %@",error);
+                                                   fail(error);
+                                               }];
+           }
+
+        }];
+
+    }
+//    NSString* broadName=self.currentPeripheral.name;
+//    NSString* uniqueID=@"000000";
+//    if (broadName.length>=14) {
+//        uniqueID=[broadName substringWithRange:NSMakeRange(4, 6)];
+//    }
+//    sendRealTimeData=[BLEMattressProtocol getRequestRealTimePacketData:uniqueID];
+//    [self sendBLEDataWithDataPacketProtocol:sendRealTimeData
+//                                    Success:^(NSData *data) {
+//                                        NSLog(@"data is %@",data);
+//                                        success(data);
+//                                    } fail:^(NSError *error) {
+//                                        NSLog(@"error is %@",error);
+//                                        fail(error);
+//                                    }];
+}
+
+
+
+
+-(void)fetchHistoryDataWithSuccessBlock:(void(^)(NSData* data))success
+                              FailBlock:(void(^)(NSError* error))fail{
+    
+    NSLog(@"fetchHistoryDataWithSuccessBlock0");
+    NSLog(@"CLBLEStateIdle == %d",CLBLEStateIdle);
+    NSLog(@"self.state == %d",self.state);
+    
+    //不相等说明蓝牙繁忙
+    if ( self.state != CLBLEStateIdle) {
+        NSError* error=[NSError errorWithDomain:kCLBLEManagerErrorDomain code:kBLEBusyErrorCode userInfo:@{@"message":kBLEBusyErrorCodeErrorMessage}];;
+        fail(error);
+        return ;
+    }
+    __weak MattressBLEManagerApi* weakSelf=self;
+    if (self.connectedPeripheral.cbPeripheral.state==CBPeripheralStateConnected) {
+        sendRealTimeData =[BLEMattressProtocol getRequestStatisticalPacketData:self.uniqueID];
+        [self sendBLEDataWithDataPacketProtocol:sendRealTimeData
+                                        Success:^(NSData *data) {
+                                            /*历史数据比较简单，获取历史数据，上传到服务器，然后通知设备，清除数据。
+                                             然后告诉外面结果就说成功了，
+                                             业务接口自己去服务器拉取数据，整个上传数据流程完毕。
+                                             */
+                                            success(data);
+                                            NSLog(@"data is %@",data);
+                                        } fail:^(NSError *error) {
+                                            NSLog(@"error is %@",error);
+                                            fail(error);
+                                        }];
+    }
+    else{
+        NSLog(@"fetchHistoryDataWithSuccessBlock11");
+        self.currentPeripheral=nil;
+        [[CLBLEManager sharedInstance] conntectPeripheralWithBLEDataSource:self
+                                                           withResultBlock:^(LGPeripheral *peripheral, NSError *error) {
+                                                               NSLog(@"fetchHistoryDataWithSuccessBlock1");
+                       if (error) {
+                           fail(error);
+                       }
+                       else{
+                           weakSelf.currentPeripheral=peripheral;
+                           sendRealTimeData =[BLEMattressProtocol getRequestStatisticalPacketData:self.uniqueID];
+                           [weakSelf sendBLEDataWithDataPacketProtocol:sendRealTimeData
+                                                           Success:^(NSData *data) {
+                                                               /*历史数据比较简单，获取历史数据，上传到服务器，然后通知设备，清除数据。
+                                                                然后告诉外面结果就说成功了，
+                                                                业务接口自己去服务器拉取数据，整个上传数据流程完毕。
+                                                                */
+                                                               success(data);
+                                                               NSLog(@"data is %@",data);
+                                                           } fail:^(NSError *error) {
+                                                               NSLog(@"error is %@",error);
+                                                               fail(error);
+                                                           }];
+                       }
+        }];
+    }
+
+}
+
+-(void)deleteStatisticalDataWithSuccessBlock:(void(^)(NSData* data))success
+                                   FailBlock:(void(^)(NSError* error))fail
+{
+    if ( self.state != CLBLEStateIdle) {
+         NSError* error=[NSError errorWithDomain:kCLBLEManagerErrorDomain code:kBLEBusyErrorCode userInfo:@{@"message":kBLEBusyErrorCodeErrorMessage}];
+        fail(error);
+        return ;
+    }
+    __weak MattressBLEManagerApi* weakSelf=self;
+    if (self.connectedPeripheral.cbPeripheral.state==CBPeripheralStateConnected) {
+        sendRealTimeData=[BLEMattressProtocol getDeleteStatisticalPacketData:self.uniqueID];
+        [self sendBLEDataWithDataPacketProtocol:sendRealTimeData
+                                        Success:^(NSData *data) {
+                                            NSLog(@"data is %@",data);
+                                            success(data);
+                                        } fail:^(NSError *error) {
+                                            NSLog(@"error is %@",error);
+                                            fail(error);
+                                        }];
+    }
+    else{
+        self.currentPeripheral=nil;
+        [[CLBLEManager sharedInstance] conntectPeripheralWithBLEDataSource:self
+                                                           withResultBlock:^(LGPeripheral *peripheral, NSError *error) {
+                               if (error) {
+                                   fail(error);
+                               }
+                               else{
+                                   weakSelf.currentPeripheral=peripheral;
+                                   sendRealTimeData=[BLEMattressProtocol getDeleteStatisticalPacketData:self.uniqueID];
+                                   [weakSelf sendBLEDataWithDataPacketProtocol:sendRealTimeData
+                                                                   Success:^(NSData *data) {
+                                                                       NSLog(@"data is %@",data);
+                                                                       success(data);
+                                                                   } fail:^(NSError *error) {
+                                                                       NSLog(@"error is %@",error);
+                                                                       fail(error);
+                                                                   }];
+                               }
+
+        }];
+    }
+}
+
+/*-(void)fetchBLEHandShakeSuccessBlock:(void(^)(NSData* data))success
+                           FailBlock:(void(^)(NSError* error))fail
+{
+    NSString* broadName=self.currentPeripheral.name;
+    NSString* uniqueID=@"000000";
+    if (broadName.length>=14) {
+        uniqueID=[broadName substringWithRange:NSMakeRange(4, 6)];
+    }
+
+    sendRealTimeData=[BLEMattressProtocol getRequestConfirmUpgrade:uniqueID];
+    [self sendBLEDataWithDataPacketProtocol:sendRealTimeData
+                                    Success:^(NSData *data) {
+                                        NSLog(@"data is %@",data);
+                                        success(data);
+                                    } fail:^(NSError *error) {
+                                        NSLog(@"error is %@",error);
+                                        fail(error);
+                                    }];
+}*/
+-(void)fetchBLEHandShakeSuccessBlock:(void(^)(NSData* data))success
+                           FailBlock:(void(^)(NSError* error))fail
+{
+
+    if ( self.state != CLBLEStateIdle) {
+       // NSError* error=[NSError errorWithDomain:@"MattressBLEManagerApi" code:-1 userInfo:@{@"userInfo":@"蓝牙繁忙"}];
+        NSError* error=[NSError errorWithDomain:kCLBLEManagerErrorDomain code:kBLEBusyErrorCode userInfo:@{@"message":kBLEBusyErrorCodeErrorMessage}];
+        fail(error);
+        return ;
+    }
+    __weak MattressBLEManagerApi* weakSelf=self;
+    if (self.connectedPeripheral.cbPeripheral.state==CBPeripheralStateConnected) {
+        sendRealTimeData =[BLEMattressProtocol getRequestConfirmUpgrade:self.uniqueID];
+        [self sendBLEDataWithDataPacketProtocol:sendRealTimeData
+                                        Success:^(NSData *data) {
+                                            success(data);
+                                            NSLog(@"data is %@",data);
+                                        } fail:^(NSError *error) {
+                                            NSLog(@"error is %@",error);
+                                            fail(error);
+                                        }];
+    }
+    else{
+        self.currentPeripheral=nil;
+        [[CLBLEManager sharedInstance] conntectPeripheralWithBLEDataSource:self
+                                                           withResultBlock:^(LGPeripheral *peripheral, NSError *error) {
+                                                               if (error) {
+                                                                   fail(error);
+                                                               }
+                                                               else{
+                                                                   weakSelf.currentPeripheral=peripheral;
+                                                                   sendRealTimeData =[BLEMattressProtocol getRequestConfirmUpgrade:self.uniqueID];
+                                                                   [weakSelf sendBLEDataWithDataPacketProtocol:sendRealTimeData
+                                                                                                       Success:^(NSData *data) {
+                                                                                                           success(data);
+                                                                                                           NSLog(@"data is %@",data);
+                                                                                                       } fail:^(NSError *error) {
+                                                                                                           NSLog(@"error is %@",error);
+                                                                                                           fail(error);
+                                                                                                       }];
+                                                               }
+                                                           }];
+    }
+
+}
+
+-(void)fetchProtocolVersionSuccessBlock:(void(^)(NSData* data))success
+                              FailBlock:(void(^)(NSError* error))fail
+{
+
+
+    if ( self.state != CLBLEStateIdle) {
+        //NSError* error=[NSError errorWithDomain:@"MattressBLEManagerApi" code:-1 userInfo:@{@"userInfo":@"蓝牙繁忙"}];
+         NSError* error=[NSError errorWithDomain:kCLBLEManagerErrorDomain code:kBLEBusyErrorCode userInfo:@{@"message":kBLEBusyErrorCodeErrorMessage}];
+        fail(error);
+        return ;
+    }
+    __weak MattressBLEManagerApi* weakSelf=self;
+    if (self.connectedPeripheral.cbPeripheral.state==CBPeripheralStateConnected) {
+        sendRealTimeData =[BLEMattressProtocol getRequestProtocolVersion:self.uniqueID];
+        [self sendBLEDataWithDataPacketProtocol:sendRealTimeData
+                                        Success:^(NSData *data) {
+                                            success(data);
+                                            NSLog(@"data is %@",data);
+                                        } fail:^(NSError *error) {
+                                            NSLog(@"error is %@",error);
+                                            fail(error);
+                                        }];
+    }
+    else{
+        self.currentPeripheral=nil;
+        [[CLBLEManager sharedInstance] conntectPeripheralWithBLEDataSource:self
+                                                           withResultBlock:^(LGPeripheral *peripheral, NSError *error) {
+                                                               if (error) {
+                                                                   fail(error);
+                                                               }
+                                                               else{
+                                                                   weakSelf.currentPeripheral=peripheral;
+                                                                   sendRealTimeData =[BLEMattressProtocol getRequestProtocolVersion:self.uniqueID];
+                                                                   [weakSelf sendBLEDataWithDataPacketProtocol:sendRealTimeData
+                                                                                                       Success:^(NSData *data) {
+                                                                                                           success(data);
+                                                                                                           NSLog(@"data is %@",data);
+                                                                                                       } fail:^(NSError *error) {
+                                                                                                           NSLog(@"error is %@",error);
+                                                                                                           fail(error);
+                                                                                                       }];
+                                                               }
+                                                           }];
+    }
+
+
+}
+#pragma mark - CLBLEDataSource
+-(NSString*)broadName{
+    return self.currentBroadName;
+}
+
+-(NSArray*)scanServiceArray{
+    return @[[CBUUID UUIDWithString:CSLEEP_SERVICE_UUID]];
+}
+
+-(NSString*)readSeriveID{
+    return CSLEEP_SERVICE_UUID;
+}
+
+-(NSString*)readCharacteristicID{
+    return CSLEEP_READ_CHARACTER_UUID;
+}
+
+-(NSString*)writeSeriveID{
+    return CSLEEP_SERVICE_UUID;
+}
+
+-(NSString*)writeCharacteristicID{
+    return CSLEEP_WRITE_CHARACTER_UUID;
+}
+
+-(LGPeripheral*)connectedPeripheral{
+    return self.currentPeripheral;
+}
+
+#pragma mark - getter and setter
+-(BOOL)BLEIsPowerOn{
+    NSLog(@"BLEIsPowerOn:%d",[CLBLEManager sharedInstance].manager.state);
+    if ([CLBLEManager sharedInstance].manager.state==CBCentralManagerStatePoweredOn||[CLBLEManager sharedInstance].manager.state==CBCentralManagerStateUnknown) {
+        return YES;
+    }
+    else{
+        return NO;
+    }
+}
+@end

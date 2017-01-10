@@ -1,0 +1,4 @@
+platform :ios, '7.0'
+pod 'FMDB','2.5'
+pod 'HETOpenSDK','0.0.1'
+inhibit_all_warnings!

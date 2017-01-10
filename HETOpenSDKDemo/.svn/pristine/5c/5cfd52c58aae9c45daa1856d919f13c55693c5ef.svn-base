@@ -1,0 +1,28 @@
+//  HETNetWorkRequestOperation.h
+//  openSDK
+//
+//
+//  Created by peng on 6/25/15.
+//  Copyright (c) 2015 peng All rights reserved.
+//
+#import <Foundation/Foundation.h>
+@class HETNetWorkRequestOperation;
+typedef void(^WeiboRequestCompletedBlock)(id result, NSData *data, NSError *error);
+typedef void(^SuccessBlock)(HETNetWorkRequestOperation *operation, id responseObject);
+typedef void(^FailureBlock)(HETNetWorkRequestOperation *operation, NSError *error);
+@interface HETNetWorkRequestOperation : NSOperation
+
+@property (nonatomic, strong, readonly) NSURLRequest *request;
+@property (nonatomic, readonly) BOOL sessionDidExpire;
+
+/*- (id)initWithRequest:(NSURLRequest *)request
+                queue:(dispatch_queue_t)queue
+            completed:(WeiboRequestCompletedBlock)completedBlock
+            cancelled:(void (^)())cancelBlock;
+*/
+- (id)initWithRequest:(NSURLRequest *)request
+                queue:(dispatch_queue_t)queue
+            BlockWithSuccess:(SuccessBlock)success
+              failure:(FailureBlock)failure;
+
+@end

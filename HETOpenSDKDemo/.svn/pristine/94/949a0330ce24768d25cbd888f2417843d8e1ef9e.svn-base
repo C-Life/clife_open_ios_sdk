@@ -1,0 +1,434 @@
+//  HETNetWorkRequest.m
+//  openSDK
+//
+//
+//  Created by peng on 6/25/15.
+//  Copyright (c) 2015 peng All rights reserved.
+//
+
+#import "HETNetWorkRequest.h"
+#import "HETURLRequestHelper.h"
+#import "HETAccounts.h"
+#import <commonCrypto/CommonDigest.h>
+
+#import "NSDate+SSToolkitAdditions.h"
+
+#define kHETAPIBaseUrl @"https://200.200.200.50/v1/app/open"//@"https://test.open.api.clife.cn/v1"
+#define kHETUploadAPIBaseUrl @"https://200.200.200.50/v1/app/open"//@"https://test.open.api.clife.cn/v1"
+@interface HETNetWorkRequest ()
+
+@property (nonatomic, strong) NSOperationQueue *requestQueue;
+@property (nonatomic, strong) NSOperation *lastAddedOperation;
+
+@property (nonatomic, strong) dispatch_queue_t workingQueue;
+@property (nonatomic, strong) dispatch_queue_t barrierQueue;
+
+@end
+
+
+@implementation HETNetWorkRequest
+
+
++ (HETNetWorkRequest *)shared
+{
+    static dispatch_once_t once;
+    static id instance;
+    dispatch_once(&once, ^{instance = self.new;});
+    return instance;
+}
+
+- (id)init
+{
+    if ((self = [super init]))
+    {
+        _requestQueue = NSOperationQueue.new;
+        _requestQueue.maxConcurrentOperationCount = 4;
+        _workingQueue = dispatch_queue_create("com.HETSDK.HETNetRequest", DISPATCH_QUEUE_SERIAL);
+        _barrierQueue = dispatch_queue_create("com.HETSDK.HETNetRequestBarrierQueue", DISPATCH_QUEUE_CONCURRENT);
+        if ([[HETAccounts shared] currentAccount]) { // Get current users's access token;
+            self.accessToken = [[HETAccounts shared]currentAccount].accessToken;
+        }
+    }
+    return self;
+}
+
+- (void)dealloc
+{
+    [self.requestQueue cancelAllOperations];
+}
+
+- (void)setMaxConcurrentDownloads:(NSInteger)maxConcurrentDownloads
+{
+    _requestQueue.maxConcurrentOperationCount = maxConcurrentDownloads;
+}
+
+- (NSInteger)maxConcurrentDownloads
+{
+    return _requestQueue.maxConcurrentOperationCount;
+}
+
+- (HETNetWorkRequestOperation*)requestWithURLRequest:(NSURLRequest *)request
+                                    BlockWithSuccess:(SuccessBlock)success
+                                             failure:(FailureBlock)failure;
+{
+    
+    
+   
+    
+    __block HETNetWorkRequestOperation *operation;
+    __weak HETNetWorkRequest *wself = self;
+    //dispatch_barrier_async(self.barrierQueue, ^{
+        operation=[[HETNetWorkRequestOperation alloc]initWithRequest:request queue:wself.workingQueue BlockWithSuccess:^(HETNetWorkRequestOperation *operation, id responseObject) {
+            success(operation,responseObject);
+            
+        } failure:^(HETNetWorkRequestOperation *operation, NSError *error) {
+            failure(operation,error);
+        }];
+        [wself.requestQueue addOperation:operation];
+        //LIFO
+        [wself.lastAddedOperation addDependency:operation];
+        wself.lastAddedOperation = operation;
+
+  //  });
+    return operation;
+}
+
+/*- (NSDictionary *)processParams:(NSDictionary *)params {
+    NSMutableDictionary *dic = params ? [NSMutableDictionary dictionaryWithDictionary:params] : [NSMutableDictionary dictionary];
+    if (![dic objectForKey:@"accessToken"] && self.accessToken) {
+        [dic setObject:self.accessToken forKey:@"accessToken"];
+    }
+    return dic;
+}*/
+-(void)startRequestWithHTTPMethod: (HETRequestMethod)method  withRequestUrl:(NSString *)requestUrl processParams:(NSDictionary *)params needSign:(BOOL)needSign
+                 BlockWithSuccess:(SuccessBlock)success
+                          failure:(FailureBlock)failure{
+    HETAccount *account=[[HETAccounts shared]currentAccount];
+    NSDate *refreshTime           = [NSDate date];
+    NSTimeZone *zone = [NSTimeZone systemTimeZone];
+    
+    NSInteger interval = [zone secondsFromGMTForDate: refreshTime];
+    
+    NSDate *localeDate = [refreshTime  dateByAddingTimeInterval: interval];
+    
+    //NSLog(@"%@,%@,%d", refreshTime,account.expirationDate,[refreshTime compare:account.expirationDate]);
+    
+
+    // accessToken尚未失效，直接访问
+    if ([refreshTime compare:account.expirationDate]!=NSOrderedDescending) {
+        
+        if(method==HETRequestMethodGet)
+        {
+            NSDictionary *processedParams =[self generateSignWithHTTPMethod:HETRequestMethodGet withRequestUrl:requestUrl processParams:params needSign:needSign];
+            NSLog(@"fullURL:%@,%@",requestUrl,processedParams);
+            NSURLRequest *request = [HETURLRequestHelper getRequestWithUrl:requestUrl params:processedParams];
+            [self requestWithURLRequest:request BlockWithSuccess:success failure:failure];
+        }
+        else if (method==HETRequestMethodPost)
+        {
+            NSDictionary *processedParams =[self generateSignWithHTTPMethod:HETRequestMethodPost withRequestUrl:requestUrl processParams:params needSign:needSign];
+            NSLog(@"url:%@,%@",requestUrl,processedParams);
+            NSURLRequest *request = [HETURLRequestHelper postRequestWithUrl:requestUrl params:processedParams];
+            [self requestWithURLRequest:request BlockWithSuccess:success failure:failure];
+            
+        }
+    }
+    
+    // accessToken失效，refreshToken未失效，刷新后再访问
+    else /*if ((account.refreshToken!= nil)
+             && ([refreshTime compare:account.expirationDate]==NSOrderedDescending)
+             && ([refreshTime compare:account.refreshTokenDate]!=NSOrderedDescending))*/
+    {
+        // 刷新token
+        [self requestWithURLRequest:[self refreshAcessTokenRequestUrl:account.refreshToken] BlockWithSuccess:^(HETNetWorkRequestOperation *operation, id responseObject) {
+            NSDictionary *result = responseObject;
+            NSInteger code= [[(NSDictionary *)result objectForKey:@"code"] integerValue];
+            if (code!=0) {
+                NSLog(@"%@",[(NSDictionary *)result objectForKey:@"msg"]);
+                NSError *error=[[NSError alloc]initWithDomain:@"" code:1000 userInfo:responseObject];
+                failure(operation,error);
+                
+            }
+            
+            NSDictionary *dict = [(NSDictionary *)result objectForKey:@"data"];
+            NSString *accessToken   =  [dict objectForKey:@"accessToken"];
+            NSString *openId        =  [dict objectForKey:@"openId"];
+            NSString * expiresIn    =  [dict objectForKey:@"expiresIn"];
+            NSString *refreshToken  =  [dict objectForKey:@"refreshToken"];
+            NSString *refreshTokenExpires =[dict objectForKey:@"refreshTokenExpires"];
+            
+            if (accessToken.length > 0 && openId.length > 0) {
+                HETAccount *account = [HETAccount new];
+                account.accessToken = accessToken;
+                account.openId = openId;
+                account.refreshToken = refreshToken;
+                account.expirationDate = [NSDate dateWithTimeIntervalSinceNow:[expiresIn integerValue]];
+                account.refreshTokenDate=[NSDate dateWithTimeIntervalSinceNow:[refreshTokenExpires integerValue]];
+                
+                [[HETAccounts shared] addAccount:account];
+                [[HETNetWorkRequest shared] setAccessToken:accessToken];
+                if(method==HETRequestMethodGet)
+                {
+                    NSDictionary *processedParams =[self generateSignWithHTTPMethod:HETRequestMethodGet withRequestUrl:requestUrl processParams:params needSign:needSign];
+                    //NSLog(@"fullURL:%@,%@",requestUrl,params);
+                    NSURLRequest *request = [HETURLRequestHelper getRequestWithUrl:requestUrl params:processedParams];
+                    [self requestWithURLRequest:request BlockWithSuccess:success failure:failure];
+                }
+                else if (method==HETRequestMethodPost)
+                {
+                    NSDictionary *processedParams =[self generateSignWithHTTPMethod:HETRequestMethodPost withRequestUrl:requestUrl processParams:params needSign:needSign];
+                    //NSLog(@"url:%@,%@",requestUrl,processedParams);
+                    NSURLRequest *request = [HETURLRequestHelper postRequestWithUrl:requestUrl params:processedParams];
+                    [self requestWithURLRequest:request BlockWithSuccess:success failure:failure];
+                    
+                }
+                
+            }
+            
+            
+        } failure:^(HETNetWorkRequestOperation *operation, NSError *error) {
+            NSLog(@"error:%@",error);
+            failure(operation,error);
+            
+        }];
+    }
+    
+    // refreshToken失效，只能重新登录
+   /*else if ([refreshTime compare:account.refreshTokenDate]==NSOrderedDescending){
+        // 重新登录
+        
+        [[NSNotificationCenter defaultCenter] postNotificationName: @"kNotificationLogin" object: nil];
+        
+        
+    }*/
+    
+  
+}
+
+
+- (HETNetWorkRequestOperation*)getFromUrl:(NSString *)url
+                              params:(NSDictionary *)params
+                                 needSign:(BOOL)needSign
+                         BlockWithSuccess:(SuccessBlock)success
+                                  failure:(FailureBlock)failure{
+    
+    
+    
+    NSDictionary *processedParams =[self generateSignWithHTTPMethod:HETRequestMethodGet withRequestUrl:url processParams:params needSign:needSign];
+      //NSLog(@"fullURL:%@,%@",url,params);
+    NSURLRequest *request = [HETURLRequestHelper getRequestWithUrl:url params:processedParams];
+    return [self requestWithURLRequest:request BlockWithSuccess:success failure:failure];
+}
+
+- (HETNetWorkRequestOperation*)postToUrl:(NSString *)url
+                                  params:(NSDictionary *)params
+                                needSign:(BOOL)needSign
+                        BlockWithSuccess:(SuccessBlock)success
+                                 failure:(FailureBlock)failure{
+    NSDictionary *processedParams =[self generateSignWithHTTPMethod:HETRequestMethodPost withRequestUrl:url processParams:params needSign:needSign];
+   // NSLog(@"url:%@,%@",url,processedParams);
+    NSURLRequest *request = [HETURLRequestHelper postRequestWithUrl:url params:processedParams];
+   return [self requestWithURLRequest:request BlockWithSuccess:success failure:failure];
+}
+
+- (HETNetWorkRequestOperation*)getFromPath:(NSString *)apiPath
+                               params:(NSDictionary *)params
+                             needSign:(BOOL)needSign
+                          BlockWithSuccess:(SuccessBlock)success
+                                   failure:(FailureBlock)failure{
+    NSString * fullURL = [kHETAPIBaseUrl stringByAppendingString:apiPath];
+  
+    return [self getFromUrl:fullURL params:params needSign:needSign BlockWithSuccess:success failure:failure];
+}
+
+- (HETNetWorkRequestOperation*)postToPath:(NSString *)apiPath
+                              params:(NSDictionary *)params
+                            needSign:(BOOL)needSign
+                         BlockWithSuccess:(SuccessBlock)success
+                                  failure:(FailureBlock)failure {
+    NSString * fullURL= [kHETAPIBaseUrl stringByAppendingString:apiPath];
+    return [self postToUrl:fullURL params:params needSign:needSign BlockWithSuccess:success failure:failure];
+}
+
+
+
+-(void)startMultipartFormDataRequestWithRequestUrl:(NSString *)requestUrl processParams:(NSDictionary *)params
+                                  BlockWithSuccess:(SuccessBlock)success
+                                           failure:(FailureBlock)failure
+{
+    HETAccount *account=[[HETAccounts shared]currentAccount];
+    // 请求参数
+    NSMutableDictionary *param = params ? [NSMutableDictionary dictionaryWithDictionary:params] : [NSMutableDictionary dictionary];
+    if (![param objectForKey:@"accessToken"] && self.accessToken) {
+        [param setObject:self.accessToken forKey:@"accessToken"];
+    }
+
+    NSDate *refreshTime           = [NSDate date];
+    // accessToken尚未失效，直接访问
+    if ([refreshTime compare:account.expirationDate]!=NSOrderedDescending) {
+        
+            NSURLRequest *request = [HETURLRequestHelper postMultipartFormDataRequestWithUrl:requestUrl params:param];
+            [self requestWithURLRequest:request BlockWithSuccess:success failure:failure];
+        
+    }
+    
+    // accessToken失效，refreshToken未失效，刷新后再访问
+    else /*if ((account.refreshToken!= nil)
+          && ([refreshTime compare:account.expirationDate]==NSOrderedDescending)
+          && ([refreshTime compare:account.refreshTokenDate]!=NSOrderedDescending))*/
+    {
+        // 刷新token
+        [self requestWithURLRequest:[self refreshAcessTokenRequestUrl:account.refreshToken] BlockWithSuccess:^(HETNetWorkRequestOperation *operation, id responseObject) {
+            NSDictionary *result = responseObject;
+            NSInteger code= [[(NSDictionary *)result objectForKey:@"code"] integerValue];
+            if (code!=0) {
+                
+            }
+            
+            NSDictionary *dict = [(NSDictionary *)result objectForKey:@"data"];
+            NSString *accessToken   =  [dict objectForKey:@"accessToken"];
+            NSString *openId        =  [dict objectForKey:@"openId"];
+            NSString * expiresIn    =  [dict objectForKey:@"expiresIn"];
+            NSString *refreshToken  =  [dict objectForKey:@"refreshToken"];
+            NSString *refreshTokenExpires =[dict objectForKey:@"refreshTokenExpires"];
+            
+            if (accessToken.length > 0 && openId.length > 0) {
+                HETAccount *account = [HETAccount new];
+                account.accessToken = accessToken;
+                account.openId = openId;
+                account.refreshToken = refreshToken;
+                account.expirationDate = [NSDate dateWithTimeIntervalSinceNow:[expiresIn integerValue]];
+                account.refreshTokenDate=[NSDate dateWithTimeIntervalSinceNow:[refreshTokenExpires integerValue]];
+                
+                [[HETAccounts shared] addAccount:account];
+                [[HETNetWorkRequest shared] setAccessToken:accessToken];
+                NSURLRequest *request = [HETURLRequestHelper postMultipartFormDataRequestWithUrl:requestUrl params:param];
+                [self requestWithURLRequest:request BlockWithSuccess:success failure:failure];
+                
+            }
+            
+            
+        } failure:^(HETNetWorkRequestOperation *operation, NSError *error) {
+            
+            failure(operation,error);
+            
+        }];
+    }
+
+}
+
+
+
+
+
+//32位MD5加密方式
+- (NSString *)getMd5_32Bit_String:(NSString *)srcString{
+    const char *cStr = [srcString UTF8String];
+    unsigned char digest[CC_MD5_DIGEST_LENGTH];
+    CC_MD5( cStr, (CC_LONG)strlen(cStr), digest );
+    NSMutableString *result = [NSMutableString stringWithCapacity:CC_MD5_DIGEST_LENGTH * 2];
+    for(int i = 0; i < CC_MD5_DIGEST_LENGTH; i++)
+        [result appendFormat:@"%02x", digest[i]];
+    
+    return result;
+}
+
+- (NSDictionary *)generateSignWithHTTPMethod: (HETRequestMethod)method  withRequestUrl:(NSString *)requestUrl processParams:(NSDictionary *)params needSign:(BOOL)needSign{
+    
+    NSString *signSeed = @"";
+    
+    // 请求URL
+    NSString *url = requestUrl;
+    
+    // 请求参数
+    NSMutableDictionary *param = params ? [NSMutableDictionary dictionaryWithDictionary:params] : [NSMutableDictionary dictionary];
+    if (![param objectForKey:@"accessToken"] && self.accessToken) {
+        [param setObject:self.accessToken forKey:@"accessToken"];
+    }
+    if(needSign)
+    {
+      switch (method) {
+         case HETRequestMethodGet:
+         {
+            signSeed = [signSeed stringByAppendingString: @"GET"];
+            break;
+         }
+         case HETRequestMethodPost:
+         {
+            signSeed = [signSeed stringByAppendingString: @"POST"];
+            break;
+         }
+         case HETRequestMethodHead:
+         {
+            break;
+         }
+         case HETRequestMethodPut:
+         {
+            break;
+         }
+         case HETRequestMethodDelete:
+         {
+            break;
+         }
+         case HETRequestMethodPatch:
+         {
+            break;
+         }
+         default:
+            break;
+    }
+    
+    
+    signSeed = [signSeed stringByAppendingString: url];
+    signSeed = [signSeed stringByAppendingString: [self dictionaryToString: param]];
+    
+    // 再加上appSecret
+    if (self.appSecret != nil) {
+        signSeed = [signSeed stringByAppendingString: @"&"];
+        signSeed = [signSeed stringByAppendingString: self.appSecret];
+    }
+    NSString *sign = [self getMd5_32Bit_String: signSeed];
+    
+     param[@"sign"] = sign;
+    }
+    return param;
+}
+
+- (NSString *)dictionaryToString: (NSDictionary *)param{
+    
+    NSString *str = @"";
+    NSArray *keyArray = [[param allKeys] sortedArrayUsingComparator:^NSComparisonResult(id obj1, id obj2) {
+        return (NSComparisonResult)[obj1 compare:obj2];
+    }];
+    
+    NSUInteger count = [keyArray count];
+    for (NSUInteger i=0; i<count; i++) {
+        NSString *key = keyArray[i];
+        id value = param[key];
+        NSString *valueStr;
+        if ([value isKindOfClass: [NSNumber class]]) {
+            valueStr = [NSString stringWithFormat: @"%ld", (long)[value integerValue]];
+        }else if ([value isKindOfClass: [NSString class]]){
+            valueStr = value;
+        }
+        str = [str stringByAppendingString: key];
+        str = [str stringByAppendingString: @"="];
+        str = [str stringByAppendingString: valueStr];
+        if (i < count-1) {
+            str = [str stringByAppendingString: @"&"];
+        }
+    }
+    
+    return str;
+}
+- (NSURLRequest *)refreshAcessTokenRequestUrl:(NSString*)refreshToken
+{
+    NSDictionary *params = [NSDictionary dictionaryWithObjectsAndKeys:
+                            self.appKey, @"appId",
+                            refreshToken, @"refreshToken",
+                            @"refreshToken", @"grantType",
+                            nil];
+    return  [HETURLRequestHelper postRequestWithUrl:self.refreshAccessTokenURL  params:params];
+    
+}
+@end

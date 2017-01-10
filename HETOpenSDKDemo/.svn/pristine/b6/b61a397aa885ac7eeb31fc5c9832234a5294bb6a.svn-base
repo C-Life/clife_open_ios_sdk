@@ -1,0 +1,1033 @@
+//
+//  BLEManager.m
+//  BLEForCSleep
+//
+//  Created by mr.cao on 15/6/1.
+//  Copyright (c) 2015年 Het. All rights reserved.
+//
+
+#import "CLBLEManager.h"
+#import "GCDMulticastDelegate.h"
+
+
+// Error Domains
+NSString * const kCLBLEManagerErrorDomain = @"CLBLEManagerErrorDomain";
+
+// Error Codes
+const NSInteger kBLEBoardNameErrorCode = 1000;
+const NSInteger kBLEConnectErrorCode = 1001;
+const NSInteger kBLECommunConnectErrorCode = 1002;
+const NSInteger kBLERecvDataErrorCode = 1003;
+const NSInteger kBLEBusyErrorCode = 1004;
+const NSInteger kBLEUUIDErrorCode = 1005;
+const NSInteger kBLEFindErrorCode = 1006;
+const NSInteger kBLEIsconnectErrorCode = 1007;
+const NSInteger kBLEReadCharactErrorCode = 1008;
+const NSInteger kBLEWriteCharactErrorCode = 1009;
+const NSInteger kBLETimeOutErrorCode = 1010;
+const NSInteger kBLEObjErrorCode = 1011;
+
+NSString * const kBLEBoardNameErrorCodeErrorMessage = @"未扫到指定的蓝牙广播";
+NSString * const kBLEConnectErrorCodeErrorMessage = @"扫到但是无法连接上";
+NSString * const kBLECommunConnectErrorCodeErrorMessage = @"蓝牙断开了";
+NSString * const kBLERecvDataErrorCodeErrorMessage = @"通信过程数据异常";
+NSString * const kBLEBusyErrorCodeErrorMessage = @"蓝牙繁忙";
+NSString * const kBLEUUIDErrorCodeErrorMessage = @"没有指定UUID";
+NSString * const kBLEFindErrorCodeErrorMessage = @"没有搜索到设备";
+NSString * const kBLEIsconnectErrorCodeErrorMessage =  @"蓝牙正在连接";
+NSString * const kBLEReadCharactErrorCodeErrorMessage = @"找不到ReadCharact";
+NSString * const kBLEWriteCharactErrorCodeErrorMessage = @"找不到WriteCharact";
+NSString * const kBLETimeOutErrorCodeErrorMessage= @"蓝牙通信超时";
+NSString * const kBLEObjErrorCodeErrorMessage= @"蓝牙连接对象是空";
+
+NSString * const kLGPeripheralDidFound    = @"kLGPeripheralDidFound";
+
+
+const NSInteger kConnectTimeOut=8;
+
+typedef void (^ScanPeripheralsCallback)      (NSArray *peripherals,NSError *error);
+typedef void (^ConnectedPeripheralsCallback) (NSArray *peripherals,NSError *error);
+typedef void (^ReadDataCallback)             (NSData *data, NSError *error);
+typedef void (^ResultCallback)               (NSError *error);
+typedef void (^scanResult)                   (NSDictionary * scanResult);
+@interface CLBLEManager()
+{
+    BOOL peripheralIsConnected;
+}
+
+
+@property (copy,   nonatomic) ScanPeripheralsCallback      scanPeripheralsCallback;
+@property (copy,   nonatomic) ConnectedPeripheralsCallback connectedPeripheralsCallback;
+@property (strong, nonatomic) NSMutableArray               *hasConnectedPeripherals;
+@property (strong, nonatomic) NSMutableArray               *retrievePeripheralsWithIdentifiers;
+@property (strong, nonatomic) NSArray                      *scanServiceArray;
+@property (strong, nonatomic) NSString                     *readServiceUUID;
+@property (strong, nonatomic) NSString                     *readCharacteristic;
+@property (strong, nonatomic) NSString                     *writeServiceUUID;
+@property (strong, nonatomic) NSString                     *writeCharacteristic;
+@property (strong, nonatomic) NSString                     *broadName;
+@property (strong, nonatomic) GCDMulticastDelegate<CLBLEManagerDelegate> *multicasetDelegate;
+@property (copy,   nonatomic) ResultCallback               findcharacteristicResultCallback ;
+
+@end
+@implementation CLBLEManager
+
+
+static CLBLEManager *_sharedInstance = nil;
++ (const CLBLEManager *)sharedInstance
+{
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        _sharedInstance = [[CLBLEManager alloc] init];
+    });
+    return _sharedInstance;
+}
+-(id)init{
+    if (self=[super init]) {
+        _multicasetDelegate = (GCDMulticastDelegate <CLBLEManagerDelegate> *)[[GCDMulticastDelegate alloc] init];
+        _manager=[LGCentralManager sharedInstance].manager;
+         self.findcharacteristicResultCallback=nil;
+    }
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleDisconnectNotification:) name:kLGPeripheralDidDisconnect object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleUpdateStateNotification:) name:kLGPeripheralDidUpdateState object:nil];
+    
+    return self;
+}
+
+
+-(void)scanbleWithObject:(id<CLBLEDataSource>)child
+         withScanTimeOut:(NSInteger)timeOut
+{
+    
+    self.broadName=nil;
+    if ([child respondsToSelector:@selector(broadName)]) {
+        self.broadName=[child broadName];
+    }
+    if ([child connectedPeripheral].name) {
+        self.broadName=child.connectedPeripheral.name;
+    }
+    self.scanServiceArray=child.scanServiceArray;
+    self.readServiceUUID=child.readSeriveID;
+    self.readCharacteristic=child.readCharacteristicID;
+    self.writeServiceUUID=child.writeSeriveID;
+    self.writeCharacteristic=child.writeCharacteristicID;
+    if(self.readServiceUUID.length==0||self.readCharacteristic.length==0||self.writeServiceUUID.length==0||self.writeCharacteristic.length==0)
+    {
+        [self.multicasetDelegate scanAllPeripherals:nil];
+        return;
+    }
+    __weak CLBLEManager *weakself=self;
+    if([LGCentralManager sharedInstance].centralReady)
+    {
+        [weakself scanWithTimeout:timeOut scanFinishBlock:^(NSArray *peripherals)
+        {
+            [weakself.multicasetDelegate scanAllPeripherals:peripherals];
+        }];
+        
+    }
+    self.hasConnectedPeripherals=[[NSMutableArray alloc]init];
+    self.retrievePeripheralsWithIdentifiers=[[NSMutableArray alloc]init];
+    self.scanPeripheralsCallback=nil;
+    // Custom initialization
+    
+    [LGCentralManager sharedInstance].updateStateBlock =^(CBCentralManagerState state)
+    {
+        if (state == CBCentralManagerStatePoweredOn)
+        {
+            if (![LGCentralManager sharedInstance].isScanning)
+            {
+                [weakself scanWithTimeout:timeOut scanFinishBlock:^(NSArray *peripherals)
+                {
+                    
+                    [weakself.multicasetDelegate scanAllPeripherals:peripherals];
+                }];
+            }
+        }
+    };
+    
+}
+
+- (void) handleDisconnectNotification:(NSNotification*)notification
+{
+    NSLog(@"handleDisconnectNotification");
+    self.currentLGPeripheral=nil;
+    //NSLog(@"self.currentLGPeripheral=nil05");
+    if(self.findcharacteristicResultCallback)
+    {
+        //NSLog(@"蓝牙连接时候断开了");
+        NSError* error=[NSError errorWithDomain:kCLBLEManagerErrorDomain code:kBLECommunConnectErrorCode userInfo:@{@"msg":kBLECommunConnectErrorCodeErrorMessage}];
+        self.findcharacteristicResultCallback(error);
+    }
+    LGPeripheral *peripheral = [notification object];
+    if (peripheral.cbPeripheral.state == CBPeripheralStateConnected) {
+        
+    } else if(peripheral.cbPeripheral.state == CBPeripheralStateDisconnected) {
+        if (peripheral.UUIDString) {
+            [self.hasConnectedPeripherals removeObject:peripheral];
+//            if(self.currentLGPeripheral&&[peripheral.name isEqualToString:self.currentLGPeripheral.name])
+//            {
+//                self.currentLGPeripheral=nil;
+//                NSLog(@"self.currentLGPeripheral=nil06");
+//            }
+        }
+    }
+}
+
+
+- (void) handleUpdateStateNotification:(NSNotification*)notification
+{
+    
+    NSDictionary* dic=[notification userInfo];
+    NSNumber* state=[dic objectForKey:kLGPeripheralDidUpdateState];
+    if (state.intValue!=CBCentralManagerStatePoweredOn) {
+        //NSLog(@"handleUpdateStateNotification");
+        [self.hasConnectedPeripherals removeObject:self.currentLGPeripheral];
+        self.currentLGPeripheral=nil;
+    }
+    else{
+        
+    }
+    
+}
+
+
+-(void)scanWithTimeout:(NSInteger)timeout
+       scanFinishBlock:(void (^)(NSArray *peripherals))scanFinishBlock;
+{
+    if([LGCentralManager sharedInstance].isCentralReady)
+    {
+        if (self.broadName) {
+            //获取已经连接的蓝牙设备
+            NSArray* connectedPeripheral=[[LGCentralManager sharedInstance] retrieveConnectedPeripheralsWithServices:self.scanServiceArray];
+            
+            LGPeripheral* peripheral=[self foundPeripheralWithPeripheraArray:connectedPeripheral ByName:self.broadName];
+            
+            if (peripheral) {
+                scanFinishBlock(@[peripheral]);
+                return;
+            }
+            else
+            {
+                [self scanPeripheral:timeout scanFinishBlock:scanFinishBlock];
+            }
+        }
+        else
+        {
+            //如果蓝牙设备没有连接，要去扫描一下
+            NSLog(@"scan+++++++++++");
+            [self scanPeripheral:timeout scanFinishBlock:scanFinishBlock];
+        }
+    }
+    else
+    {
+        scanFinishBlock(nil);
+    }
+    
+    
+}
+
+-(void)scanPeripheral:(NSInteger)timeout
+      scanFinishBlock:(void (^)(NSArray *peripherals))scanFinishBlock
+{
+    if ([LGCentralManager sharedInstance].isScanning == NO)
+    {
+        __weak CLBLEManager* weakSelf=self;
+        [[LGCentralManager sharedInstance] scanForPeripheralsByInterval:timeout
+                                                             peripheral:self.broadName
+                                                               services:self.scanServiceArray
+                                                                options:@{CBCentralManagerScanOptionAllowDuplicatesKey : @NO}
+                                                             completion:^(NSArray *peripherals)
+                                                                {
+                                                                 if(weakSelf.broadName.length)
+                                                                 {
+                                                                     for(LGPeripheral *peripheral in peripherals)
+                                                                     {
+                                                                         if ([[peripheral.name uppercaseString] rangeOfString:[weakSelf.broadName uppercaseString]].length)
+                                                                         {
+                                                                             
+                                                                             [[LGCentralManager sharedInstance] stopScanForPeripheralsWithoutCallback];
+                                                                             scanFinishBlock(@[peripheral]);
+                                                                             return ;
+                                                                         }
+                                                                     }
+                                                                     scanFinishBlock(nil);
+                                                                 }
+                                                                 else
+                                                                 {
+                                                                     scanFinishBlock(peripherals);
+                                                                 }
+                                                             }];
+        
+    }
+    else
+    {
+        scanFinishBlock(nil);
+    }
+}
+
+-(void)conntectPeripheralWithBLEDataSource:(id<CLBLEDataSource>)child
+                           withResultBlock:(void(^)(LGPeripheral* peripheral,NSError *error))connectResultBlock{
+    self.findcharacteristicResultCallback=nil;
+    self.broadName=nil;
+    if ([child respondsToSelector:@selector(broadName)]) {
+        self.broadName=[child broadName];
+    }
+    if ([child connectedPeripheral].name) {
+        self.broadName=child.connectedPeripheral.name;
+    }
+    
+    if (self.broadName==nil||self.broadName.length<=0) {
+        NSError* error=[NSError errorWithDomain:kCLBLEManagerErrorDomain code:kBLEBoardNameErrorCode userInfo:@{@"userInfo":kBLEBoardNameErrorCodeErrorMessage}];
+        connectResultBlock(nil,error);
+        return;
+    }
+    
+    self.scanServiceArray=child.scanServiceArray;
+    self.readServiceUUID=child.readSeriveID;
+    self.readCharacteristic=child.readCharacteristicID;
+    self.writeServiceUUID=child.writeSeriveID;
+    self.writeCharacteristic=child.writeCharacteristicID;
+    if(self.readServiceUUID.length==0||self.readCharacteristic.length==0||self.writeServiceUUID.length==0||self.writeCharacteristic.length==0)
+    {
+        NSError* error=[NSError errorWithDomain:kCLBLEManagerErrorDomain code:kBLEUUIDErrorCode userInfo:@{@"userInfo":kBLEUUIDErrorCodeErrorMessage}];
+        connectResultBlock(nil,error);
+        return;
+    }
+    self.hasConnectedPeripherals=[[NSMutableArray alloc]init];
+    self.retrievePeripheralsWithIdentifiers=[[NSMutableArray alloc]init];
+    
+    self.scanPeripheralsCallback=nil;
+    if(child.connectedPeripheral)
+    {
+        [self conntectPeripheral:child.connectedPeripheral connect:^(NSError *error)
+        {
+            //NSLog(@"conntectPeripheralerror:%@",error);
+            if(!error)
+            {
+                self.currentLGPeripheral=child.connectedPeripheral;
+                //NSLog(@"self.currentLGPeripheral:%@",self.currentLGPeripheral);
+            }
+            else
+            {
+                self.currentLGPeripheral=nil;
+                //NSLog(@"self.currentLGPeripheral=nil01");
+            }
+            connectResultBlock(child.connectedPeripheral,error);
+        }];
+        return;
+    }
+    
+    //获取已经连接的蓝牙设备
+    NSArray* connectedPeripheral=[[LGCentralManager sharedInstance] retrieveConnectedPeripheralsWithServices:self.scanServiceArray];
+    
+    LGPeripheral* peripheral=[self foundPeripheralWithPeripheraArray:connectedPeripheral ByName:self.broadName];
+    
+    if (peripheral&&[[peripheral.name uppercaseString] rangeOfString:[self.broadName uppercaseString]].length)
+    {
+        [self discoverServiceAndCharacterWithPripheral:peripheral block:^(NSError *error)
+        {
+            connectResultBlock(peripheral,error);
+        }];
+//        connectResultBlock(peripheral,nil);
+    }
+    else
+    {
+        NSMutableArray *uuidIdentifiersArray= [[NSUserDefaults standardUserDefaults] valueForKey:@"kbonduuid"];
+        if(uuidIdentifiersArray.count)
+        {
+            NSMutableArray* nsuuidArray=[[NSMutableArray alloc] initWithCapacity:0];
+            for (NSString* uuidString in uuidIdentifiersArray)
+            {
+                NSUUID *uuid = [[NSUUID alloc] initWithUUIDString:uuidString];
+                [nsuuidArray addObject:uuid];
+            }
+            NSArray *scanedPeripheral=[[LGCentralManager sharedInstance] retrievePeripheralsWithIdentifiers:nsuuidArray];
+            BOOL bFIND=FALSE;
+            LGPeripheral* findPeriphera=nil;
+            for(LGPeripheral *peripheral in scanedPeripheral)
+            {
+                if ([[peripheral.name uppercaseString] rangeOfString:[self.broadName uppercaseString]].length)
+                {
+                    NSLog(@"peripheral name is %@",peripheral.name);
+
+                    findPeriphera=peripheral;
+                    bFIND=YES;
+                }
+            }
+            if(bFIND)
+            {
+                [self conntectPeripheral:findPeriphera connect:^(NSError *error) {
+                    //NSLog(@"conntectPeripheralerror:%@",error);
+                    if(!error)
+                    {
+                        self.currentLGPeripheral=findPeriphera;
+                    }
+                    else
+                    {
+                        self.currentLGPeripheral=nil;
+                        //NSLog(@"self.currentLGPeripheral=nil02");
+                    }
+                    connectResultBlock(findPeriphera,error);
+                }];
+                return;
+            }
+            else
+            {
+                NSLog(@"scan1");
+                __weak CLBLEManager* weakSelf=self;
+                [self scanWithTimeout:4 scanFinishBlock:^(NSArray *peripherals)
+                {
+                    NSLog(@"scan2");
+                    LGPeripheral* peripheral=[weakSelf foundPeripheralWithPeripheraArray:peripherals ByName:self.broadName];
+                    if (peripheral)
+                    {
+                        [weakSelf conntectPeripheral:peripheral connect:^(NSError *error)
+                         {
+                            //NSLog(@"conntectPeripheral0");
+                            if(!error)
+                            {
+                                self.currentLGPeripheral=peripheral;
+                            }
+                            else
+                            {
+                                self.currentLGPeripheral=nil;
+                               // NSLog(@"self.currentLGPeripheral=nil03");
+                            }
+
+                            connectResultBlock(peripheral,error);
+                        }];
+                    }
+                    else
+                    {
+                        //NSLog(@"conntectPeripheral1");
+                       NSError* error=[NSError errorWithDomain:kCLBLEManagerErrorDomain code:kBLEFindErrorCode userInfo:@{@"userInfo":kBLEFindErrorCodeErrorMessage}];
+                        connectResultBlock(nil,error);
+                    }
+                }];
+                return;
+            }
+        }
+        __weak CLBLEManager* weakSelf=self;
+        [self scanWithTimeout:4 scanFinishBlock:^(NSArray *peripherals)
+        {
+            LGPeripheral* peripheral=[self foundPeripheralWithPeripheraArray:peripherals ByName:self.broadName];
+            if (peripheral)
+            {
+                [weakSelf conntectPeripheral:peripheral connect:^(NSError *error)
+                {
+                    if(!error)
+                    {
+                        self.currentLGPeripheral=peripheral;
+                    }
+                    else
+                    {
+                        self.currentLGPeripheral=nil;
+                       // NSLog(@"self.currentLGPeripheral=nil04");
+                        
+                    }
+
+                    connectResultBlock(peripheral,error);
+                }];
+            }
+            else
+            {
+                NSError* error=[NSError errorWithDomain:kCLBLEManagerErrorDomain code:kBLEFindErrorCode userInfo:@{@"userInfo":kBLEFindErrorCodeErrorMessage}];
+                connectResultBlock(nil,error);
+                return;
+            }
+        }];
+    }
+}
+
+-(void)conntectPeripheral:(LGPeripheral *)peripheral
+                  connect:(void(^)(NSError *error))connectResultBlock
+{
+    
+    self.findcharacteristicResultCallback=connectResultBlock;
+    if(self.currentLGPeripheral &&[[peripheral.name uppercaseString] isEqualToString:[self.currentLGPeripheral.name uppercaseString]]&&self.currentLGPeripheral.cbPeripheral.state == CBPeripheralStateConnected)
+    {
+        self.findcharacteristicResultCallback=nil;
+        connectResultBlock(nil);
+        NSLog(@"已经connect直接返回不需要重新连接-----------------------");
+        return;
+        
+    }
+    NSLog(@"connect-----------------------");
+    __weak CLBLEManager* weakSelf=self;
+    
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        
+        if (peripheral.isConnecting) {
+            NSError* error=[NSError errorWithDomain:kCLBLEManagerErrorDomain code:-1 userInfo:@{@"msg":kBLEIsconnectErrorCodeErrorMessage}];
+            self.findcharacteristicResultCallback=nil;
+            connectResultBlock(error);
+        }
+        else
+        {
+            [peripheral connectWithTimeout:kConnectTimeOut completion:^(NSError *error) {
+                // Discovering services of peripheral
+                NSLog(@"连接蓝牙出错信息:%@",error);
+                if (error) {
+                    weakSelf.currentLGPeripheral=nil;
+                    //NSLog(@"self.currentLGPeripheral=nil11;");
+                    self.findcharacteristicResultCallback=nil;
+                     NSError* error1=[NSError errorWithDomain:kCLBLEManagerErrorDomain code:kBLEConnectErrorCode userInfo:@{@"msg":kBLEConnectErrorCodeErrorMessage}];;
+                    connectResultBlock(error1);
+                }
+                else
+                {
+                    if(peripheral.cbPeripheral.state==CBPeripheralStateConnected)
+                    {
+                        //NSLog(@"开始查找service和characteristic");
+                        weakSelf.currentLGPeripheral=peripheral;
+                        [weakSelf discoverServiceAndCharacterWithPripheral:peripheral block:connectResultBlock];
+                    }
+                    else
+                    {
+                        //NSLog(@"蓝牙断开连接01");
+                         NSError* error=[NSError errorWithDomain:kCLBLEManagerErrorDomain code:kBLEConnectErrorCode userInfo:@{@"msg":kBLEConnectErrorCodeErrorMessage}];
+                        connectResultBlock(error);
+                        
+                    }
+                }
+            }];
+        }
+    });
+    
+    
+}
+
+-(void)discoverServiceAndCharacterWithPripheral:(LGPeripheral*)peripheral
+                                          block:(void(^)(NSError *error))discoverResultBlock
+{
+    if(peripheral.cbPeripheral.state!=CBPeripheralStateConnected)
+    {
+        self.findcharacteristicResultCallback=nil;
+        //NSLog(@"蓝牙断开连接01");
+         NSError* error=[NSError errorWithDomain:kCLBLEManagerErrorDomain code:kBLEConnectErrorCode userInfo:@{@"msg":kBLEConnectErrorCodeErrorMessage}];;
+        discoverResultBlock(error);
+        return;
+        
+    }
+    __weak CLBLEManager* weakSelf=self;
+    [peripheral discoverServicesWithCompletion:^(NSArray *services, NSError *error) {
+        //NSLog(@"找到services:%@,%@",services,error);
+        if(error)
+        {
+            self.currentLGPeripheral=nil;
+            self.findcharacteristicResultCallback=nil;
+            discoverResultBlock(error);
+            
+        }
+        else
+        {
+            
+            __block BOOL findCharacteristic=NO;
+            __block BOOL findReadCharacteristic=NO;
+            __block BOOL findWriteCharacteristic=NO;
+            [services enumerateObjectsUsingBlock:^(id  _Nonnull obj1, NSUInteger idx1, BOOL * _Nonnull stop1) {
+                
+                LGService *service=obj1;
+                // NSLog(@"services:%@,%d",service.UUIDString,idx1);
+                
+                [service discoverCharacteristicsWithUUIDs:@[[CBUUID UUIDWithString:weakSelf.writeCharacteristic],[CBUUID UUIDWithString:weakSelf.readCharacteristic]] completion:^(NSArray *characteristics, NSError *error) {
+                    
+                    if(error)
+                    {
+                        self.currentLGPeripheral=nil;
+                        //NSLog(@"self.currentLGPeripheral=nil10");
+                        self.findcharacteristicResultCallback=nil;
+                        discoverResultBlock(error);
+                    }
+                    else
+                    {
+                        [characteristics enumerateObjectsUsingBlock:^(id  _Nonnull obj2, NSUInteger idx2, BOOL * _Nonnull stop2) {
+                            
+                            LGCharacteristic *characteristic=obj2;
+                            //NSLog(@"查找charactisitc uuid is %@,writeCharacteristic:%@,readCharacteristic:%@",[characteristic.UUIDString uppercaseString],[weakSelf.writeCharacteristic  uppercaseString],[weakSelf.readCharacteristic  uppercaseString]);
+                            if ([[characteristic.UUIDString uppercaseString] isEqualToString:[weakSelf.writeCharacteristic  uppercaseString]])
+                            {
+                                NSLog(@"charactisitc uuid is %@",characteristic);
+                                findWriteCharacteristic=YES;
+                                if (findReadCharacteristic)
+                                {
+                                    peripheralIsConnected=YES;
+                                    [weakSelf.retrievePeripheralsWithIdentifiers addObject:peripheral.UUIDString];
+                                    [[NSUserDefaults standardUserDefaults]setObject:weakSelf.retrievePeripheralsWithIdentifiers forKey:@"kbonduuid"];
+                                    [[NSUserDefaults standardUserDefaults]synchronize];
+                                    self.currentLGPeripheral=peripheral;
+                                    //NSLog(@"peripheral uuid is %@,%@",peripheral,self.currentLGPeripheral);
+                                    
+                                    if(![weakSelf.hasConnectedPeripherals containsObject:peripheral])
+                                    {
+                                        [weakSelf.hasConnectedPeripherals addObject:peripheral];
+                                    }
+                                    *stop2=YES;
+                                    findCharacteristic=YES;
+                                    self.findcharacteristicResultCallback=nil;
+                                    discoverResultBlock(error);
+                                    
+                                }
+                            }
+                            if ([[characteristic.UUIDString uppercaseString] isEqualToString:[weakSelf.readCharacteristic uppercaseString]])
+                            {
+                                NSLog(@"charactisitc uuid is %@",characteristic);
+                                findReadCharacteristic=YES;
+                                if (findWriteCharacteristic)
+                                {
+                                    peripheralIsConnected=YES;
+                                    [weakSelf.retrievePeripheralsWithIdentifiers addObject:peripheral.UUIDString];
+                                    [[NSUserDefaults standardUserDefaults]setObject:weakSelf.retrievePeripheralsWithIdentifiers forKey:@"kbonduuid"];
+                                    [[NSUserDefaults standardUserDefaults]synchronize];
+                                    self.currentLGPeripheral=peripheral;
+                                    NSLog(@"peripheral uuid is %@,%@",peripheral,self.currentLGPeripheral);
+                                    
+                                    if(![weakSelf.hasConnectedPeripherals containsObject:peripheral])
+                                    {
+                                        [weakSelf.hasConnectedPeripherals addObject:peripheral];
+                                    }
+                                    *stop2=YES;
+                                    findCharacteristic=YES;
+                                    self.findcharacteristicResultCallback=nil;
+                                    discoverResultBlock(error);
+                                    
+                                    
+                                    
+                                }
+                            }
+                        }];
+                    }
+                    
+                }];
+                
+                
+            }];
+        }
+        
+        
+    }];
+    
+}
+
+
+
+
+
+
+
+/*-(void)conntectPeripheral:(LGPeripheral *)peripheral
+                  connect:(void(^)(NSError *error))connectResultBlock
+{
+    if(self.currentLGPeripheral &&[[peripheral.name uppercaseString] isEqualToString:[self.currentLGPeripheral.name uppercaseString]]&&self.currentLGPeripheral.cbPeripheral.state == CBPeripheralStateConnected)
+    {
+        
+        connectResultBlock(nil);
+        NSLog(@"已经connect直接返回不需要重新连接-----------------------");
+        return;
+        
+    }
+    NSLog(@"connect-----------------------");
+    __weak CLBLEManager* weakSelf=self;
+
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        
+        if (peripheral.isConnecting) {
+            NSError* error=[NSError errorWithDomain:@"CLBLEManager" code:-1 userInfo:@{@"msg":@"蓝牙正在连接"}];
+            connectResultBlock(error);
+            return ;
+        }
+        [peripheral connectWithTimeout:kConnectTimeOut completion:^(NSError *error) {
+            // Discovering services of peripheral
+            NSLog(@"连接超时:%@",error);
+            if (error) {
+                weakSelf.currentLGPeripheral=nil;
+                NSLog(@"self.currentLGPeripheral=nil11;");
+                connectResultBlock(error);
+                return ;
+            }
+            weakSelf.currentLGPeripheral=peripheral;
+            [weakSelf discoverServiceAndCharacterWithPripheral:peripheral block:connectResultBlock];
+        }];
+    });
+    
+    
+}
+
+-(void)discoverServiceAndCharacterWithPripheral:(LGPeripheral*)peripheral
+                                          block:(void(^)(NSError *error))discoverResultBlock{
+    
+    __weak CLBLEManager* weakSelf=self;
+    [peripheral discoverServicesWithCompletion:^(NSArray *services, NSError *error) {
+        if(error)
+        {
+            self.currentLGPeripheral=nil;
+            discoverResultBlock(error);
+            return;
+        }
+        for(LGService *service in services)
+        {
+            // NSLog(@"service.cbService.UUID:%@",service.cbService.UUID);
+            __block BOOL findReadCharacteristic=NO;
+            __block BOOL findWriteCharacteristic=NO;
+            
+            [service discoverCharacteristicsWithUUIDs:@[[CBUUID UUIDWithString:weakSelf.writeCharacteristic],[CBUUID UUIDWithString:weakSelf.readCharacteristic]] completion:^(NSArray *characteristics, NSError *error) {
+                
+                if (peripheral.cbPeripheral.state != CBPeripheralStateConnected) {
+                    NSError* error=[NSError errorWithDomain:@"CLBLEManager" code:-1 userInfo:@{@"userInfo":@"找特征值的适合蓝牙断了"}];
+                    self.currentLGPeripheral=nil;
+                    NSLog(@"self.currentLGPeripheral=nil09");
+                    discoverResultBlock(error);
+                    return;
+                }
+
+                if(error)
+                {
+                    self.currentLGPeripheral=nil;
+                    NSLog(@"self.currentLGPeripheral=nil10");
+                    discoverResultBlock(error);
+                }
+                else
+                {
+                    for (LGCharacteristic* characteristic in characteristics) {
+                        if ([characteristic.UUIDString isEqualToString:weakSelf.writeCharacteristic]) {
+                            NSLog(@"charactisitc uuid is %@",characteristic);
+                            findWriteCharacteristic=YES;
+                            if (findReadCharacteristic) {
+                                peripheralIsConnected=YES;
+                                [weakSelf.retrievePeripheralsWithIdentifiers addObject:peripheral.UUIDString];
+                                [[NSUserDefaults standardUserDefaults]setObject:weakSelf.retrievePeripheralsWithIdentifiers forKey:@"kbonduuid"];
+                                [[NSUserDefaults standardUserDefaults]synchronize];
+                                self.currentLGPeripheral=peripheral;
+                                NSLog(@"peripheral uuid is %@,%@",peripheral,self.currentLGPeripheral);
+
+                                if(![weakSelf.hasConnectedPeripherals containsObject:peripheral])
+                                {
+                                    [weakSelf.hasConnectedPeripherals addObject:peripheral];
+                                }
+                                discoverResultBlock(error);
+                            }
+                        }
+                        if ([characteristic.UUIDString isEqualToString:weakSelf.readCharacteristic]) {
+                            NSLog(@"charactisitc uuid is %@",characteristic);
+                            findReadCharacteristic=YES;
+                            if (findWriteCharacteristic) {
+                                peripheralIsConnected=YES;
+                                [weakSelf.retrievePeripheralsWithIdentifiers addObject:peripheral.UUIDString];
+                                [[NSUserDefaults standardUserDefaults]setObject:weakSelf.retrievePeripheralsWithIdentifiers forKey:@"kbonduuid"];
+                                [[NSUserDefaults standardUserDefaults]synchronize];
+                                self.currentLGPeripheral=peripheral;
+                                NSLog(@"peripheral uuid is %@,%@",peripheral,self.currentLGPeripheral);
+
+                                if(![weakSelf.hasConnectedPeripherals containsObject:peripheral])
+                                {
+                                    [weakSelf.hasConnectedPeripherals addObject:peripheral];
+                                }
+                                discoverResultBlock(error);
+                            }
+                        }
+                    }
+//                    if([service.cbService.UUID isEqual:[CBUUID UUIDWithString:weakSelf.readServiceUUID]])
+//                    {
+//                        peripheralIsConnected=YES;
+//                        [weakSelf.retrievePeripheralsWithIdentifiers addObject:peripheral.UUIDString];
+//                        [[NSUserDefaults standardUserDefaults]setObject:weakSelf.retrievePeripheralsWithIdentifiers forKey:@"kbonduuid"];
+//                        [[NSUserDefaults standardUserDefaults]synchronize];
+//                        weakSelf.currentLGPeripheral=peripheral;
+//                        
+//                        
+//                        if(![weakSelf.hasConnectedPeripherals containsObject:peripheral])
+//                        {
+//                            [weakSelf.hasConnectedPeripherals addObject:peripheral];
+//                        }
+//                        discoverResultBlock(error);
+//                    }
+//                    
+//                    if([service.cbService.UUID isEqual:[CBUUID UUIDWithString:weakSelf.writeServiceUUID]])
+//                    {
+//                        peripheralIsConnected=YES;
+//                        [weakSelf.retrievePeripheralsWithIdentifiers addObject:peripheral.UUIDString];
+//                        
+//                        [[NSUserDefaults standardUserDefaults]setObject:weakSelf.retrievePeripheralsWithIdentifiers forKey:@"kbonduuid"];
+//                        [[NSUserDefaults standardUserDefaults]synchronize];
+//                        weakSelf.currentLGPeripheral=peripheral;
+//                        
+//                        
+//                        if(![weakSelf.hasConnectedPeripherals containsObject:peripheral])
+//                        {
+//                            [weakSelf.hasConnectedPeripherals addObject:peripheral];
+//                        }
+//                        discoverResultBlock(error);
+//                    }
+                    
+                    
+                }
+                
+            }];
+//            [service discoverCharacteristicsWithCompletion:^(NSArray *characteristics, NSError *error) {
+//                //for (LGCharacteristic *characteristic in service.characteristics ) {
+//                // NSLog(@"service.cbService.characteristic:%@",characteristic.cbCharacteristic);
+//                if(error)
+//                {
+//                    discoverResultBlock(error);
+//                }
+//                else
+//                {
+//                    if([service.cbService.UUID isEqual:[CBUUID UUIDWithString:weakSelf.readServiceUUID]])
+//                    {
+//                        peripheralIsConnected=YES;
+//                        [weakSelf.retrievePeripheralsWithIdentifiers addObject:peripheral.UUIDString];
+//                        [[NSUserDefaults standardUserDefaults]setObject:weakSelf.retrievePeripheralsWithIdentifiers forKey:@"kbonduuid"];
+//                        [[NSUserDefaults standardUserDefaults]synchronize];
+//                        weakSelf.currentLGPeripheral=peripheral;
+//                        
+//                        
+//                        if(![weakSelf.hasConnectedPeripherals containsObject:peripheral])
+//                        {
+//                            [weakSelf.hasConnectedPeripherals addObject:peripheral];
+//                        }
+//                        discoverResultBlock(error);
+//                    }
+//                    
+//                    if([service.cbService.UUID isEqual:[CBUUID UUIDWithString:weakSelf.writeServiceUUID]])
+//                    {
+//                        peripheralIsConnected=YES;
+//                        [weakSelf.retrievePeripheralsWithIdentifiers addObject:peripheral.UUIDString];
+//                        
+//                        [[NSUserDefaults standardUserDefaults]setObject:weakSelf.retrievePeripheralsWithIdentifiers forKey:@"kbonduuid"];
+//                        [[NSUserDefaults standardUserDefaults]synchronize];
+//                        weakSelf.currentLGPeripheral=peripheral;
+//                        
+//                        
+//                        if(![weakSelf.hasConnectedPeripherals containsObject:peripheral])
+//                        {
+//                            [weakSelf.hasConnectedPeripherals addObject:peripheral];
+//                        }
+//                        discoverResultBlock(error);
+//                    }
+//                    
+//                    
+//                }
+//                
+//            }];
+            
+        }
+    }];
+
+}*/
+
+-(void)oadConntectPeripheralWithBLEDataSource:(id<CLBLEDataSource>)child
+                              withResultBlock:(void(^)(LGPeripheral* peripheral,NSError *error))connectResultBlock{
+    
+    self.broadName=nil;
+    if ([child respondsToSelector:@selector(broadName)]) {
+        self.broadName=[child broadName];
+    }
+    if ([child connectedPeripheral].name) {
+        self.broadName=child.connectedPeripheral.name;
+    }
+    
+    if (self.broadName==nil||self.broadName.length<=0) {
+         NSError* error=[NSError errorWithDomain:kCLBLEManagerErrorDomain code:kBLEUUIDErrorCode userInfo:@{@"userInfo":kBLEUUIDErrorCodeErrorMessage}];
+        connectResultBlock(nil,error);
+        return;
+    }
+    
+    self.scanServiceArray=child.scanServiceArray;
+    self.readServiceUUID=child.readSeriveID;
+    self.readCharacteristic=child.readCharacteristicID;
+    self.writeServiceUUID=child.writeSeriveID;
+    self.writeCharacteristic=child.writeCharacteristicID;
+    if(self.readServiceUUID.length==0||self.readCharacteristic.length==0||self.writeServiceUUID.length==0||self.writeCharacteristic.length==0)
+    {
+         NSError* error=[NSError errorWithDomain:kCLBLEManagerErrorDomain code:kBLEUUIDErrorCode userInfo:@{@"userInfo":kBLEUUIDErrorCodeErrorMessage}];
+        connectResultBlock(nil,error);
+        return;
+    }
+    self.hasConnectedPeripherals=[[NSMutableArray alloc]init];
+    self.retrievePeripheralsWithIdentifiers=[[NSMutableArray alloc]init];
+    self.scanPeripheralsCallback=nil;
+    __weak CLBLEManager* weakSelf=self;
+    if([LGCentralManager sharedInstance].centralReady)
+    {
+        [self scanWithTimeout:4 scanFinishBlock:^(NSArray *peripherals)
+        {
+            LGPeripheral* peripheral=[self foundPeripheralWithPeripheraArray:peripherals ByName:self.broadName];
+            if (peripheral)
+            {
+                [weakSelf conntectPeripheral:peripheral connect:^(NSError *error) {
+                    connectResultBlock(peripheral,error);
+                }];
+            }
+            else
+            {
+                NSError* error=[NSError errorWithDomain:kCLBLEManagerErrorDomain code:kBLEFindErrorCode userInfo:@{@"userInfo":kBLEFindErrorCodeErrorMessage}];
+                connectResultBlock(nil,error);
+                return;
+            }
+        }];
+    }
+    else
+    {
+        [LGCentralManager sharedInstance].updateStateBlock =^(CBCentralManagerState state) {
+            if (state == CBCentralManagerStatePoweredOn)
+            {
+                if (![LGCentralManager sharedInstance].isScanning)
+                {
+                    [self scanWithTimeout:4 scanFinishBlock:^(NSArray *peripherals)
+                    {
+                        LGPeripheral* peripheral=[self foundPeripheralWithPeripheraArray:peripherals ByName:self.broadName];
+                        if (peripheral)
+                        {
+                            [weakSelf conntectPeripheral:peripheral connect:^(NSError *error) {
+                                connectResultBlock(peripheral,error);
+                            }];
+                        }
+                        else
+                        {
+                            NSError* error=[NSError errorWithDomain:kCLBLEManagerErrorDomain code:kBLEFindErrorCode userInfo:@{@"userInfo":kBLEFindErrorCodeErrorMessage}];
+                            connectResultBlock(nil,error);
+                            return;
+                        }
+                    }];
+                    
+                    
+                }
+            }};
+        
+    }
+}
+
+/*-(void)conntectPeripheral:(LGPeripheral *)peripheral withResultBlock:(void(^)(NSError *error))connectResultBlock;
+{
+    [self conntectPeripheral:peripheral connect:connectResultBlock];
+}*/
+
+-(void)disconntectPeripheral:(LGPeripheral *)peripheral withResultBlock:(void(^)(NSError *error))aCallback
+{
+    if (peripheral)
+    {
+        [peripheral disconnectWithCompletion:aCallback];
+    }
+    //防止界面切换的很快的情况，这边还没有置为空值
+   // [[LGCentralManager sharedInstance] stopScanForPeripherals];
+}
+
+-(void)sendData:(NSData *)data peripheral:(LGPeripheral *)peripheral
+{
+    
+    LGCharacteristic *writeCharacteristic =[self findCharacteristic:peripheral WithCBUUID:[CBUUID UUIDWithString:self.writeServiceUUID] cCBUUID:[CBUUID UUIDWithString:self.writeCharacteristic]];
+    [writeCharacteristic writeValue:data completion:nil];
+    
+}
+
+-(void)setNotify:(LGPeripheral *)peripheral WithCBUUID:(CBUUID *)sCBUUID cCBUUID:(CBUUID *)cCBUUID withResultBlock:(void(^)(NSError *error))resultBlock withResultBlock:(void(^)(NSData *data,NSError *error))readDataBlock
+{
+    __weak CLBLEManager* weakSelf=self;
+    [peripheral discoverServicesWithCompletion:^(NSArray *services, NSError *error) {
+        if(error)
+        {
+            resultBlock(error);
+            return;
+        }
+        for(LGService *service in services)
+        {
+            [service discoverCharacteristicsWithCompletion:^(NSArray *characteristics, NSError *error) {
+                if(error)
+                {
+                    resultBlock(error);
+                }
+                else
+                {
+                    if([service.cbService.UUID isEqual:sCBUUID])
+                    {
+                        peripheralIsConnected=YES;
+                        LGCharacteristic *notifyCharacteristic =[weakSelf findCharacteristic:peripheral WithCBUUID:sCBUUID cCBUUID:cCBUUID];
+                        if (notifyCharacteristic) {
+                            [notifyCharacteristic setNotifyValue:YES completion:^(NSError *error) {
+                                resultBlock(error);
+                                
+                            } onUpdate:^(NSData *data, NSError *error) {
+                                
+                                readDataBlock(data,error);
+                                
+                                
+                            }];
+                            
+                        }
+                        
+                    }
+                }
+            }];
+            
+        }
+    }];
+    
+}
+
+//根据service和charact找到指定的特征值
+- (LGCharacteristic *)findCharacteristic:(LGPeripheral *)peripheral WithCBUUID:(CBUUID *)sCBUUID cCBUUID:(CBUUID *)cCBUUID
+{
+    if (peripheral.cbPeripheral.state == CBPeripheralStateConnected) {
+        for (LGService *service in peripheral.services) {
+            //            NSLog(@"service uuid-%@", service.UUIDString);
+            
+            // Finding out our service
+            if ([service.cbService.UUID isEqual:sCBUUID]) {
+                for (LGCharacteristic *charact in service.characteristics) {
+                    //                     NSLog(@"characteristic uuid-%@", charact.cbCharacteristic.UUID);
+                    if ([charact.cbCharacteristic.UUID isEqual:cCBUUID]) {
+                        
+                        return charact;
+                    }
+                    
+                }
+            }
+            
+            
+        }
+    }
+    
+    
+    return nil;
+}
+-(LGPeripheral*)foundPeripheralWithPeripheraArray:(NSArray*)peripherals ByName:(NSString*)boradName
+{
+    for (LGPeripheral* peripheral in peripherals) {
+        if ([[peripheral.name lowercaseString] isEqualToString:[boradName lowercaseString]]) {
+            return peripheral;
+        }
+    }
+    return nil;
+    
+}
+
+
+
+- (LGService *)findServiceInList:(NSArray *)services
+                          byUUID:(NSString *)anID
+{
+    for (LGService *service in services) {
+        if ([[service.UUIDString lowercaseString] isEqualToString:[anID lowercaseString]]) {
+            return service;
+        }
+    }
+    return nil;
+}
+-(void) addBleDelegate:(id)delegate delegateQueue:(dispatch_queue_t)delegateQueue{
+    [_multicasetDelegate addDelegate:delegate delegateQueue:delegateQueue];
+}
+
+
+-(void) removeBleDelegate:(id)delegate delegateQueue:(dispatch_queue_t)delegateQueue{
+    [_multicasetDelegate removeDelegate:delegate delegateQueue:delegateQueue];
+}
+
+
+-(void)dealloc
+{
+    NSLog(@"%@ dealloc",[self class]);
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+}
+
+@end

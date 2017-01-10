@@ -1,0 +1,46 @@
+//
+//  WIFIToBLEOADUpgradeHandle.h
+//  HETPublicSDK_DeviceCore
+//
+//  Created by mr.cao on 15/11/21.
+//  Copyright © 2015年 HET. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+#import "CLBLEManager.h"
+#import <UIKit/UIKit.h>
+#define HI_UINT16(a) (((a) >> 8) & 0xff)
+#define LO_UINT16(a) ((a) & 0xff)
+@protocol OADUpgradeHandleDelegate<NSObject>
+//升级进度
+-(void)OADUpgradeHandleProgress:(float)progress;
+//升级失败
+-(void)OADUpgradeHandleFail;
+@end
+
+@interface WIFIToBLEOADUpgradeHandle : NSObject
+@property (weak  ,nonatomic)id<OADUpgradeHandleDelegate>delegate;
+
+@property (strong,nonatomic) NSData *imageFile;
+
+@property (strong,nonatomic) UIView *view;
+@property (nonatomic,weak) NSObject<CLBLEDataSource>* child;
+@property int nBlocks;
+@property int nBytes;
+@property int iBlocks;
+@property int iBytes;
+@property BOOL canceled;
+@property BOOL inProgramming;
+@property BOOL start;
+@property (nonatomic,retain) NSTimer *imageDetectTimer;
+@property uint16_t imgVersion;
+@property UINavigationController *navCtrl;
+@property (nonatomic,copy) NSString* BLEBroadName;
+
+
+
+- (void)initUpgradeData:(NSData *)binData;
+
+
+@end
+

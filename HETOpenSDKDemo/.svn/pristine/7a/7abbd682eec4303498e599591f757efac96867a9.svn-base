@@ -1,0 +1,185 @@
+//
+//  SmartLinkMangerAPI.m
+//  NewBindDeviceProject
+//
+//  Created by mr.cao on 15/6/24.
+//  Copyright (c) 2015年 mr.cao. All rights reserved.
+//
+
+#import "HETSmartLinkMangerAPI.h"
+
+#define mysleep(ms) [NSThread sleepForTimeInterval:ms/1000.0]
+@interface HETSmartLinkMangerAPI()
+{
+    long tag;
+    HETGCDAsyncUdpSocket *udpSocket;
+
+ 
+    NSMutableString *log;
+
+    
+   BOOL start;
+   NSString *myHost;
+    dispatch_queue_t  _centralQueue;
+}
+
+
+@end
+
+
+@implementation HETSmartLinkMangerAPI
+- (instancetype)init
+{
+    self = [super init];
+    if(self)
+    {
+        
+        [self getIpAddressInfo];
+    }
+    return self;
+}
+
+- (instancetype)initWithBindPort:(uint16_t)port
+{
+    self = [super init];
+    if(self)
+    {
+        [self getIpAddressInfo];
+        if (udpSocket == nil)
+        {
+            start = YES;
+            [self setupSocket:port];
+        }
+        
+    }
+    return self;
+}
+
+
+- (void)sendData:(NSData *)data
+          toHost:(NSString *)host
+            withPort:(uint16_t)port
+     withTimeout:(NSTimeInterval)timeout
+             tag:(long)atag
+{
+//    if (udpSocket == nil)
+//    {
+//        if(![self setupSocket])
+//            return ;
+//    }
+     start = YES;
+    [udpSocket sendData:data toHost:host port:port withTimeout:timeout tag:atag];
+}
+- (BOOL)setupSocket:(uint16_t)port
+
+{
+     _centralQueue = dispatch_queue_create("com.cao.caoQueue",NULL);
+    udpSocket = [[HETGCDAsyncUdpSocket alloc] initWithDelegate:self delegateQueue:_centralQueue];
+    //只能支持一种IP  否则广播时将收到两条一样的数据
+    [udpSocket setIPv4Enabled:YES];
+    [udpSocket setIPv6Enabled:NO];
+
+    NSError *error = nil;
+    
+   if (![udpSocket bindToPort:port error:&error])
+    {
+        NSLog(@"Error binding18899: %@", error);
+        return NO;
+    }
+    
+    if (![udpSocket enableBroadcast:YES error:&error])
+    {
+        NSLog(@"Error enableBroadcast: %@", error);
+        return NO;
+    }
+    if (![udpSocket beginReceiving:&error])
+    {
+        NSLog(@"Error receiving: %@", error);
+        return NO;
+    }
+ 
+    return YES;
+}
+
+
+-(void) disConnectSocket{
+     if (udpSocket) {
+            [udpSocket close];
+            udpSocket = nil;
+     }
+}
+
+-(void) stop_smartLink{
+    start = NO;
+    [self disConnectSocket];
+}
+
+//获取广播地址
+-(NSString *)getIpAddressInfo{
+    struct ifaddrs *interfaces = NULL;
+    struct ifaddrs *temp_addr = NULL;
+    NSString *address;
+    getifaddrs(&interfaces);
+    temp_addr = interfaces;
+    while (temp_addr!=NULL) {
+        NSString *ifa_name = [NSString stringWithUTF8String:temp_addr->ifa_name];
+        if ([ifa_name isEqualToString:@"en0"]&&temp_addr->ifa_addr->sa_family == AF_INET) {
+            unsigned int IP = ((struct sockaddr_in *)temp_addr->ifa_addr)->sin_addr.s_addr;
+            unsigned int mask = ((struct sockaddr_in *)temp_addr->ifa_netmask)->sin_addr.s_addr;
+            myHost = [NSString stringWithUTF8String:inet_ntoa(((struct sockaddr_in *)temp_addr->ifa_addr)->sin_addr)];
+            unsigned int temp = (IP&mask)|(~mask);//计算广播地址
+            struct in_addr inaddr;
+            inaddr.s_addr = temp;
+            address = [NSString stringWithUTF8String:inet_ntoa(inaddr)];
+            return address;
+        }
+        temp_addr = temp_addr->ifa_next;
+    }
+    return nil;
+}
+
+#pragma mark-----------------GCDAsyncUdpSocketDelegate
+- (void)udpSocket:(HETGCDAsyncUdpSocket *)sock didSendDataWithTag:(long)tag1
+{
+    // You could add checks here
+}
+
+- (void)udpSocket:(HETGCDAsyncUdpSocket *)sock didNotSendDataWithTag:(long)tag1 dueToError:(NSError *)error
+{
+    // You could add checks here
+        if (udpSocket) {
+            [udpSocket close];
+            udpSocket = nil;
+        }
+      
+}
+
+//广播是面向整个局域网，所以这里需要过滤自己广播的数据
+- (void)udpSocket:(HETGCDAsyncUdpSocket *)sock didReceiveData:(NSData *)data
+      fromAddress:(NSData *)address
+withFilterContext:(id)filterContext
+{
+    NSString *host = nil;
+    uint16_t port = 0;
+    [HETGCDAsyncUdpSocket getHost:&host port:&port fromAddress:address];
+    if (!start) {
+        return;
+    }
+    //过滤自己发出的广播数据
+    if ([host rangeOfString:myHost].location!=NSNotFound) {
+        return;
+    }
+    if(self.delegate&&[self.delegate respondsToSelector:@selector(didReceiveData:fromAddress:)])
+    {
+        [self.delegate didReceiveData:data fromAddress:address];
+    }
+    
+ 
+}
+
+-(void)dealloc
+{
+    [self stop_smartLink];
+}
+
+@end

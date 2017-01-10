@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<protocol>
+    <id>1-11-3-0005-D</id>
+    <description>香薰机运行数据协议解码</description>
+    <definitions>
+        <byteDef length="1"  javaType="INTEGER"  propertyName="工作模式" property="workMode"  />
+        <byteDef length="1"  javaType="INTEGER"  propertyName="工作状态" property="workStatus"/>
+        <byteDef length="1"  javaType="INTEGER"  propertyName="运行状态"   ignore="true"/>
+        <byteDef length="1"  javaType="INTEGER"  propertyName="设定工作时间小时" property="setTimeH" />
+        <byteDef length="1"  javaType="INTEGER"  propertyName="设定工作时间分钟" property="setTimeM" />
+        <byteDef length="1"  javaType="INTEGER"  propertyName="剩余时间小时" property="remainingTimeH" />
+        <byteDef length="1"  javaType="INTEGER"  propertyName="剩余时间分钟" property="remainingTimeM" />
+        <byteDef length="1"  javaType="INTEGER"  propertyName="报警状态1" property="warningStatus1" />
+        <byteDef length="1"  javaType="INTEGER"  propertyName="报警状态2" property="warningStatus2" />
+        <byteDef length="1"  javaType="INTEGER"  ignore="true" />
+        <byteDef length="1"  javaType="INTEGER"  propertyName="预约开机时间小时" property="presetStartupTimeH" />
+        <byteDef length="1"  javaType="INTEGER"  propertyName="预约开机时间分钟" property="presetStartupTimeM" />
+        <byteDef length="1"  javaType="INTEGER"  propertyName="预约开机剩余时间小时" property="presetStartupTimeLeftH" />
+        <byteDef length="1"  javaType="INTEGER"  propertyName="预约开机剩余时间分钟" property="presetStartupTimeLeftM" />
+        <byteDef length="1"  javaType="INTEGER"  propertyName="预约关机时间设置小时" property="presetShutdownTimeH" />
+        <byteDef length="1"  javaType="INTEGER"  propertyName="预约关机时间设置分钟" property="presetShutdownTimeM" />
+        <byteDef length="1"  javaType="INTEGER"  propertyName="预约关机剩余时间小时" property="presetShutdownTimeLeftH" />
+        <byteDef length="1"  javaType="INTEGER"  propertyName="预约关机剩余时间分钟" property="presetShutdownTimeLeftM" />
+        <byteDef length="1"  javaType="INTEGER"  propertyName="灯" property="light" />
+        <byteDef length="1"  javaType="INTEGER"  propertyName="七彩灯的颜色选择" property="color" />
+        <byteDef length="1"  javaType="INTEGER"  ignore="true" />
+        <byteDef length="1"  javaType="INTEGER"  propertyName="输出负载状态1" property="outputLoad1" />
+        <byteDef length="1"  javaType="INTEGER"  propertyName="输出负载状态2" property="outputLoad2" />
+        <byteDef length="1"  javaType="INTEGER"  propertyName="MIST状态" property="mist" />
+        <byteDef length="3"  javaType="INTEGER"  ignore="true" />
+        <byteDef length="1"  javaType="INTEGER"  propertyName="累积工作时间高位小时" property="cumulativeTime1" />
+        <byteDef length="1"  javaType="INTEGER"  propertyName="累积工作时间中位小时" property="cumulativeTime2" />
+        <byteDef length="1"  javaType="INTEGER"  propertyName="累积工作时间低位小时" property="cumulativeTime3" />
+        <byteDef length="1"  javaType="INTEGER"  propertyName="累积工作时间分钟" property="cumulativeTime4" />
+        <byteDef length="1"  javaType="INTEGER"  propertyName="累积工作次数高位" property="cumulativeWorkTimes1" />
+        <byteDef length="1"  javaType="INTEGER"  propertyName="累积工作次数中位" property="cumulativeWorkTimes2" />
+        <byteDef length="1"  javaType="INTEGER"  propertyName="累积工作次数低位" property="cumulativeWorkTimes3" />
+        <byteDef length="14"  javaType="STRING"  ignore="true" />
+    </definitions>
+</protocol>

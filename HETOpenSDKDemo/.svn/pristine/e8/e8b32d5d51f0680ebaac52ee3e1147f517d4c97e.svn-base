@@ -1,0 +1,154 @@
+//
+//  WIFIBindManager.h
+//  NewBindDeviceProject
+//
+//  Created by mr.cao on 15/6/24.
+//  Copyright (c) 2015年 mr.cao. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+#import "HETWIFICommonReform.h"
+
+
+typedef enum {
+    DeviceAdd         = 0,// 默认添加设备
+    DeviceFridge      = 1,// 1: 冰箱
+    DeviceWash        = 2,// 2: 洗衣机
+    DeviceCondition   = 3,// 3: 空调
+    DeviceNuanFeng    = 4,// 4: 暖风机
+    DeviceHumidifier  = 5,// 5: 加湿器
+    DeviceMattress    = 6,// 6: 喜临门睡眠监测器
+    DeviceAirClean    = 7,// 7: 空气清新机
+    DeviceHotWater    = 8,// 8: 热水器
+    DeviceSnore       = 9,// 9: 鼾声检测
+    DeviceTurn        = 10,// 10: 翻身检测
+    DeviceAroma       = 11,// 11: 香薰机
+    DeviceStir        = 12,// 12: 搅拌机
+    DeviceTempControl = 13,// 13: 温控器
+    DeviceLight       = 14,// 14: LED 电灯
+    DeviceElecOven    = 15,// 15: 电烤箱
+    DeviceAirBox      = 16,// 16: 空气盒子
+    DeviceAirFan      = 17,// 17: 吊顶风扇
+    DeviceSleepBox    = 18,// 18: 睡眠盒子
+    DeviceSlowCooker  = 19,// 19: 慢炖锅
+    DeviceWaterCup    = 20,// 20: 水杯
+    DeviceCurtain     = 21,// 21: 电动窗帘
+    DeviceOutlet      = 22,// 22: 插座
+    DeviceBleToWifi   = 23,// 23: 蓝牙转WIFI
+    DeviceCigarette   = 24,// 24: 电子烟
+    
+    DeviceSleepButton = 26,// 26: 睡眠记录器
+    DeviceMusicBox    = 27,// 27: 音箱
+    DeviceBleWifiBox  = 28,
+    DeviceCough       = 29,// 25: 咳嗽检测
+    DeviceSleepScene  = 30,
+    DeviceSkinTest    = 31,//31:测肤仪
+    DeviceCleanFace   = 34,//34:洁面仪
+    DeviceLlskincleaner = 35, //35. 提拉
+    DevicePortablesprayer = 36,//36. 便捷式喷雾仪
+    DeviceImportExport = 37, //彩光导入导出仪)
+    DeviceHotelTray = 40,    //酒店托盘
+    
+    DeviceSnorePillow = 42,  //止鼾枕头
+    DeviceSleepBoxAirCondition = 43,  //红外空调
+    
+} DeviceType;
+
+
+
+
+@protocol HETWIFIBindBusinessDelegate<NSObject>
+/**
+ *  绑定失败代理
+ *
+ *  @param obj  绑定失败的设备信息HETWIFICommonReform对象
+ */
+-(void)HETWIFIBindBusinessFail:(HETWIFICommonReform *)obj;
+
+/**
+ *  绑定成功代理
+ *
+ *  @param obj  绑定成功的设备信息HETWIFICommonReform对象
+ */
+-(void)HETWIFIBindBusinessSuccess:(HETWIFICommonReform *)obj;
+
+
+/**
+ *  扫描到设备代理
+ *
+ *  @param HETWIFIBindBusiness HETWIFIBindBusiness对象
+ *  @param obj                 设备信息HETWIFICommonReform对象
+ */
+- (void)scanWIFIDevice:(id)HETWIFIBindBusiness BindDeviceInfo:(HETWIFICommonReform *)obj;
+
+@end
+
+
+
+@interface HETWIFIBindBusiness : NSObject
+
+
+@property(nonatomic,weak)id<HETWIFIBindBusinessDelegate>delegate;
+
+
+
+
++ (HETWIFIBindBusiness *)sharedInstance;
+
+/**
+ *  获取手机所连WIFI得SSID
+ *
+ *  @param interval 时间间隔，每隔interval 获取一次
+ *  @param times    次数
+ *  @param success  获取SSID的回调
+ */
+-(void)fetchSSIDInfoWithInterVal:(NSTimeInterval)interval
+                       WithTimes:(NSTimeInterval)times
+                    SuccessBlock:(void(^)(NSString* ssidStr))success;
+/**
+ *  停止获取手机所连WIFI得SSID
+ */
+
+-(void)stopFetchSSIDInfo;
+
+
+
+
+/**
+ *  获得所连Wi-Fi的Mac地址
+ *
+ *  @return 返回mac地址
+ */
+-(NSString *)fetchmacSSIDInfo;
+
+
+
+
+/**
+ *  扫描设备
+ *
+ *  @param ssid       WIFI 名称
+ *  @param psw        WIFI 密码
+ *  @param deviceType 设备类型，如果deviceType<1则扫描所有设备
+ */
+-(void)startScanDevicewithSSID:(NSString *)ssid withPassWord:(NSString *)psw withDeviceType:(DeviceType)deviceType;
+
+
+
+
+/**
+ *  绑定设备
+ *
+ *  @param deviceArrayObj 需要绑定的设备数组，数组里面必须是HETWIFICommonReform对象
+ *  @param interval       设置绑定超时时间
+ */
+-(void)bindDevices:(NSArray<HETWIFICommonReform *>*)deviceObjArray withTimeOut:(NSTimeInterval)interval;
+
+
+/**
+ *  停止服务，关闭socket
+ */
+-(void) stop;
+
+@end
