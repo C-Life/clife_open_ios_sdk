@@ -18,6 +18,6 @@ Pod::Spec.new do |s|
   s.platform     = :ios
   s.ios.deployment_target = '7.0'
   s.requires_arc = true
-  s.vendored_frameworks = 'Pod/*.framework'
+  s.vendored_frameworks = 'Pod/HETOpenSDK.framework'
 
 end
