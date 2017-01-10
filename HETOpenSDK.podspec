@@ -6,6 +6,7 @@
 #  To see working Podspecs in the CocoaPods repo see https://github.com/CocoaPods/Specs/
 #
 
+
 Pod::Spec.new do |s|
 
   s.name         = "HETOpenSDK"
