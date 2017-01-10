@@ -1,0 +1,19 @@
+PODS:
+  - FMDB (2.5):
+    - FMDB/standard (= 2.5)
+  - FMDB/common (2.5)
+  - FMDB/standard (2.5):
+    - FMDB/common
+  - HETOpenSDK (0.0.1)
+
+DEPENDENCIES:
+  - FMDB (= 2.5)
+  - HETOpenSDK (= 0.0.1)
+
+SPEC CHECKSUMS:
+  FMDB: 96e8f1bcc1329e269330f99770ad4285d9003e52
+  HETOpenSDK: 83f4888d7dc99a27e0717bf17ce4f587748da014
+
+PODFILE CHECKSUM: 2c9678da529d039652b85495dc6993dbcffcef5d
+
+COCOAPODS: 1.1.1

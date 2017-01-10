@@ -1,0 +1,10 @@
+platform :ios, '7.0'
+
+target :"HETOpenSDKDemo" do
+    
+
+pod 'FMDB','2.5'
+pod 'HETOpenSDK','0.0.1'
+
+end
+inhibit_all_warnings!
