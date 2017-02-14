@@ -1,6 +1,6 @@
 //
 //  HETFileInfo.h
-//  HETOpenSDKDemo
+//  HETOpenSDK
 //
 //  Created by mr.cao on 16/5/10.
 //  Copyright © 2016年 mr.cao. All rights reserved.
