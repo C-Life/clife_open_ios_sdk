@@ -7,7 +7,7 @@
                     
 ##2.下载C-Life终端SDK文件
 
-```
+```objc
    pod 'HETOpenSDK','0.1.0'
    
 ```
@@ -15,7 +15,7 @@
 1. 在XCode中建立你的工程。
 2. 允许XCode7以上版本支持Http传输方法,如果用的是Xcode7以上版本时，需要在App项目的plist手动加入以下key和值以支持http传输:
 
-	```
+	```objc
     <key>NSAppTransportSecurity</key> 
       <dict> 
     <key>NSAllowsArbitraryLoads</key> 
@@ -24,7 +24,7 @@
 	```
 3. pod导入HETOpenSDK库
 
-	```
+	```objc
    platform :ios, '7.0'
    pod 'HETOpenSDK','0.1.0'
    inhibit_all_warnings!
@@ -33,7 +33,7 @@
 ##4.在代码中使用
 1.  注册AppID和AppSecret     
 
-	```
+	```objc
 	- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions{
 		// Override point for customization after application launch.
 		//注册H&T开放平台SDK
@@ -45,7 +45,7 @@
 2. 授权登录
    参考HETAuthorize类里面方法
      
-	```
+	```objc
 	/**
 	*  是否授权认证
 	*
@@ -62,7 +62,7 @@
 	
    使用如下：
      
-    ```
+    ```objc
     //检查SDK是否已经授权登录，否则不能使用
 	HETAuthorize *auth = [[HETAuthorize alloc] init];
 	self.auth = auth;
@@ -79,7 +79,7 @@
 
    参考HETAuthorize类里面方法
     
-    ```
+    ```objc
     
     /**
     *  获取用户信息
@@ -99,7 +99,7 @@
    
    使用如下：    
 	
-	```
+	```objc
 	//------------------第三方设备接入路由，厂家自己实现,例如汉枫WiFi模块----------------------------
 	smtlk =[[HFSmartLink alloc]init];
 	smtlk.isConfigOneDevice = false;
@@ -136,7 +136,7 @@
    
        绑定成功后，用户可以获取绑定成功的设备列表，获取到设备列表，才可以控制设备
     
-    ```
+    ```objc
 	    /**
  *  查询绑定的所有设备列表
  *
@@ -151,7 +151,7 @@
 	    
 	   修改设备信息，用户可以修改设备的名称
 	   
-	 ```
+	 ```objc
         /**
          *  修改设备基础信息
          *
@@ -170,7 +170,7 @@
 	    
 	   解除设备绑定
 	      
-	```
+	```objc
         /**
         *  解除设备绑定
         *
@@ -187,7 +187,7 @@
 	
 	参考HETDeviceRequestBusiness类
     
-	```
+	```objc
 	/**
 	*  查询设备控制数据信息
 	*
@@ -223,7 +223,7 @@ failure:(failureBlock)failure;
 	
     参考HETDeviceRequestBusiness类
     
-   ```
+   ```objc
 	/**
 	*  查询设备运行数据信息
 	*
@@ -261,7 +261,7 @@ failure:(failureBlock)failure;
    
  5.6 获取设备故障数据、七天之内的历史故障数据  
 	
-    ```
+    ```objc
 	/**
 	*  查询设备配置数据信息
 	*
@@ -303,7 +303,7 @@ failure:(failureBlock)failure;
     
    [1] 初始化参数，获取设备运行数据，控制数据，故障数据
    	
-    ```
+    ```objc
     /**
  *
  *
@@ -324,14 +324,14 @@ failure:(failureBlock)failure;
   [2]启动服务,开始获取设备的数据
   
   
-   ```
+   ```objc
     //启动服务
     - (void)start;
               
    ```
   [3]停止服务,停止获取设备的数据	
   
-   ```
+   ```objc
     //停止服务
     - (void)stop;
   	             
@@ -354,7 +354,7 @@ failure:(failureBlock)failure;
 
 
   
-   ```
+   ```objc
 	/**
 	*  设备控制
 	*
@@ -376,7 +376,7 @@ failure:(failureBlock)failure;
    [1]查询设备固件版本信息
    
     
-   ```
+   ```objc
       /**
       *  查询设备固件版本
       *
@@ -396,7 +396,7 @@ failure:(failureBlock)failure;
    [2]确认设备升级
    
     
-   ```
+   ```objc
     /**
      *  确认设备升级
      *
@@ -420,7 +420,7 @@ failure:(failureBlock)failure;
    [3]查询升级进度
    
      
-   ``` 
+   ```objc
     /**
      *  查询升级进度
      *
@@ -445,7 +445,7 @@ failure:(failureBlock)failure;
    [4]升级成功确认
    
      
-   ``` 
+   ```objc 
    /**
     *  升级成功确认
     *
