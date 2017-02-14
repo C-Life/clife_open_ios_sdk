@@ -137,7 +137,7 @@
        绑定成功后，用户可以获取绑定成功的设备列表，获取到设备列表，才可以控制设备
     
     ```objc
-	    /**
+	/**
  *  查询绑定的所有设备列表
  *
  *  @param success  设备列表返回HETDevice对象数组
@@ -152,15 +152,15 @@
 	   修改设备信息，用户可以修改设备的名称
 	   
 	 ```objc
-        /**
-         *  修改设备基础信息
-         *
-         *  @param deviceId   设备标识
-         *  @param deviceName 设备名称
-         *  @param roomId     房间标识（绑定者才可以修改房间位置）
-         *  @param success    成功的回调
-         *  @param failure    失败的回调
-         */
+    /**
+    *  修改设备基础信息
+    *
+    *  @param deviceId   设备标识
+    *  @param deviceName 设备名称
+    *  @param roomId     房间标识（绑定者才可以修改房间位置）
+    *  @param success    成功的回调
+    *  @param failure    失败的回调
+    */
     - (void)updateDeviceInfoWithDeviceId:(NSString *)deviceId  deviceName:(NSString *)deviceName
   roomId:(NSString *)roomId  success：(successBlock)success
  failure:(failureBlock)failure;
@@ -171,13 +171,13 @@
 	   解除设备绑定
 	      
 	```objc
-        /**
-        *  解除设备绑定
-        *
-        *  @param deviceId 设备deviceId
-        *  @param success  成功的回调
-        *  @param failure  失败的回调
-        */
+    /**
+    *  解除设备绑定
+    *
+    *  @param deviceId 设备deviceId
+    *  @param success  成功的回调
+    *  @param failure  失败的回调
+    */
    - (void)unbindDeviceWithDeviceId:(NSString *)deviceId success:(successBlock)success failure:(failureBlock)failure;
    ```
    
@@ -377,13 +377,13 @@ failure:(failureBlock)failure;
    
     
    ```objc
-      /**
-      *  查询设备固件版本
-      *
-      *  @param deviceId 设备标识
-      *  @param success  成功的回调
-      *  @param failure  失败的回调
-      */
+   /**
+   *  查询设备固件版本
+   *
+   *  @param deviceId 设备标识
+   *  @param success  成功的回调
+   *  @param failure  失败的回调
+   */
 
      -(void)deviceUpgradeCheckWithDeviceId:(NSString *)deviceId
                               success:(successBlock)success
