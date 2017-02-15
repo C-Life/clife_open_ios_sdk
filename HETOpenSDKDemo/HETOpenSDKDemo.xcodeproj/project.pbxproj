@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		C621D5A91D7FF93000E86D8E /* libsqlite3.0.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = C621D5A81D7FF93000E86D8E /* libsqlite3.0.tbd */; };
 		C66187EE1C85887F001E54C5 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C66187ED1C85887F001E54C5 /* SystemConfiguration.framework */; };
 		C67C08041DC0B4E70075AFC1 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = C67C07611DC0B4E70075AFC1 /* AppDelegate.m */; };
 		C67C08051DC0B4E70075AFC1 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C67C07621DC0B4E70075AFC1 /* Assets.xcassets */; };
@@ -19,29 +18,22 @@
 		C67C080B1DC0B4E70075AFC1 /* HETCommonHelp.m in Sources */ = {isa = PBXBuildFile; fileRef = C67C07721DC0B4E70075AFC1 /* HETCommonHelp.m */; };
 		C67C080C1DC0B4E70075AFC1 /* DMString.m in Sources */ = {isa = PBXBuildFile; fileRef = C67C07751DC0B4E70075AFC1 /* DMString.m */; };
 		C67C080D1DC0B4E70075AFC1 /* HETUIConfig.m in Sources */ = {isa = PBXBuildFile; fileRef = C67C07781DC0B4E70075AFC1 /* HETUIConfig.m */; };
-		C67C080E1DC0B4E70075AFC1 /* UIImage+hetbundle.m in Sources */ = {isa = PBXBuildFile; fileRef = C67C077B1DC0B4E70075AFC1 /* UIImage+hetbundle.m */; };
 		C67C080F1DC0B4E70075AFC1 /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = C67C077C1DC0B4E70075AFC1 /* Info.plist */; };
 		C67C08101DC0B4E70075AFC1 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = C67C077D1DC0B4E70075AFC1 /* main.m */; };
 		C67C08111DC0B4E70075AFC1 /* bingxiang_deviceBind@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = C67C077F1DC0B4E70075AFC1 /* bingxiang_deviceBind@2x.png */; };
 		C67C08121DC0B4E70075AFC1 /* bingxiang_deviceBind@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = C67C07801DC0B4E70075AFC1 /* bingxiang_deviceBind@3x.png */; };
-		C67C08131DC0B4E70075AFC1 /* deviceBind.bundle in Resources */ = {isa = PBXBuildFile; fileRef = C67C07821DC0B4E70075AFC1 /* deviceBind.bundle */; };
 		C67C08141DC0B4E70075AFC1 /* gotoBack_deviceBind.png in Resources */ = {isa = PBXBuildFile; fileRef = C67C07831DC0B4E70075AFC1 /* gotoBack_deviceBind.png */; };
 		C67C08151DC0B4E70075AFC1 /* gotoBack_deviceBind@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = C67C07841DC0B4E70075AFC1 /* gotoBack_deviceBind@3x.png */; };
 		C67C08161DC0B4E70075AFC1 /* AromaDiffuserViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C67C07881DC0B4E70075AFC1 /* AromaDiffuserViewController.m */; };
 		C67C08171DC0B4E70075AFC1 /* HETDeviceInfoViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C67C078B1DC0B4E70075AFC1 /* HETDeviceInfoViewController.m */; };
 		C67C08181DC0B4E70075AFC1 /* HETWIFIUpgradeViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C67C078E1DC0B4E70075AFC1 /* HETWIFIUpgradeViewController.m */; };
-		C67C08191DC0B4E70075AFC1 /* HETDeviceObject.m in Sources */ = {isa = PBXBuildFile; fileRef = C67C07911DC0B4E70075AFC1 /* HETDeviceObject.m */; };
 		C67C081A1DC0B4E70075AFC1 /* HETWIFIAromaDiffuserDevice.m in Sources */ = {isa = PBXBuildFile; fileRef = C67C07951DC0B4E70075AFC1 /* HETWIFIAromaDiffuserDevice.m */; };
 		C67C081B1DC0B4E70075AFC1 /* MainViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C67C07981DC0B4E70075AFC1 /* MainViewController.m */; };
 		C67C081C1DC0B4E70075AFC1 /* ALLWIFIDeviceViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C67C079B1DC0B4E70075AFC1 /* ALLWIFIDeviceViewController.m */; };
-		C67C081D1DC0B4E70075AFC1 /* HETChooseDeviceViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C67C079D1DC0B4E70075AFC1 /* HETChooseDeviceViewController.m */; };
-		C67C081E1DC0B4E70075AFC1 /* HETChooseSubDeviceViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C67C079F1DC0B4E70075AFC1 /* HETChooseSubDeviceViewController.m */; };
 		C67C081F1DC0B4E70075AFC1 /* ScanWIFIViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C67C07A11DC0B4E70075AFC1 /* ScanWIFIViewController.m */; };
 		C67C08201DC0B4E70075AFC1 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C67C07A41DC0B4E70075AFC1 /* ViewController.m */; };
-		C67C08211DC0B4E70075AFC1 /* hf-pmk-generator.c in Sources */ = {isa = PBXBuildFile; fileRef = C67C07A61DC0B4E70075AFC1 /* hf-pmk-generator.c */; };
 		C67C08221DC0B4E70075AFC1 /* HFSmartLink.m in Sources */ = {isa = PBXBuildFile; fileRef = C67C07A91DC0B4E70075AFC1 /* HFSmartLink.m */; };
 		C67C08231DC0B4E70075AFC1 /* HFSmartLinkDeviceInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = C67C07AB1DC0B4E70075AFC1 /* HFSmartLinkDeviceInfo.m */; };
-		C67C08241DC0B4E70075AFC1 /* libTest.c in Sources */ = {isa = PBXBuildFile; fileRef = C67C07AC1DC0B4E70075AFC1 /* libTest.c */; };
 		C67C08251DC0B4E70075AFC1 /* UdpProxy.m in Sources */ = {isa = PBXBuildFile; fileRef = C67C07AF1DC0B4E70075AFC1 /* UdpProxy.m */; };
 		C67C08261DC0B4E70075AFC1 /* Udpproxy2.m in Sources */ = {isa = PBXBuildFile; fileRef = C67C07B11DC0B4E70075AFC1 /* Udpproxy2.m */; };
 		C67C08271DC0B4E70075AFC1 /* NSBundle+SSToolkitAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = C67C07B51DC0B4E70075AFC1 /* NSBundle+SSToolkitAdditions.m */; };
@@ -80,7 +72,6 @@
 		1DCFB1B2446E893E2A123E51 /* Pods-HETOpenSDKDemo.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-HETOpenSDKDemo.release.xcconfig"; path = "Pods/Target Support Files/Pods-HETOpenSDKDemo/Pods-HETOpenSDKDemo.release.xcconfig"; sourceTree = "<group>"; };
 		9885A404E160F93B84FA1D63 /* Pods-HETOpenSDKDemo.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-HETOpenSDKDemo.debug.xcconfig"; path = "Pods/Target Support Files/Pods-HETOpenSDKDemo/Pods-HETOpenSDKDemo.debug.xcconfig"; sourceTree = "<group>"; };
 		A350E9931D0F93EEB9CF1208 /* libPods-HETOpenSDKDemo.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-HETOpenSDKDemo.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		C621D5A81D7FF93000E86D8E /* libsqlite3.0.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.0.tbd; path = usr/lib/libsqlite3.0.tbd; sourceTree = SDKROOT; };
 		C63AF0CD1C50D645000E0EB8 /* HETOpenSDKDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = HETOpenSDKDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C66187ED1C85887F001E54C5 /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
 		C67C07601DC0B4E70075AFC1 /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
@@ -101,13 +92,10 @@
 		C67C07751DC0B4E70075AFC1 /* DMString.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DMString.m; sourceTree = "<group>"; };
 		C67C07771DC0B4E70075AFC1 /* HETUIConfig.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HETUIConfig.h; sourceTree = "<group>"; };
 		C67C07781DC0B4E70075AFC1 /* HETUIConfig.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HETUIConfig.m; sourceTree = "<group>"; };
-		C67C077A1DC0B4E70075AFC1 /* UIImage+hetbundle.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIImage+hetbundle.h"; sourceTree = "<group>"; };
-		C67C077B1DC0B4E70075AFC1 /* UIImage+hetbundle.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIImage+hetbundle.m"; sourceTree = "<group>"; };
 		C67C077C1DC0B4E70075AFC1 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		C67C077D1DC0B4E70075AFC1 /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		C67C077F1DC0B4E70075AFC1 /* bingxiang_deviceBind@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "bingxiang_deviceBind@2x.png"; sourceTree = "<group>"; };
 		C67C07801DC0B4E70075AFC1 /* bingxiang_deviceBind@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "bingxiang_deviceBind@3x.png"; sourceTree = "<group>"; };
-		C67C07821DC0B4E70075AFC1 /* deviceBind.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = deviceBind.bundle; sourceTree = "<group>"; };
 		C67C07831DC0B4E70075AFC1 /* gotoBack_deviceBind.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = gotoBack_deviceBind.png; sourceTree = "<group>"; };
 		C67C07841DC0B4E70075AFC1 /* gotoBack_deviceBind@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "gotoBack_deviceBind@3x.png"; sourceTree = "<group>"; };
 		C67C07871DC0B4E70075AFC1 /* AromaDiffuserViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AromaDiffuserViewController.h; sourceTree = "<group>"; };
@@ -116,30 +104,20 @@
 		C67C078B1DC0B4E70075AFC1 /* HETDeviceInfoViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HETDeviceInfoViewController.m; sourceTree = "<group>"; };
 		C67C078D1DC0B4E70075AFC1 /* HETWIFIUpgradeViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HETWIFIUpgradeViewController.h; sourceTree = "<group>"; };
 		C67C078E1DC0B4E70075AFC1 /* HETWIFIUpgradeViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HETWIFIUpgradeViewController.m; sourceTree = "<group>"; };
-		C67C07901DC0B4E70075AFC1 /* HETDeviceObject.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HETDeviceObject.h; sourceTree = "<group>"; };
-		C67C07911DC0B4E70075AFC1 /* HETDeviceObject.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HETDeviceObject.m; sourceTree = "<group>"; };
 		C67C07941DC0B4E70075AFC1 /* HETWIFIAromaDiffuserDevice.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HETWIFIAromaDiffuserDevice.h; sourceTree = "<group>"; };
 		C67C07951DC0B4E70075AFC1 /* HETWIFIAromaDiffuserDevice.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HETWIFIAromaDiffuserDevice.m; sourceTree = "<group>"; };
 		C67C07971DC0B4E70075AFC1 /* MainViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MainViewController.h; sourceTree = "<group>"; };
 		C67C07981DC0B4E70075AFC1 /* MainViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MainViewController.m; sourceTree = "<group>"; };
 		C67C079A1DC0B4E70075AFC1 /* ALLWIFIDeviceViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ALLWIFIDeviceViewController.h; sourceTree = "<group>"; };
 		C67C079B1DC0B4E70075AFC1 /* ALLWIFIDeviceViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ALLWIFIDeviceViewController.m; sourceTree = "<group>"; };
-		C67C079C1DC0B4E70075AFC1 /* HETChooseDeviceViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HETChooseDeviceViewController.h; sourceTree = "<group>"; };
-		C67C079D1DC0B4E70075AFC1 /* HETChooseDeviceViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HETChooseDeviceViewController.m; sourceTree = "<group>"; };
-		C67C079E1DC0B4E70075AFC1 /* HETChooseSubDeviceViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HETChooseSubDeviceViewController.h; sourceTree = "<group>"; };
-		C67C079F1DC0B4E70075AFC1 /* HETChooseSubDeviceViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HETChooseSubDeviceViewController.m; sourceTree = "<group>"; };
 		C67C07A01DC0B4E70075AFC1 /* ScanWIFIViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ScanWIFIViewController.h; sourceTree = "<group>"; };
 		C67C07A11DC0B4E70075AFC1 /* ScanWIFIViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ScanWIFIViewController.m; sourceTree = "<group>"; };
 		C67C07A31DC0B4E70075AFC1 /* ViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
 		C67C07A41DC0B4E70075AFC1 /* ViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ViewController.m; sourceTree = "<group>"; };
-		C67C07A61DC0B4E70075AFC1 /* hf-pmk-generator.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = "hf-pmk-generator.c"; sourceTree = "<group>"; };
-		C67C07A71DC0B4E70075AFC1 /* hf-pmk-generator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "hf-pmk-generator.h"; sourceTree = "<group>"; };
 		C67C07A81DC0B4E70075AFC1 /* HFSmartLink.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HFSmartLink.h; sourceTree = "<group>"; };
 		C67C07A91DC0B4E70075AFC1 /* HFSmartLink.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HFSmartLink.m; sourceTree = "<group>"; };
 		C67C07AA1DC0B4E70075AFC1 /* HFSmartLinkDeviceInfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HFSmartLinkDeviceInfo.h; sourceTree = "<group>"; };
 		C67C07AB1DC0B4E70075AFC1 /* HFSmartLinkDeviceInfo.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HFSmartLinkDeviceInfo.m; sourceTree = "<group>"; };
-		C67C07AC1DC0B4E70075AFC1 /* libTest.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = libTest.c; sourceTree = "<group>"; };
-		C67C07AD1DC0B4E70075AFC1 /* libTest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = libTest.h; sourceTree = "<group>"; };
 		C67C07AE1DC0B4E70075AFC1 /* UdpProxy.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UdpProxy.h; sourceTree = "<group>"; };
 		C67C07AF1DC0B4E70075AFC1 /* UdpProxy.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UdpProxy.m; sourceTree = "<group>"; };
 		C67C07B01DC0B4E70075AFC1 /* Udpproxy2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Udpproxy2.h; sourceTree = "<group>"; };
@@ -207,7 +185,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C621D5A91D7FF93000E86D8E /* libsqlite3.0.tbd in Frameworks */,
 				C66187EE1C85887F001E54C5 /* SystemConfiguration.framework in Frameworks */,
 				C95FF0836608882D8B100069 /* libPods-HETOpenSDKDemo.a in Frameworks */,
 			);
@@ -229,7 +206,6 @@
 			isa = PBXGroup;
 			children = (
 				C67C075E1DC0B4E70075AFC1 /* HETOpenSDKDemo */,
-				C621D5A81D7FF93000E86D8E /* libsqlite3.0.tbd */,
 				C66187ED1C85887F001E54C5 /* SystemConfiguration.framework */,
 				C63AF0CE1C50D645000E0EB8 /* Products */,
 				55B0D2338707C3B4D4D1394A /* Pods */,
@@ -298,7 +274,6 @@
 				C67C07721DC0B4E70075AFC1 /* HETCommonHelp.m */,
 				C67C07731DC0B4E70075AFC1 /* StringCommon */,
 				C67C07761DC0B4E70075AFC1 /* UIConfig */,
-				C67C07791DC0B4E70075AFC1 /* UIImage+bundle */,
 			);
 			path = Helpers;
 			sourceTree = "<group>";
@@ -334,33 +309,15 @@
 			path = UIConfig;
 			sourceTree = "<group>";
 		};
-		C67C07791DC0B4E70075AFC1 /* UIImage+bundle */ = {
-			isa = PBXGroup;
-			children = (
-				C67C077A1DC0B4E70075AFC1 /* UIImage+hetbundle.h */,
-				C67C077B1DC0B4E70075AFC1 /* UIImage+hetbundle.m */,
-			);
-			path = "UIImage+bundle";
-			sourceTree = "<group>";
-		};
 		C67C077E1DC0B4E70075AFC1 /* Resource */ = {
 			isa = PBXGroup;
 			children = (
 				C67C077F1DC0B4E70075AFC1 /* bingxiang_deviceBind@2x.png */,
 				C67C07801DC0B4E70075AFC1 /* bingxiang_deviceBind@3x.png */,
-				C67C07811DC0B4E70075AFC1 /* bundle */,
 				C67C07831DC0B4E70075AFC1 /* gotoBack_deviceBind.png */,
 				C67C07841DC0B4E70075AFC1 /* gotoBack_deviceBind@3x.png */,
 			);
 			path = Resource;
-			sourceTree = "<group>";
-		};
-		C67C07811DC0B4E70075AFC1 /* bundle */ = {
-			isa = PBXGroup;
-			children = (
-				C67C07821DC0B4E70075AFC1 /* deviceBind.bundle */,
-			);
-			path = bundle;
 			sourceTree = "<group>";
 		};
 		C67C07851DC0B4E70075AFC1 /* Section */ = {
@@ -369,7 +326,6 @@
 				C67C07861DC0B4E70075AFC1 /* AromaDiffuserViewController */,
 				C67C07891DC0B4E70075AFC1 /* DeviceInfoViewController */,
 				C67C078C1DC0B4E70075AFC1 /* DeviceUpgradeViewController */,
-				C67C078F1DC0B4E70075AFC1 /* HETDeviceObject */,
 				C67C07921DC0B4E70075AFC1 /* HETWIFIDevices */,
 				C67C07961DC0B4E70075AFC1 /* MainViewController */,
 				C67C07991DC0B4E70075AFC1 /* ScanWIFIDeviceViewController */,
@@ -405,15 +361,6 @@
 			path = DeviceUpgradeViewController;
 			sourceTree = "<group>";
 		};
-		C67C078F1DC0B4E70075AFC1 /* HETDeviceObject */ = {
-			isa = PBXGroup;
-			children = (
-				C67C07901DC0B4E70075AFC1 /* HETDeviceObject.h */,
-				C67C07911DC0B4E70075AFC1 /* HETDeviceObject.m */,
-			);
-			path = HETDeviceObject;
-			sourceTree = "<group>";
-		};
 		C67C07921DC0B4E70075AFC1 /* HETWIFIDevices */ = {
 			isa = PBXGroup;
 			children = (
@@ -445,10 +392,6 @@
 			children = (
 				C67C079A1DC0B4E70075AFC1 /* ALLWIFIDeviceViewController.h */,
 				C67C079B1DC0B4E70075AFC1 /* ALLWIFIDeviceViewController.m */,
-				C67C079C1DC0B4E70075AFC1 /* HETChooseDeviceViewController.h */,
-				C67C079D1DC0B4E70075AFC1 /* HETChooseDeviceViewController.m */,
-				C67C079E1DC0B4E70075AFC1 /* HETChooseSubDeviceViewController.h */,
-				C67C079F1DC0B4E70075AFC1 /* HETChooseSubDeviceViewController.m */,
 				C67C07A01DC0B4E70075AFC1 /* ScanWIFIViewController.h */,
 				C67C07A11DC0B4E70075AFC1 /* ScanWIFIViewController.m */,
 			);
@@ -467,14 +410,10 @@
 		C67C07A51DC0B4E70075AFC1 /* smartlink */ = {
 			isa = PBXGroup;
 			children = (
-				C67C07A61DC0B4E70075AFC1 /* hf-pmk-generator.c */,
-				C67C07A71DC0B4E70075AFC1 /* hf-pmk-generator.h */,
 				C67C07A81DC0B4E70075AFC1 /* HFSmartLink.h */,
 				C67C07A91DC0B4E70075AFC1 /* HFSmartLink.m */,
 				C67C07AA1DC0B4E70075AFC1 /* HFSmartLinkDeviceInfo.h */,
 				C67C07AB1DC0B4E70075AFC1 /* HFSmartLinkDeviceInfo.m */,
-				C67C07AC1DC0B4E70075AFC1 /* libTest.c */,
-				C67C07AD1DC0B4E70075AFC1 /* libTest.h */,
 				C67C07AE1DC0B4E70075AFC1 /* UdpProxy.h */,
 				C67C07AF1DC0B4E70075AFC1 /* UdpProxy.m */,
 				C67C07B01DC0B4E70075AFC1 /* Udpproxy2.h */,
@@ -685,7 +624,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C67C08131DC0B4E70075AFC1 /* deviceBind.bundle in Resources */,
 				C67C08141DC0B4E70075AFC1 /* gotoBack_deviceBind.png in Resources */,
 				C67C08121DC0B4E70075AFC1 /* bingxiang_deviceBind@3x.png in Resources */,
 				C67C08331DC0B4E70075AFC1 /* LICENSE in Resources */,
@@ -743,7 +681,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_ROOT}/../Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run \'pod install\' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n";
+			shellScript = "diff \"${PODS_ROOT}/../Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
@@ -763,7 +701,6 @@
 				C67C084B1DC0B4E70075AFC1 /* ColorButton.m in Sources */,
 				C67C08101DC0B4E70075AFC1 /* main.m in Sources */,
 				C67C08391DC0B4E70075AFC1 /* NSData+ImageContentType.m in Sources */,
-				C67C08241DC0B4E70075AFC1 /* libTest.c in Sources */,
 				C67C083E1DC0B4E70075AFC1 /* SDWebImageDownloaderOperation.m in Sources */,
 				C67C08181DC0B4E70075AFC1 /* HETWIFIUpgradeViewController.m in Sources */,
 				C67C083C1DC0B4E70075AFC1 /* SDWebImageDecoder.m in Sources */,
@@ -772,7 +709,6 @@
 				C67C08261DC0B4E70075AFC1 /* Udpproxy2.m in Sources */,
 				C67C08341DC0B4E70075AFC1 /* MBProgressHUD.m in Sources */,
 				C67C081B1DC0B4E70075AFC1 /* MainViewController.m in Sources */,
-				C67C080E1DC0B4E70075AFC1 /* UIImage+hetbundle.m in Sources */,
 				C67C08041DC0B4E70075AFC1 /* AppDelegate.m in Sources */,
 				C67C08411DC0B4E70075AFC1 /* UIButton+WebCache.m in Sources */,
 				C67C08251DC0B4E70075AFC1 /* UdpProxy.m in Sources */,
@@ -784,16 +720,13 @@
 				C67C08161DC0B4E70075AFC1 /* AromaDiffuserViewController.m in Sources */,
 				C67C08081DC0B4E70075AFC1 /* NSBundle+SSToolkitAdditions.m in Sources */,
 				C67C080A1DC0B4E70075AFC1 /* NSDate+SSToolkitAdditions.m in Sources */,
-				C67C081D1DC0B4E70075AFC1 /* HETChooseDeviceViewController.m in Sources */,
 				C67C08281DC0B4E70075AFC1 /* NSData+SAMAdditions.m in Sources */,
-				C67C08191DC0B4E70075AFC1 /* HETDeviceObject.m in Sources */,
 				C67C084A1DC0B4E70075AFC1 /* CLDeviceTableViewCell.m in Sources */,
 				C67C080C1DC0B4E70075AFC1 /* DMString.m in Sources */,
 				C67C08421DC0B4E70075AFC1 /* UIImage+GIF.m in Sources */,
 				C67C08231DC0B4E70075AFC1 /* HFSmartLinkDeviceInfo.m in Sources */,
 				C67C08461DC0B4E70075AFC1 /* UIView+WebCacheOperation.m in Sources */,
 				C67C083F1DC0B4E70075AFC1 /* SDWebImageManager.m in Sources */,
-				C67C08211DC0B4E70075AFC1 /* hf-pmk-generator.c in Sources */,
 				C67C08311DC0B4E70075AFC1 /* HETBaseModel.m in Sources */,
 				C67C08091DC0B4E70075AFC1 /* NSData+SAMAdditions.m in Sources */,
 				C67C083B1DC0B4E70075AFC1 /* SDWebImageCompat.m in Sources */,
@@ -802,7 +735,6 @@
 				C67C08071DC0B4E70075AFC1 /* BaseViewController.m in Sources */,
 				C67C08291DC0B4E70075AFC1 /* NSDate+SSToolkitAdditions.m in Sources */,
 				C67C08401DC0B4E70075AFC1 /* SDWebImagePrefetcher.m in Sources */,
-				C67C081E1DC0B4E70075AFC1 /* HETChooseSubDeviceViewController.m in Sources */,
 				C67C08451DC0B4E70075AFC1 /* UIImageView+WebCache.m in Sources */,
 				C67C083A1DC0B4E70075AFC1 /* SDImageCache.m in Sources */,
 				C67C08381DC0B4E70075AFC1 /* README.md in Sources */,

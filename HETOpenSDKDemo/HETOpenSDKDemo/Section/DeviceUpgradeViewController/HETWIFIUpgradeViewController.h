@@ -1,6 +1,6 @@
 //
 //  HETWIFIUpgradeViewController.h
-//  CLife
+//  HETOpenSDKDemo
 //
 //  Created by Newman on 15/8/10.
 //  Copyright (c) 2015年 HET. All rights reserved.

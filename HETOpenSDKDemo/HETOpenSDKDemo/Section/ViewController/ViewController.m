@@ -8,7 +8,7 @@
 
 #import "ViewController.h"
 
-#import <HETOpenSDK/HETAuthorize.h>
+#import <HETOpenSDK/HETOpenSDK.h>
 #import "MainViewController.h"
 
 

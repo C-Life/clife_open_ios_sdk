@@ -1,5 +1,5 @@
 //
-//  HETScanViewController.m
+//  ScanViewController.m
 //  HETOpenSDKDemo
 //
 //  Created by mr.cao on 16/1/21.
@@ -8,7 +8,7 @@
 
 
 #import "ScanWIFIViewController.h"
-#import  <HETOpenSDK/HETOpenSDK.h>
+#import <HETOpenSDK/HETOpenSDK.h>
 #import "ALLWIFIDeviceViewController.h"
 
 

@@ -1,6 +1,6 @@
 //
 //  HETWIFIUpgradeViewController.m
-//  CLife
+//  HETOpenSDKDemo
 //
 //  Created by Newman on 15/8/10.
 //  Copyright (c) 2015年 HET. All rights reserved.
@@ -8,7 +8,6 @@
 
 #import "HETWIFIUpgradeViewController.h"
 #import "HETUIConfig.h"
-#import <HETOpenSDK/HETOpenSDK.h>
 #import "HETCommonHelp.h"
 static int checkProgressFailCount = 0; //when check upgrade progress fail , this value plus 1 , if checkProgressFailCount greater than 60 , then consider upgrade fail
 

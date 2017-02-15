@@ -10,11 +10,7 @@
 
 ##3.搭建开发环境
 1. 在XCode中建立你的工程。
-2. 将SDK中的HETOpenSDK.framework 添加到你所建的工程（如下图所示）：
-   ![](https://i.niupic.com/images/2016/09/20/k0wsKW.jpeg
-)
-   
-3. 允许XCode7支持Http传输方法,如果用的是Xcode7时，需要在App项目的plist手动加入以下key和值以支持http传输:
+2. 允许XCode7以上版本支持Http传输方法,如果用的是Xcode7以上版本时，需要在App项目的plist手动加入以下key和值以支持http传输:
 
 	```
     <key>NSAppTransportSecurity</key> 
@@ -23,9 +19,14 @@
         <true/> 
     </dict>
 	```
-4. pod导入FMDB库， pod 'FMDB','2.5'
+3. pod导入FMDB库和HETOpenSDK库
 
-
+	```
+   platform :ios, '7.0'
+   pod 'FMDB','2.5'
+   pod 'HETOpenSDK','0.0.1'
+   inhibit_all_warnings!
+  ```
 ##4.在代码中使用
 1.  注册AppID和AppSecret     
 

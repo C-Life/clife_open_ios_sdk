@@ -8,10 +8,7 @@
 
 #import "HETDeviceInfoViewController.h"
 
-
 #import "HETWIFIUpgradeViewController.h"
-
-#import  <HETOpenSDK/HETOpenSDK.h>
 
 @interface HETDeviceInfoViewController ()
 
@@ -45,28 +42,31 @@
     // Do any additional setup after loading the view.
     
     
-       UIButton *upgradeBtn = [UIButton buttonWithType:UIButtonTypeCustom];
-       upgradeBtn.frame =  CGRectMake(self.view.bounds.size.width/2.0-150/2.0, 100, 150, 44);
-       [upgradeBtn setTitle:@"设备升级" forState:UIControlStateNormal];
-       [upgradeBtn setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
-       [upgradeBtn addTarget:self action:@selector(upgradeBtnAction) forControlEvents:UIControlEventTouchUpInside];
-       upgradeBtn.backgroundColor=[self colorFromHexRGB:@"2E7BD3"];
-       [self.view addSubview:upgradeBtn];
+    int btnHeight=44;
+    int btnWidth=250;
+    int btnGap=(CCViewHeight-btnHeight*3)/4;
+    UIButton *upgradeBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+    upgradeBtn.frame =  CGRectMake(self.view.bounds.size.width/2.0-btnWidth/2.0, btnGap, btnWidth, btnHeight);
+    [upgradeBtn setTitle:@"设备升级" forState:UIControlStateNormal];
+    [upgradeBtn setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
+    [upgradeBtn addTarget:self action:@selector(upgradeBtnAction) forControlEvents:UIControlEventTouchUpInside];
+    upgradeBtn.backgroundColor=[self colorFromHexRGB:@"2E7BD3"];
+    [self.view addSubview:upgradeBtn];
     
     
-        UIButton *runDataBtn = [UIButton buttonWithType:UIButtonTypeCustom];
-        runDataBtn.frame =  CGRectMake(self.view.bounds.size.width/2.0-150/2.0, 210, 150, 44);
-        [runDataBtn setTitle:@"设备历史运行数据" forState:UIControlStateNormal];
-        [runDataBtn setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
-        [runDataBtn addTarget:self action:@selector(runBtnAction) forControlEvents:UIControlEventTouchUpInside];
-        runDataBtn.backgroundColor=[self colorFromHexRGB:@"2E7BD3"];
-        [self.view addSubview:runDataBtn];
+    UIButton *runDataBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+    runDataBtn.frame =  CGRectMake(self.view.bounds.size.width/2.0-btnWidth/2.0, btnGap*2+btnHeight, btnWidth, btnHeight);
+    [runDataBtn setTitle:@"设备历史运行数据" forState:UIControlStateNormal];
+    [runDataBtn setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
+    [runDataBtn addTarget:self action:@selector(runBtnAction) forControlEvents:UIControlEventTouchUpInside];
+    runDataBtn.backgroundColor=[self colorFromHexRGB:@"2E7BD3"];
+    [self.view addSubview:runDataBtn];
     
     
     
     
     UIButton *modifyDeviceInfoBtn = [UIButton buttonWithType:UIButtonTypeCustom];
-    modifyDeviceInfoBtn.frame =  CGRectMake(self.view.bounds.size.width/2.0-150/2.0, 280, 150, 44);
+    modifyDeviceInfoBtn.frame =  CGRectMake(self.view.bounds.size.width/2.0-btnWidth/2.0, btnGap*3+btnHeight*2, btnWidth, btnHeight);
     [modifyDeviceInfoBtn setTitle:@"修改设备信息" forState:UIControlStateNormal];
     [modifyDeviceInfoBtn setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
     [modifyDeviceInfoBtn addTarget:self action:@selector(modifyDeviceInfoBtnAction) forControlEvents:UIControlEventTouchUpInside];
@@ -81,7 +81,7 @@
 }
 -(void)upgradeBtnAction
 {
-     NSString *deviceId=[self.deviceInformation objectForKey:@"deviceId"];
+    NSString *deviceId=self.hetDeviceModel.deviceId;
     HETDeviceUpgradeBusiness *upgradeBusiness=[[HETDeviceUpgradeBusiness alloc]init];
     [upgradeBusiness deviceUpgradeCheckWithDeviceId:deviceId success:^(id dictValue) {
         
@@ -115,7 +115,7 @@
 -(void)runBtnAction
 {
     HETDeviceRequestBusiness *request=[[HETDeviceRequestBusiness alloc]init];
-    NSString *deviceId=[self.deviceInformation objectForKey:@"deviceId"];
+    NSString *deviceId=self.hetDeviceModel.deviceId;
     NSDate *senddate = [NSDate date];
     NSDateFormatter *dateformatter = [[NSDateFormatter alloc] init];
     [dateformatter setDateFormat:@"YYYY-MM-dd"];
@@ -152,10 +152,10 @@
 -(void) modifyDeviceInfoBtnAction
 {
     HETDeviceRequestBusiness *request=[[HETDeviceRequestBusiness alloc]init];
-    NSString *deviceId=[self.deviceInformation objectForKey:@"deviceId"];
+     NSString *deviceId=self.hetDeviceModel.deviceId;
     
     
-    [request updateDeviceInfoWithDeviceID:deviceId deviceName:@"123fsdg" roomId:@"12" success:^(id responseObject) {
+    [request updateDeviceInfoWithDeviceId:deviceId deviceName:@"123fsdg" roomId:@"12" success:^(id responseObject) {
         
     } failure:^(NSError *error) {
         
@@ -177,10 +177,9 @@
         return ;
     }
     if (self.oldDeviceVersion && self.devNewVersion && ![self.devNewVersion isEqualToString:self.oldDeviceVersion]){
-        if (self.deviceInformation) {
-            NSInteger deviceTypeId = [[self.deviceInformation objectForKey:@"deviceTypeId"] intValue];
+        if (self.hetDeviceModel) {
             HETWIFIUpgradeViewController * wifiUpgrade = [[HETWIFIUpgradeViewController alloc] init];
-            wifiUpgrade.deviceId = [self.deviceInformation objectForKey:@"deviceId"];
+            wifiUpgrade.deviceId =self.hetDeviceModel.deviceId;
             wifiUpgrade.versionType = self.devNewVersion;
             wifiUpgrade.deviceVersionId = self.deviceVersionId;
             [self.navigationController pushViewController:wifiUpgrade animated:YES];

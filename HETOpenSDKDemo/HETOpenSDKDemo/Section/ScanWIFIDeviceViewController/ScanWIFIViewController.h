@@ -1,6 +1,6 @@
 //
-//  CLScanViewController.h
-//  NewBindDeviceProject
+//  ScanViewController.h
+//  HETOpenSDKDemo
 //
 //  Created by mr.cao on 15/6/25.
 //  Copyright (c) 2015年 mr.cao. All rights reserved.

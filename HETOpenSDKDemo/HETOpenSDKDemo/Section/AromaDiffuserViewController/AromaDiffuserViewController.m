@@ -8,9 +8,8 @@
 
 #import "AromaDiffuserViewController.h"
 #import "ColorButton.h"
-#import  <HETOpenSDK/HETOpenSDK.h>
+#import <HETOpenSDK/HETOpenSDK.h>
 #import "HETWIFIAromaDiffuserDevice.h"
-
 #import "HETDeviceInfoViewController.h"
 
 
@@ -83,7 +82,7 @@
     rightButton.frame = CGRectMake(0, 0, 100, 40);
     // [addButton setImage: [UIImage imageNamed:@"deviceShare_shareManage_addShareIcon"] forState:UIControlStateNormal];
     [rightButton setTitle:@"设备升级和历史数据" forState:UIControlStateNormal];
-    rightButton.titleLabel.font=[UIFont systemFontOfSize:10];
+    rightButton.titleLabel.font=[UIFont systemFontOfSize:11];
     [rightButton addTarget:self action:@selector(rightBtnClick) forControlEvents:UIControlEventTouchUpInside];
     [self.navigationItem setRightBarButtonItem:[[UIBarButtonItem alloc] initWithCustomView:rightButton] animated:NO];
     
@@ -129,17 +128,23 @@
     
     [self.view addSubview:self.logTextView];
     
-    NSString *deviceId=[self.deviceDic objectForKey:@"deviceId"];
+//    NSString *deviceId=[self.deviceDic objectForKey:@"deviceId"];
+//    
+//    NSString *deviceBindType=[self.deviceDic objectForKey:@"bindType"];
+//    NSString *deviceTypeId=[self.deviceDic objectForKey:@"deviceTypeId"];
+//    
+//    NSString *userKey=[self.deviceDic objectForKey:@"userKey"];
+//    NSString *macAddress=[self.deviceDic objectForKey:@"macAddress"];
+//    NSString *deviceSubtypeId=[self.deviceDic objectForKey:@"deviceSubtypeId"];
+//     NSString *productId=[self.deviceDic objectForKey:@"productId"];
     
-    NSString *deviceBindType=[self.deviceDic objectForKey:@"bindType"];
-    NSString *deviceTypeId=[self.deviceDic objectForKey:@"deviceTypeId"];
     
-    NSString *userKey=[self.deviceDic objectForKey:@"userKey"];
-    NSString *macAddress=[self.deviceDic objectForKey:@"macAddress"];
-    NSString *deviceSubtypeId=[self.deviceDic objectForKey:@"deviceSubtypeId"];
-     NSString *productId=[self.deviceDic objectForKey:@"productId"];
-    
-        _device=[[HETWIFIAromaDiffuserDevice alloc]initWithUserKey:userKey withProductId:productId  deviceId:deviceId deviceMac:macAddress deviceTypeId:deviceTypeId deviceSubtypeId:deviceSubtypeId deviceRunDataSuccess:^(AromaDiffuserDeviceRunModel *model) {
+       
+
+}
+-(void)viewWillAppear:(BOOL)animated
+{
+    _device=[[HETWIFIAromaDiffuserDevice alloc]initWithHetDeviceModel:self.hetDeviceModel deviceRunDataSuccess:^(AromaDiffuserDeviceRunModel *model) {
         NSLog(@"%@",model);
         NSDictionary *responseObject=[model convertModelToDic];
         NSString *jsonString=[self DataTOjsonString:responseObject];
@@ -147,31 +152,33 @@
         self.ignoreCount--;
         if(self.ignoreCount<0)
         {
-        NSString *mist=model.mist;
-        NSString *light=model.light;
-        NSString *color=model.color;
-        
-        for(int j=0;j<3;j++)
-        {
-            UIButton *btn = (UIButton *)[self.view viewWithTag:1000+j+1];
-            UIButton *btn1 = (UIButton *)[self.view viewWithTag:2000+j+1];
-            btn.backgroundColor=[UIColor whiteColor];
-            btn1.backgroundColor=[UIColor whiteColor];
+            NSString *mist=model.mist;
+            NSString *light=model.light;
+            NSString *color=model.color;
+//            self.mist=mist.integerValue;
+//            self.light=light.integerValue;
+//            self.color=color.integerValue;
+            for(int j=0;j<3;j++)
+            {
+                UIButton *btn = (UIButton *)[self.view viewWithTag:1000+j+1];
+                UIButton *btn1 = (UIButton *)[self.view viewWithTag:2000+j+1];
+                btn.backgroundColor=[UIColor whiteColor];
+                btn1.backgroundColor=[UIColor whiteColor];
+            }
+            
+            
+            
+            UIButton *lightBtn=(UIButton *)[self.view viewWithTag:1000+light.integerValue];
+            lightBtn.backgroundColor=[UIColor blueColor];
+            UIButton *mistBtn=(UIButton *)[self.view viewWithTag:2000+mist.integerValue];
+            mistBtn.backgroundColor=[UIColor blueColor];
+            ColorButton *colorBtn=(ColorButton *)[self.view viewWithTag:3000+color.integerValue];
+            colorBtn.selected=YES;
+            [colorBtn setNeedsDisplay];
+            _lastSelectedColorBtn=colorBtn;
         }
-
         
         
-        UIButton *lightBtn=(UIButton *)[self.view viewWithTag:1000+light.integerValue];
-        lightBtn.backgroundColor=[UIColor blueColor];
-        UIButton *mistBtn=(UIButton *)[self.view viewWithTag:2000+mist.integerValue];
-        mistBtn.backgroundColor=[UIColor blueColor];
-        ColorButton *colorBtn=(ColorButton *)[self.view viewWithTag:3000+color.integerValue];
-        colorBtn.selected=YES;
-        [colorBtn setNeedsDisplay];
-        _lastSelectedColorBtn=colorBtn;
-        }
-        
-
         
     } deviceRunDataFail:^(NSError *error) {
         
@@ -183,30 +190,33 @@
         self.ignoreCount--;
         if(self.ignoreCount<0)
         {
-        NSString *mist=model.mist;
-        NSString *light=model.light;
-        NSString *color=model.color;
-        
-        
-        for(int j=0;j<3;j++)
-        {
-            UIButton *btn = (UIButton *)[self.view viewWithTag:1000+j+1];
-            UIButton *btn1 = (UIButton *)[self.view viewWithTag:2000+j+1];
-            btn.backgroundColor=[UIColor whiteColor];
-            btn1.backgroundColor=[UIColor whiteColor];
-        }
-        
-
-        
-        
-        UIButton *lightBtn=(UIButton *)[self.view viewWithTag:1000+light.integerValue];
-        lightBtn.backgroundColor=[UIColor blueColor];
-        UIButton *mistBtn=(UIButton *)[self.view viewWithTag:2000+mist.integerValue];
-         mistBtn.backgroundColor=[UIColor blueColor];
-        ColorButton *colorBtn=(ColorButton *)[self.view viewWithTag:3000+color.integerValue];
-        colorBtn.selected=YES;
-        [colorBtn setNeedsDisplay];
-        _lastSelectedColorBtn=colorBtn;
+            
+            NSString *mist=model.mist;
+            NSString *light=model.light;
+            NSString *color=model.color;
+//            self.mist=mist.integerValue;
+//            self.light=light.integerValue;
+//            self.color=color.integerValue;
+            
+            for(int j=0;j<3;j++)
+            {
+                UIButton *btn = (UIButton *)[self.view viewWithTag:1000+j+1];
+                UIButton *btn1 = (UIButton *)[self.view viewWithTag:2000+j+1];
+                btn.backgroundColor=[UIColor whiteColor];
+                btn1.backgroundColor=[UIColor whiteColor];
+            }
+            
+            
+            
+            
+            UIButton *lightBtn=(UIButton *)[self.view viewWithTag:1000+light.integerValue];
+            lightBtn.backgroundColor=[UIColor blueColor];
+            UIButton *mistBtn=(UIButton *)[self.view viewWithTag:2000+mist.integerValue];
+            mistBtn.backgroundColor=[UIColor blueColor];
+            ColorButton *colorBtn=(ColorButton *)[self.view viewWithTag:3000+color.integerValue];
+            colorBtn.selected=YES;
+            [colorBtn setNeedsDisplay];
+            _lastSelectedColorBtn=colorBtn;
         }
         
         
@@ -215,8 +225,6 @@
         
     }];
     [_device  start];
-       
-
 }
 -(void)viewWillDisappear:(BOOL)animated
 {
@@ -224,6 +232,7 @@
     [_device stop];
     _device=nil;
 }
+
 - (void)addView2Page:(UIScrollView *)scrollV count:(NSUInteger)pageCount frame:(CGRect)frame
 {
     for (int i = 0; i < pageCount; i++)
@@ -361,7 +370,7 @@
 {
     
     HETDeviceInfoViewController *vc=[[HETDeviceInfoViewController alloc]init];
-    vc.deviceInformation=self.deviceDic;
+    vc.hetDeviceModel=self.hetDeviceModel;
     
     [self.navigationController pushViewController:vc animated:YES];
 }
@@ -373,7 +382,14 @@
 }
 - (void)actionbtnlight:(UIButton *)btn
 {
-    self.updateFlag=2;
+    
+    
+    self.updateFlag=1<<7;
+    self.updateFlag=htonl(self.updateFlag);
+    NSString *updateFlagStr=[NSString stringWithFormat:@"%08x",self.updateFlag];//800000
+    int test=(4-(7/8)-1)*8+7%8;
+    self.updateFlag=1<<test;
+     updateFlagStr=[NSString stringWithFormat:@"%08x",self.updateFlag];
     self.light=btn.tag-1000;
     for(int j=0;j<3;j++)
     {
@@ -390,8 +406,10 @@
 }
 - (void)actionbtnmist:(UIButton *)btn
 {
-    self.updateFlag=1;
     self.mist=btn.tag-2000;
+    int test=(4-(6/8)-1)*8+6%8;
+    self.updateFlag=1<<test;
+     NSString *updateFlagStr=[NSString stringWithFormat:@"%08x",self.updateFlag];//800000
     for(int j=0;j<3;j++)
     {
         UIButton *btn = (UIButton *)[self.view viewWithTag:2000+j+1];
@@ -407,8 +425,13 @@
 }
 - (void)actionbtncolor:(ColorButton *)btn
 {
-    self.updateFlag=8;
+  
+    
+    int test=(4-(19/8)-1)*8+19%8;
+    self.updateFlag=1<<test;
     self.color=btn.tag-3000;
+    self.updateFlag=1<<(31-19-1);//00000800
+     NSString *updateFlagStr=[NSString stringWithFormat:@"%08x",self.updateFlag];//800000
     if(_lastSelectedColorBtn)
     {
         _lastSelectedColorBtn.selected=!_lastSelectedColorBtn.selected;
@@ -428,7 +451,8 @@
 {
     
     self.ignoreCount=2;
-      NSDictionary *dic=@{@"color":[NSString stringWithFormat:@"%d",self.color],@"light":[NSString stringWithFormat:@"%d",self.light],@"mist":[NSString stringWithFormat:@"%d",self.mist],@"presetShutdownTime":@"0",@"presetStartupTime":@"0",@"timeClose":@"0",@"updateFlag":[NSString stringWithFormat:@"%d",self.updateFlag]};
+    
+      NSDictionary *dic=@{@"color":[NSString stringWithFormat:@"%lu",(unsigned long)self.color],@"light":[NSString stringWithFormat:@"%lu",(unsigned long)self.light],@"mist":[NSString stringWithFormat:@"%d",self.mist],@"presetShutdownTime":@"0",@"presetStartupTime":@"0",@"timeClose":@"0",@"updateFlag":[NSString stringWithFormat:@"%x",self.updateFlag]};
     AromaDiffuserDeviceConfigModel *model=[[AromaDiffuserDeviceConfigModel alloc]initWithDic:dic];
  
     [_device deviceControlRequestWithModel:model withSuccessBlock:^(id responseObject) {
