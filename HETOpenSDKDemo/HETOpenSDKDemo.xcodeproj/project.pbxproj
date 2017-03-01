@@ -63,7 +63,6 @@
 		C67C08471DC0B4E70075AFC1 /* UIScrollView+SVInfiniteScrolling.m in Sources */ = {isa = PBXBuildFile; fileRef = C67C07F81DC0B4E70075AFC1 /* UIScrollView+SVInfiniteScrolling.m */; };
 		C67C08481DC0B4E70075AFC1 /* UIScrollView+SVPullToRefresh.m in Sources */ = {isa = PBXBuildFile; fileRef = C67C07FA1DC0B4E70075AFC1 /* UIScrollView+SVPullToRefresh.m */; };
 		C67C08491DC0B4E70075AFC1 /* CLDeviceCollectionViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = C67C07FE1DC0B4E70075AFC1 /* CLDeviceCollectionViewCell.m */; };
-		C67C084A1DC0B4E70075AFC1 /* CLDeviceTableViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = C67C08001DC0B4E70075AFC1 /* CLDeviceTableViewCell.m */; };
 		C67C084B1DC0B4E70075AFC1 /* ColorButton.m in Sources */ = {isa = PBXBuildFile; fileRef = C67C08031DC0B4E70075AFC1 /* ColorButton.m */; };
 		C95FF0836608882D8B100069 /* libPods-HETOpenSDKDemo.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A350E9931D0F93EEB9CF1208 /* libPods-HETOpenSDKDemo.a */; };
 /* End PBXBuildFile section */
@@ -174,8 +173,6 @@
 		C67C07FA1DC0B4E70075AFC1 /* UIScrollView+SVPullToRefresh.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIScrollView+SVPullToRefresh.m"; sourceTree = "<group>"; };
 		C67C07FD1DC0B4E70075AFC1 /* CLDeviceCollectionViewCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CLDeviceCollectionViewCell.h; sourceTree = "<group>"; };
 		C67C07FE1DC0B4E70075AFC1 /* CLDeviceCollectionViewCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CLDeviceCollectionViewCell.m; sourceTree = "<group>"; };
-		C67C07FF1DC0B4E70075AFC1 /* CLDeviceTableViewCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CLDeviceTableViewCell.h; sourceTree = "<group>"; };
-		C67C08001DC0B4E70075AFC1 /* CLDeviceTableViewCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CLDeviceTableViewCell.m; sourceTree = "<group>"; };
 		C67C08021DC0B4E70075AFC1 /* ColorButton.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ColorButton.h; sourceTree = "<group>"; };
 		C67C08031DC0B4E70075AFC1 /* ColorButton.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ColorButton.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -541,8 +538,6 @@
 			children = (
 				C67C07FD1DC0B4E70075AFC1 /* CLDeviceCollectionViewCell.h */,
 				C67C07FE1DC0B4E70075AFC1 /* CLDeviceCollectionViewCell.m */,
-				C67C07FF1DC0B4E70075AFC1 /* CLDeviceTableViewCell.h */,
-				C67C08001DC0B4E70075AFC1 /* CLDeviceTableViewCell.m */,
 			);
 			path = CellViews;
 			sourceTree = "<group>";
@@ -598,6 +593,7 @@
 				TargetAttributes = {
 					C63AF0CC1C50D645000E0EB8 = {
 						CreatedOnToolsVersion = 7.0;
+						DevelopmentTeam = WU2WFZ2B66;
 					};
 				};
 			};
@@ -721,7 +717,6 @@
 				C67C08081DC0B4E70075AFC1 /* NSBundle+SSToolkitAdditions.m in Sources */,
 				C67C080A1DC0B4E70075AFC1 /* NSDate+SSToolkitAdditions.m in Sources */,
 				C67C08281DC0B4E70075AFC1 /* NSData+SAMAdditions.m in Sources */,
-				C67C084A1DC0B4E70075AFC1 /* CLDeviceTableViewCell.m in Sources */,
 				C67C080C1DC0B4E70075AFC1 /* DMString.m in Sources */,
 				C67C08421DC0B4E70075AFC1 /* UIImage+GIF.m in Sources */,
 				C67C08231DC0B4E70075AFC1 /* HFSmartLinkDeviceInfo.m in Sources */,
@@ -844,6 +839,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				DEVELOPMENT_TEAM = WU2WFZ2B66;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/HETOpenSDKDemo/Extern",
@@ -865,6 +861,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				DEVELOPMENT_TEAM = WU2WFZ2B66;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/HETOpenSDKDemo/Extern",
