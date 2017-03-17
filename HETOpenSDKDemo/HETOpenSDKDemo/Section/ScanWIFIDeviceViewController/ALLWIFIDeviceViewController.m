@@ -13,10 +13,15 @@
 #import "HFSmartLinkDeviceInfo.h"
 #import <SystemConfiguration/CaptiveNetwork.h>
 
+#import "ELIANBroadcast_SSID_Password.h"
+
 @interface ALLWIFIDeviceViewController ()
 {
     HETWIFIBindBusiness *manager;
-     HFSmartLink * smtlk;
+    HFSmartLink * hfsmtlk;
+    
+    ELIANBroadcast_SSID_Password *mtksmtlk;
+    
 
 }
 @end
@@ -34,13 +39,14 @@
 {
     [super viewWillAppear:animated];
     
-    
+    if(self.productId.integerValue==1374)//汉风模块的设备
+    {
     //HF WiFi模块接入路由
-    smtlk =[[HFSmartLink alloc]init];
-    smtlk.isConfigOneDevice = false;
+    hfsmtlk =[[HFSmartLink alloc]init];
+    hfsmtlk.isConfigOneDevice = false;
     
-    smtlk.waitTimers = 30;
-    [smtlk startWithKey:self.wifiPassword processblock:^(NSInteger process) {
+    hfsmtlk.waitTimers = 30;
+    [hfsmtlk startWithKey:self.wifiPassword processblock:^(NSInteger process) {
         
     } successBlock:^(HFSmartLinkDeviceInfo *dev) {
         //[self  showAlertWithMsg:[NSString stringWithFormat:@"%@:%@",dev.mac,dev.ip] title:@"OK"];
@@ -50,19 +56,33 @@
         
         
     }];
-    
+  }
+ else if(self.productId.integerValue==2171)//MTK芯片的设备
+ {
+     mtksmtlk=[[ELIANBroadcast_SSID_Password alloc]init];
+     [mtksmtlk startBroadcast_SSID:self.ssid Password:self.wifiPassword];
+  }
 
-    [HETCommonHelp showCustomHudtitle:@"开始绑定设备"];
+
+    [HETCommonHelp showCustomHudtitle:@"开始绑定设备(100s超时)"];
     manager=[HETWIFIBindBusiness sharedInstance];
     [manager startBindDeviceWithProductId:self.productId withTimeOut:100 completionHandler:^(HETWIFICommonReform *deviceObj, NSError *error) {
         NSLog(@"设备mac地址:%@,%@",deviceObj.device_mac,error);
-        [smtlk closeWithBlock:^(NSString *closeMsg, BOOL isOK) {
+        if(hfsmtlk)
+        {
+          [hfsmtlk closeWithBlock:^(NSString *closeMsg, BOOL isOK) {
             
-        }];
-        [smtlk stopWithBlock:^(NSString *stopMsg, BOOL isOk) {
+           }];
+           [hfsmtlk stopWithBlock:^(NSString *stopMsg, BOOL isOk) {
             
-        }];
-        smtlk=nil;
+           }];
+        }
+        hfsmtlk=nil;
+        if(mtksmtlk)
+        {
+            [mtksmtlk stopBroadcast];
+        }
+        mtksmtlk=nil;
        if(error)
        {
            [HETCommonHelp HidHud];
