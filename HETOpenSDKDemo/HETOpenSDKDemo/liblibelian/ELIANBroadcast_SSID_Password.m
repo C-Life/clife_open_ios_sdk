@@ -1,6 +1,6 @@
 //
 //  ELIANBroadcast_SSID_Password.m
-//  HETPublicSDK_DeviceBind
+//  HETOpenSDKDemo
 //
 //  Created by hcc on 2017/2/22.
 //  Copyright © 2017年 HET. All rights reserved.
