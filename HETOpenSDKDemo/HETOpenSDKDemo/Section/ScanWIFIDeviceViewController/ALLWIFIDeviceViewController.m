@@ -17,7 +17,7 @@
 
 @interface ALLWIFIDeviceViewController ()
 {
-    HETWIFIBindBusiness *manager;
+   
     HFSmartLink * hfsmtlk;
     
     ELIANBroadcast_SSID_Password *mtksmtlk;
@@ -57,7 +57,7 @@
         
     }];
   }
- else if(self.productId.integerValue==2171)//MTK芯片的设备
+ else if(self.productId.integerValue==2159)//MTK芯片的设备
  {
      mtksmtlk=[[ELIANBroadcast_SSID_Password alloc]init];
      [mtksmtlk startBroadcast_SSID:self.ssid Password:self.wifiPassword];
@@ -65,9 +65,9 @@
 
 
     [HETCommonHelp showCustomHudtitle:@"开始绑定设备(100s超时)"];
-    manager=[HETWIFIBindBusiness sharedInstance];
-    [manager startBindDeviceWithProductId:self.productId withTimeOut:100 completionHandler:^(HETWIFICommonReform *deviceObj, NSError *error) {
-        NSLog(@"设备mac地址:%@,%@",deviceObj.device_mac,error);
+    
+    [[HETWIFIBindBusiness sharedInstance] startBindDeviceWithProductId:self.productId withTimeOut:100 completionHandler:^(HETDevice *deviceObj, NSError *error) {
+        NSLog(@"设备mac地址:%@,%@",deviceObj.macAddress,error);
         if(hfsmtlk)
         {
           [hfsmtlk closeWithBlock:^(NSString *closeMsg, BOOL isOK) {
@@ -104,7 +104,7 @@
 {
     [super viewWillDisappear:animated];
     //停止扫描
-    [manager stop];
+    [[HETWIFIBindBusiness sharedInstance] stop];
 }
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];

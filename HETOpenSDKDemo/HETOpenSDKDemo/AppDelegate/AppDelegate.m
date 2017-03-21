@@ -10,6 +10,10 @@
 #import "ViewController.h"
 #import <HETOpenSDK/HETOpenSDK.h>
 
+
+#define ktestAPPID @"30048"
+#define ktestAPPSECRET @"9e0ab42cc3b54fca8c56affa6be059cf"
+
 @interface AppDelegate ()
 
 @end
@@ -21,7 +25,7 @@
     // Override point for customization after application launch.
      self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
     
-    [HETOpenSDK registerAppId:ktestAPPID appSecret:ktestAPPSECRET];
+    [HETOpenSDK registerAppId:@"30284" appSecret:@"331dcf8e1c5a4a13bded9eb521c2934c"];
 
     ViewController *rootvc=[[ViewController alloc]init];
     

@@ -39,12 +39,6 @@
 
 
 
-
-
-#define ktestAPPID @"30048"
-#define ktestAPPSECRET @"9e0ab42cc3b54fca8c56affa6be059cf"
-
-
 @interface BaseViewController : UIViewController
 //设置导航条标题
 -(void)setNavigationBarTitle:(NSString *)title;

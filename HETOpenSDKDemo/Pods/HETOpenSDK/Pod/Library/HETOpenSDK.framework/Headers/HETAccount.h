@@ -19,6 +19,5 @@
 @property (nonatomic, strong) NSDate *expirationDate; //过期时间
 @property (nonatomic, strong) NSDate *refreshTokenDate;
 @property (nonatomic, assign) BOOL selected; //是否选中（当前用户）
-@property (nonatomic, copy) NSString *userKey;//用于设备控制的唯一标示符号
 
 @end

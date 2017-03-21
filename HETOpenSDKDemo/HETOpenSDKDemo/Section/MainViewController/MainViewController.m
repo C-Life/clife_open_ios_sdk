@@ -95,7 +95,7 @@
 {
     
     ScanWIFIViewController *vc=[[ScanWIFIViewController alloc]init];
-    vc.productId=@"2171";//@"1374";//测试用的productId,这里根据自己产品填写
+    vc.productId=@"2159";//@"1374";//测试用的productId,这里根据自己产品填写
     [self.navigationController pushViewController:vc animated:YES];
 }
 
