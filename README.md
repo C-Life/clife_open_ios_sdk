@@ -1,16 +1,16 @@
-#iOS接入指南 
+# iOS接入指南 
 
 注：本文为C-Life iOS终端SDK的新手使用教程，只涉及教授SDK的使用方法，默认读者已经熟悉XCode开发工具的基本使用方法，以及具有一定的编程知识基础等。
                                   
-##1.向C-Life注册你的应用程序
+## 1.向C-Life注册你的应用程序
 请到 应用中心 页面创建移动应用，填写资料(必须填写应用包名BundleId)后，将获得AppID和AppSecret，可立即用于开发。但应用登记完成后还需要提交审核，只有审核通过的应用才能正式发布使用。
                     
-##2.下载C-Life终端SDK文件
+## 2.下载C-Life终端SDK文件
 
 ```objc
    pod 'HETOpenSDK','0.1.1'  
 ```
-##3.搭建开发环境
+## 3.搭建开发环境
 1. 在XCode中建立你的工程。
 2. 允许XCode7以上版本支持Http传输方法,如果用的是Xcode7以上版本时，需要在App项目的plist手动加入以下key和值以支持http传输:
 
@@ -32,7 +32,7 @@
      ``` 
       
                             
-##4.在代码中使用
+## 4.在代码中使用
 1. 注册AppID和AppSecret     
 
 	```objc
@@ -120,7 +120,7 @@
  
     5.1 获取绑定设备列表
    
-       绑定成功后，用户可以获取绑定成功的设备列表，获取到设备列表，才可以控制设备
+   绑定成功后，用户可以获取绑定成功的设备列表，获取到设备列表，才可以控制设备
     
     ```objc
 	/**
@@ -137,7 +137,7 @@
    
   5.2 修改设备信息
 	    
-	   修改设备信息，用户可以修改设备的名称
+	修改设备信息，用户可以修改设备的名称
 	   
 	 ```objc
     /**
@@ -149,16 +149,14 @@
     *  @param success    成功的回调
     *  @param failure    失败的回调
     */
-    - (void)updateDeviceInfoWithDeviceId:(NSString *)deviceId  deviceName:(NSString *)deviceName
-  roomId:(NSString *)roomId  success：(successBlock)success
- failure:(failureBlock)failure;
+    - (void)updateDeviceInfoWithDeviceId:(NSString *)deviceId  deviceName:(NSString *)deviceName roomId:(NSString *)roomId  success：(successBlock)success  failure:(failureBlock)failure;
  
      ```
 	
 	
  5.3 解绑设备
-	    
-	   解除设备绑定
+ 
+	解除设备绑定
 	      
 	```objc
     /**
@@ -168,17 +166,16 @@
     *  @param success  成功的回调
     *  @param failure  失败的回调
     */
-   - (void)unbindDeviceWithDeviceId:(NSString *)deviceId success:(successBlock)success failure:(failureBlock)failure;
-
-   ```
-   
-   
-    
+    - (void)unbindDeviceWithDeviceId:(NSString *)deviceId success:(successBlock)success failure:(failureBlock)failure;
+ 
+    ```
+	
+	
  5.4 获取设备控制数据、七天之内的历史控制数据  
 	
 	参考HETDeviceRequestBusiness类
     
-	```objc
+  	```objc
 	/**
 	*  查询设备控制数据信息
 	*
@@ -186,8 +183,7 @@
 	*  @param success  成功的回调
 	*  @param failure  失败的回调
 	*/
-	- (void)fetchDeviceConfigDataWithDeviceId:(NSString *)deviceId success:(successBlock)success
-failure:(failureBlock)failure;
+	- (void)fetchDeviceConfigDataWithDeviceId:(NSString *)deviceId success:(successBlock)success failure:(failureBlock)failure;
 	                         
 	
 	/**
@@ -210,7 +206,8 @@ failure:(failureBlock)failure;
                                       failure:(failureBlock)failure;
    ```
    
-	5.5 获取设备运行数据、七天之内的历史运行数据  
+   
+ 5.5 获取设备运行数据、七天之内的历史运行数据  
 	
     参考HETDeviceRequestBusiness类
     
@@ -305,7 +302,7 @@ failure:(failureBlock)failure;
     *  @param cfgDataBlock          设备配置数据block回调
     *  @param errorDataBlock        设备故障数据block回调
     */
-- (instancetype)initWithHetDeviceModel:(HETDevice *)device
+    - (instancetype)initWithHetDeviceModel:(HETDevice *)device
                   isSupportLittleLoop:(BOOL)bsupport
                         deviceRunData:(void(^)(id responseObject))runDataBlock
                         deviceCfgData:(void(^)(id responseObject))cfgDataBlock
@@ -323,8 +320,7 @@ failure:(failureBlock)failure;
   
    ```objc
     //停止服务
-    - (void)stop;
-  	             
+    - (void)stop;             
    ```
    
   [4]下发设备控制
@@ -457,7 +453,7 @@ failure:(failureBlock)failure;
 
 	
        
-#注意事项
+# 注意事项
 *  如果网络请求出现appId不合法，请检查工程里面的BundleId和appId，必须跟在平台申请时候填的BundleId和appId一样才行
 *  deviceId参数来源于获取所有绑定的设备列表（fetchAllBindDeviceSuccess:）里设备的基本信息的deviceId字段
 
