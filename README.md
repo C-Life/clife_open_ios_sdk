@@ -303,37 +303,40 @@
                   isSupportLittleLoop:(BOOL)bsupport
                         deviceRunData:(void(^)(id responseObject))runDataBlock
                         deviceCfgData:(void(^)(id responseObject))cfgDataBlock
-                      deviceErrorData:(void(^)(id responseObject))errorDataBlock;        
-  	```
+                      deviceErrorData:(void(^)(id responseObject))errorDataBlock;
+    ```
   	
-  [2]启动服务,开始获取设备的数据
+  	
+  	
+  	
+   [2]启动服务,开始获取设备的数据
   
   
    ```objc
     //启动服务
     - (void)start;           
    ```
-  [3]停止服务,停止获取设备的数据	
+   [3]停止服务,停止获取设备的数据	
   
    ```objc
     //停止服务
     - (void)stop;             
    ```
    
-  [4]下发设备控制
+   [4]下发设备控制
   
    关于updateflag
 
    这个修改标记位是为了做统计和配置下发的时候设备执行相应的功能。下发数据必须传递updateflag标志
 
-  例如，空气净化器（广磊K180）配置信息协议：
+   例如，空气净化器（广磊K180）配置信息协议：
 
-  紫外线(1)、负离子(2)、臭氧(3)、儿童锁(4)、开关(5)、WiFi(6)、过滤网(7)、模式(8)、定时(9)、风量(10)
-  上面一共上10个功能，那么updateFlag就2个字节，没超过8个功能为1个字节，超过8个为2个字节，超过16个为3个字节，以此类推。
+   紫外线(1)、负离子(2)、臭氧(3)、儿童锁(4)、开关(5)、WiFi(6)、过滤网(7)、模式(8)、定时(9)、风量(10)
+   上面一共上10个功能，那么updateFlag就2个字节，没超过8个功能为1个字节，超过8个为2个字节，超过16个为3个字节，以此类推。
 
-  打开负离子，2个字节，每一个bit的值为下：
+   打开负离子，2个字节，每一个bit的值为下：
 
-  0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0
+   0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0
 
 
   
@@ -345,9 +348,7 @@
 	*  @param successBlock 控制成功的回调
 	*  @param failureBlock 控制失败的回调
 	*/
-	- (void)deviceControlRequestWithJson:(NSString *)jsonString withSuccessBlock:(void(^)(id responseObject))successBlock withFailBlock:(void(^)( NSError *error))failureBlock;
-	
-	  
+	- (void)deviceControlRequestWithJson:(NSString *)jsonString withSuccessBlock:(void(^)(id responseObject))successBlock withFailBlock:(void(^)( NSError *error))failureBlock; 
    ```
    
    
