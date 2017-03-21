@@ -8,8 +8,7 @@
 ##2.下载C-Life终端SDK文件
 
 ```objc
-   pod 'HETOpenSDK','0.1.1'
-   
+   pod 'HETOpenSDK','0.1.1'  
 ```
 ##3.搭建开发环境
 1. 在XCode中建立你的工程。
@@ -21,19 +20,20 @@
     <key>NSAllowsArbitraryLoads</key> 
         <true/> 
     </dict>
-    
 	```
 3. pod导入HETOpenSDK库
 
-	```objc
-   platform :ios, '7.0'
-   pod 'HETOpenSDK','0.1.1'
-   inhibit_all_warnings!
-    
-	```
+     ```objc  
+    platform :ios, '7.0'
+    target :"HETOpenSDKDemo" do
+        pod 'HETOpenSDK','0.1.1'
+    end
+    inhibit_all_warnings!
+     ``` 
+      
+                            
 ##4.在代码中使用
-
-1.  注册AppID和AppSecret     
+1. 注册AppID和AppSecret     
 
 	```objc
 	- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions{
@@ -43,9 +43,9 @@
 		return YES;
 	} 
 	
-  ```	
-	
+   ```
 2. 授权登录
+ 
    参考HETAuthorize类里面方法
      
 	```objc
@@ -76,8 +76,7 @@
 	    }];
 	
 	}	
-	
-  ```
+	```
   
 3. 获取用户基本信息
 
@@ -91,8 +90,8 @@
     *  @param failure
     */
     -(void)getUserInformationSuccess:(successBlock)success failure:(failureBlock)failure; 
-	
-  ```
+    ```
+    
    
 4. 设备绑定
 
@@ -113,15 +112,9 @@
         NSLog(@"设备mac地址:%@,%@",deviceObj.device_mac,error);
         }
     }];
-    
- ```
-    
-    这里的productId参数来源于以下方式：
-     开放平台管理系统-应用菜单项 关联产品的产品ID 
+    ``` 
+    这里的productId参数来源于以下方式：开放平台管理系统-应用菜单项 关联产品的产品ID 
 ![产品ID](https://i.niupic.com/images/2016/09/21/NB8R71.png)
-    	
-	
-	
 	
 5. 设备管理
  
@@ -131,17 +124,19 @@
     
     ```objc
 	/**
- *  查询绑定的所有设备列表
- *
- *  @param success  设备列表返回HETDevice对象数组
- *  @param failure 失败的回调
- */
-- (void)fetchAllBindDeviceSuccess:(void (^)(NSArray<HETDevice *>* deviceArray))success 
+   *  查询绑定的所有设备列表
+   *
+   *  @param success  设备列表返回HETDevice对象数组
+   *  @param failure 失败的回调
+   */
+   - (void)fetchAllBindDeviceSuccess:(void (^)(NSArray<HETDevice *>* deviceArray))success 
 failure:(failureBlock)failure;	
-                
    ```
-	
-	5.2 修改设备信息
+   
+   
+   
+   
+  5.2 修改设备信息
 	    
 	   修改设备信息，用户可以修改设备的名称
 	   
@@ -299,15 +294,15 @@ failure:(failureBlock)failure;
    	
     ```objc
     /**
- *
- *
- *  @param device                设备的对象
- *  @param bsupport              是否需要支持小循环，默认为NO，如不需支持小循环，设置为NO
- *  @param deviceControlBusiness 设备控制业务类
- *  @param runDataBlock          设备运行数据block回调
- *  @param cfgDataBlock          设备配置数据block回调
- *  @param errorDataBlock        设备故障数据block回调
- */
+    *
+    *
+    *  @param device                设备的对象
+    *  @param bsupport              是否需要支持小循环，默认为NO，如不需支持小循环设置为NO
+    *  @param deviceControlBusiness 设备控制业务类
+    *  @param runDataBlock          设备运行数据block回调
+    *  @param cfgDataBlock          设备配置数据block回调
+    *  @param errorDataBlock        设备故障数据block回调
+    */
 - (instancetype)initWithHetDeviceModel:(HETDevice *)device
                   isSupportLittleLoop:(BOOL)bsupport
                         deviceRunData:(void(^)(id responseObject))runDataBlock
@@ -320,8 +315,7 @@ failure:(failureBlock)failure;
   
    ```objc
     //启动服务
-    - (void)start;
-              
+    - (void)start;           
    ```
   [3]停止服务,停止获取设备的数据	
   
@@ -427,9 +421,7 @@ failure:(failureBlock)failure;
     -(void)fetchDeviceUpgradeProgress:(NSString *)deviceId
                         deviceVersionId:(NSString *)deviceVersionId
                                 success:(successBlock)success
-                                failure:(failureBlock)failure;
-                              
-                              
+                                failure:(failureBlock)failure;                          
        
    ```                        
                               
@@ -453,10 +445,7 @@ failure:(failureBlock)failure;
                                deviceVersionId:(NSString *)deviceVersionId
                                        success:(successBlock)success
                                        failure:(failureBlock)failure;
-                              
-                              
-                              
-                                                   
+                                                                             
    ``` 
 
   
