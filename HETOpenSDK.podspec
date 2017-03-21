@@ -10,7 +10,7 @@
 Pod::Spec.new do |s|
 
   s.name         = "HETOpenSDK"
-  s.version      = "0.1.0"
+  s.version      = "0.1.1"
   s.summary      = "H&T开放平台SDK"
   s.homepage     = "https://github.com/C-Life/clife_open_ios_sdk"
   s.license      = 'Apache License, Version 2.0'
