@@ -114,7 +114,7 @@
     }];
     ``` 
     这里的productId参数来源于以下方式：开放平台管理系统-应用菜单项 关联产品的产品ID 
-![产品ID](https://i.niupic.com/images/2016/09/21/NB8R71.png)
+![产品ID](https://github.com/C-Life/clife_open_ios_sdk/blob/master/image/productId.png?raw=true)
 	
 5. 设备管理
  
