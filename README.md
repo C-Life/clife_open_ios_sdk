@@ -29,10 +29,10 @@
    platform :ios, '7.0'
    pod 'HETOpenSDK','0.1.1'
    inhibit_all_warnings!
-   
-  ```
-  
+    
+	```
 ##4.在代码中使用
+
 1.  注册AppID和AppSecret     
 
 	```objc
@@ -90,9 +90,9 @@
     *  @param success
     *  @param failure
     */
-    -(void)getUserInformationSuccess:(successBlock)success  failure:(failureBlock)failure;
-    
-   ```
+    -(void)getUserInformationSuccess:(successBlock)success failure:(failureBlock)failure; 
+	
+  ```
    
 4. 设备绑定
 
@@ -136,9 +136,10 @@
  *  @param success  设备列表返回HETDevice对象数组
  *  @param failure 失败的回调
  */
-- (void)fetchAllBindDeviceSuccess:(void (^)(NSArray<HETDevice *>* deviceArray))success
-                               failure:(failureBlock)failure;	                          
-    ```
+- (void)fetchAllBindDeviceSuccess:(void (^)(NSArray<HETDevice *>* deviceArray))success 
+failure:(failureBlock)failure;	
+                
+   ```
 	
 	5.2 修改设备信息
 	    
