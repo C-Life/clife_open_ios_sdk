@@ -8,7 +8,7 @@
 ##2.下载C-Life终端SDK文件
 
 ```objc
-   pod 'HETOpenSDK','0.1.0'
+   pod 'HETOpenSDK','0.1.1'
    
 ```
 ##3.搭建开发环境
@@ -26,7 +26,7 @@
 
 	```objc
    platform :ios, '7.0'
-   pod 'HETOpenSDK','0.1.0'
+   pod 'HETOpenSDK','0.1.1'
    inhibit_all_warnings!
   ```
   
@@ -37,7 +37,7 @@
 	- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions{
 		// Override point for customization after application launch.
 		//注册H&T开放平台SDK
-		[HETOpenSDK registerAppId::ktestAPPId appSecret:ktestAPPSECRET];
+		[HETOpenSDK registerAppId:"yourAPPId" appSecret:"yourAPPSecret"];
 		return YES;
 	} 
 	```	
@@ -116,8 +116,7 @@
 	}];
 	//----------------------------------------------------------------
 	//启动扫描设备服务
-	 manager=[HETWIFIBindBusiness sharedInstance];
-    [manager startBindDeviceWithProductId:self.productId withTimeOut:100 completionHandler:^(HETWIFICommonReform *deviceObj, NSError *error) {
+	 [[HETWIFIBindBusiness sharedInstance] startBindDeviceWithProductId:self.productId withTimeOut:100 completionHandler:^(HETDevice *deviceObj, NSError *error) {
         NSLog(@"设备mac地址:%@,%@",deviceObj.device_mac,error);
         }
     }];
