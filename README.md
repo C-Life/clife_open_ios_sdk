@@ -21,6 +21,7 @@
     <key>NSAllowsArbitraryLoads</key> 
         <true/> 
     </dict>
+    
 	```
 3. pod导入HETOpenSDK库
 
@@ -28,6 +29,7 @@
    platform :ios, '7.0'
    pod 'HETOpenSDK','0.1.1'
    inhibit_all_warnings!
+   
   ```
   
 ##4.在代码中使用
@@ -40,7 +42,8 @@
 		[HETOpenSDK registerAppId:"yourAPPId" appSecret:"yourAPPSecret"];
 		return YES;
 	} 
-	```	
+	
+  ```	
 	
 2. 授权登录
    参考HETAuthorize类里面方法
@@ -72,26 +75,25 @@
 	
 	    }];
 	
-	}
+	}	
 	
-	```
+  ```
+  
 3. 获取用户基本信息
 
    参考HETAuthorize类里面方法
-    
+       
     ```objc
-    
     /**
     *  获取用户信息
     *
     *  @param success
     *  @param failure
     */
-    -(void)getUserInformationSuccess:(successBlock)success
-                         failure:(failureBlock)failure;
-
-  
-    ```
+    -(void)getUserInformationSuccess:(successBlock)success  failure:(failureBlock)failure;
+    
+   ```
+   
 4. 设备绑定
 
     设备绑定流程：广播路由器ssid和密码，开启扫描设备服务将扫描到的设备进行绑定，获取绑定结果回调
@@ -104,23 +106,15 @@
 	smtlk =[[HFSmartLink alloc]init];
 	smtlk.isConfigOneDevice = false;
 	smtlk.waitTimers = 30;
-	[smtlk startWithKey:self.wifiPassword processblock:^(NSInteger process) {
-	
-	} successBlock:^(HFSmartLinkDeviceInfo *dev) {
-	    //[self  showAlertWithMsg:[NSString stringWithFormat:@"%@:%@",dev.mac,dev.ip] title:@"OK"];
-	} failBlock:^(NSString *failmsg) {
-	    //[self  showAlertWithMsg:failmsg title:@"error"];
-	} endBlock:^(NSDictionary *deviceDic) {
-	
-	
-	}];
+	[smtlk startWithKey:self.wifiPassword processblock:^(NSInteger process) {} successBlock:^(HFSmartLinkDeviceInfo *dev) {} failBlock:^(NSString *failmsg) {	} endBlock:^(NSDictionary *deviceDic) {}];
 	//----------------------------------------------------------------
 	//启动扫描设备服务
 	 [[HETWIFIBindBusiness sharedInstance] startBindDeviceWithProductId:self.productId withTimeOut:100 completionHandler:^(HETDevice *deviceObj, NSError *error) {
         NSLog(@"设备mac地址:%@,%@",deviceObj.device_mac,error);
         }
     }];
-	```
+    
+ ```
     
     这里的productId参数来源于以下方式：
      开放平台管理系统-应用菜单项 关联产品的产品ID 
