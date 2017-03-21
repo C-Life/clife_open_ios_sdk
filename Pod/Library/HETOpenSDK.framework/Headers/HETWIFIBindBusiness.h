@@ -8,8 +8,7 @@
 
 #import <Foundation/Foundation.h>
 #import <SystemConfiguration/CaptiveNetwork.h>
-
-#import "HETWIFICommonReform.h"
+#import "HETDevice.h"
 
 
 
@@ -20,9 +19,6 @@ typedef NS_ENUM(NSInteger, HETDeviceBindError) {
     HETDeviceBindSendDeviceInfoError,   // 提交设备信息给服务器失败
     HETDeviceBindTimeOutError,            // 绑定超时
 };
-
-
-
 
 
 
@@ -73,7 +69,7 @@ typedef NS_ENUM(NSInteger, HETDeviceBindError) {
  *  @param interval          绑定的超时时间,单位是秒
  *  @param handler           绑定的回调
  */
--(void)startBindDeviceWithProductId:(NSString *)productId withTimeOut:(NSTimeInterval)interval completionHandler:(void (^)(HETWIFICommonReform *deviceObj, NSError *error))handler;
+-(void)startBindDeviceWithProductId:(NSString *)productId withTimeOut:(NSTimeInterval)interval completionHandler:(void (^)(HETDevice *deviceObj, NSError *error))handler;
 
 
 

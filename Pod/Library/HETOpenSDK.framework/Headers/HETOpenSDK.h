@@ -14,7 +14,6 @@
 #import "HETDeviceRequestBusiness.h"
 #import "HETNetWorkRequestHeader.h"
 #import "HETWIFIBindBusiness.h"
-#import "HETWIFICommonReform.h"
 #import "HETDeviceControlBusiness.h"
 #import "HETDeviceUpgradeBusiness.h"
 
