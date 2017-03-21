@@ -131,7 +131,7 @@
    *  @param failure 失败的回调
    */
    - (void)fetchAllBindDeviceSuccess:(void (^)(NSArray<HETDevice *>* deviceArray))success failure:(failureBlock)failure;
-    ```
+     ```
    
   
   
@@ -174,7 +174,7 @@
     ```
 	
 	
- 5.4 获取设备控制数据、七天之内的历史控制数据  
+   5.4 获取设备控制数据、七天之内的历史控制数据  
 	
    参考HETDeviceRequestBusiness类
      
@@ -187,8 +187,7 @@
 	*  @param failure  失败的回调
 	*/
 	- (void)fetchDeviceConfigDataWithDeviceId:(NSString *)deviceId success:(successBlock)success failure:(failureBlock)failure;
-	                         
-	
+
 	/**
     *  获取设备控制数据列表（七天之内）
     *
@@ -210,7 +209,7 @@
    ```
    
    
- 5.5 获取设备运行数据、七天之内的历史运行数据  
+   5.5 获取设备运行数据、七天之内的历史运行数据  
 	
    参考HETDeviceRequestBusiness类
     
@@ -224,10 +223,7 @@
 	*/
 	- (void)fetchDeviceRunDataWithDeviceId:(NSString *)deviceId
 	                         success:(successBlock)success
-	                         failure:(failureBlock)failure;	                         	                         	 
-	 
-	 
-	                            
+	                         failure:(failureBlock)failure;                           
     /**
     *  获取设备运行数据列表（七天之内）
     *
@@ -250,7 +246,7 @@
 
 
    
- 5.6 获取设备故障数据、七天之内的历史故障数据
+   5.6 获取设备故障数据、七天之内的历史故障数据
    
 	
     ```objc
@@ -263,11 +259,7 @@
 	*/
 	- (void)fetchDeviceConfigDataWithDeviceId:(NSString *)deviceId
 	                         success:(successBlock)success
-	                         failure:(failureBlock)failure;
-	                         
-	                         
-	                         
-	                         
+	                         failure:(failureBlock)failure;                        
     /**
     *  获取设备故障数据列表（七天之内）
     *
