@@ -129,8 +129,7 @@
    *  @param success  设备列表返回HETDevice对象数组
    *  @param failure 失败的回调
    */
-   - (void)fetchAllBindDeviceSuccess:(void (^)(NSArray<HETDevice *>* deviceArray))success 
-failure:(failureBlock)failure;	
+   - (void)fetchAllBindDeviceSuccess:(void (^)(NSArray<HETDevice *>* deviceArray))success failure:(failureBlock)failure;	
    ```
    
    
@@ -153,7 +152,9 @@ failure:(failureBlock)failure;
     - (void)updateDeviceInfoWithDeviceId:(NSString *)deviceId  deviceName:(NSString *)deviceName
   roomId:(NSString *)roomId  success：(successBlock)success
  failure:(failureBlock)failure;
+ 
      ```
+	
 	
  5.3 解绑设备
 	    
@@ -168,6 +169,7 @@ failure:(failureBlock)failure;
     *  @param failure  失败的回调
     */
    - (void)unbindDeviceWithDeviceId:(NSString *)deviceId success:(successBlock)success failure:(failureBlock)failure;
+
    ```
    
    
