@@ -118,9 +118,10 @@
 	
 5. 设备管理
  
-    5.1 获取绑定设备列表
+   5.1 获取绑定设备列表
    
    绑定成功后，用户可以获取绑定成功的设备列表，获取到设备列表，才可以控制设备
+   
     
     ```objc
 	/**
@@ -129,17 +130,16 @@
    *  @param success  设备列表返回HETDevice对象数组
    *  @param failure 失败的回调
    */
-   - (void)fetchAllBindDeviceSuccess:(void (^)(NSArray<HETDevice *>* deviceArray))success failure:(failureBlock)failure;	
-   ```
+   - (void)fetchAllBindDeviceSuccess:(void (^)(NSArray<HETDevice *>* deviceArray))success failure:(failureBlock)failure;
+    ```
    
-   
-   
-   
-  5.2 修改设备信息
-	    
-	修改设备信息，用户可以修改设备的名称
+  
+  
+   5.2 修改设备信息
+  
+   修改设备信息，用户可以修改设备的名称
 	   
-	 ```objc
+    ```objc
     /**
     *  修改设备基础信息
     *
@@ -149,14 +149,17 @@
     *  @param success    成功的回调
     *  @param failure    失败的回调
     */
-    - (void)updateDeviceInfoWithDeviceId:(NSString *)deviceId  deviceName:(NSString *)deviceName roomId:(NSString *)roomId  success：(successBlock)success  failure:(failureBlock)failure;
- 
-     ```
+    - (void)updateDeviceInfoWithDeviceId:(NSString *)deviceId  deviceName:(NSString *)deviceName roomId:(NSString *)roomId  success:(successBlock)success  failure:(failureBlock)failure;
+    ```
+     
+     
+     
+     
 	
 	
- 5.3 解绑设备
- 
-	解除设备绑定
+   5.3 解绑设备
+   
+   解除设备绑定
 	      
 	```objc
     /**
@@ -173,8 +176,8 @@
 	
  5.4 获取设备控制数据、七天之内的历史控制数据  
 	
-	参考HETDeviceRequestBusiness类
-    
+   参考HETDeviceRequestBusiness类
+     
   	```objc
 	/**
 	*  查询设备控制数据信息
@@ -209,7 +212,7 @@
    
  5.5 获取设备运行数据、七天之内的历史运行数据  
 	
-    参考HETDeviceRequestBusiness类
+   参考HETDeviceRequestBusiness类
     
    ```objc
 	/**
@@ -247,7 +250,8 @@
 
 
    
- 5.6 获取设备故障数据、七天之内的历史故障数据  
+ 5.6 获取设备故障数据、七天之内的历史故障数据
+   
 	
     ```objc
 	/**
@@ -282,7 +286,8 @@
                                    pageIndex:(NSString *)pageIndex
                                      success:(successBlock)success
                                      failure:(failureBlock)failure;
-	```
+                                     
+    ```
 
     
 6. WiFi设备控制
