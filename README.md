@@ -107,7 +107,7 @@
     - (void)authorizeWithCompleted:(authenticationCompletedBlock)completedBlock;
   
     
-使用如下：
+【示例代码】
   
  
     //检查SDK是否已经授权登录，否则不能使用
@@ -188,20 +188,20 @@
    
 ### 4.5.1 WiFi设备的绑定，设备配置连接上路由器的设备使用此接口进行设备绑定
    
-   在此我们以WiFi设备为例,APP广播路由器ssid和密码，开启扫描设备服务将扫描到的设备进行绑定，获取绑定结果回调。
+   在此我们以WiFi设备为例,在开始配置前，设备要先进入配置模式，然后APP发送要配置的路由器ssid和密码,开启扫描设备服务将扫描到的设备进行绑定，获取绑定结果回调。
      
    我们并未在开放平台SDK里集成C-Life平台所有WiFi模组。每个单独的WiFi模组对应的smartlink方式Framework将独立提供，用户将根据自己的需求自行接入。
    
-   使用如下：    
+   【示例代码】    
 	
  
-	//------------------第三方设备接入路由，厂家自己实现,例如汉枫WiFi模块-------------------------
+	//------------------第三方设备接入路由，使用者自己实现,例如汉枫WiFi模块的配置入网的方式-------------------------
 	smtlk =[[HFSmartLink alloc]init];
 	smtlk.isConfigOneDevice = false;
 	smtlk.waitTimers = 30;
 	[smtlk startWithKey:self.wifiPassword processblock:^(NSInteger process) {} successBlock:^(HFSmartLinkDeviceInfo *dev) {} failBlock:^(NSString *failmsg) {	} endBlock:^(NSDictionary *deviceDic) {}];
 	//----------------------------------------------------------------
-	//启动扫描设备服务并设置100秒的超时时间
+	//启动设备绑定的服务并设置100秒的超时时间
 	 [[HETWIFIBindBusiness sharedInstance] startBindDeviceWithProductId:self.productId withTimeOut:100 completionHandler:^(HETDevice *deviceObj, NSError *error) {
         NSLog(@"设备mac地址:%@,%@",deviceObj.device_mac,error);
         }
@@ -290,7 +290,7 @@
     *  @param failure  失败的回调
     */
     - (void)unbindDeviceWithDeviceId:(NSString *)deviceId success:(successBlock)success failure:(failureBlock)failure;
- 
+   
 
 	
 	
@@ -401,7 +401,7 @@
     
 ### 4.7 WiFi设备控制
 
-   参考HETDeviceControlBusiness类，此类封装了WiFi设备的控制与数据的业务，会根据当前网络环境大小循环自动切换，如果当前设备处于大循环状态模式，5s会回调一次数据，如果设备当前处于小循环状态，数据会实时回调
+   参考HETDeviceControlBusiness类，此类封装了WiFi设备的控制与数据的业务，会根据当前网络环境大小循环自动切换，如果当前设备处于大循环状态模式，5s会回调一次数据，如果设备当前处于小循环状态，数据会实时回调。
     
    [1] 初始化参数，获取设备运行数据，控制数据，故障数据
    	
@@ -423,7 +423,20 @@
  
   	
   	
-  	
+  	【示例代码】
+
+     _business=[[HETDeviceControlBusiness alloc]initWithHetDeviceModel:(HETDevice *)device isSupportLittleLoop:YES deviceRunData:^(id responseObject) {
+            NSLog(@"----------运行数据:%@",responseObject);
+            //----这里结果根据自己设备在开放平台录入的运行数据协议的字段来处理结果-----//
+            //--------------------------------------------------------------//
+        } deviceCfgData:^(id responseObject) {
+            NSLog(@"配置数据:%@",responseObject);
+            //----这里结果根据自己设备在开放平台录入的控制数据的协议的字段来处理结果-----//
+            //--------------------------------------------------------------//
+        } deviceErrorData:^(id responseObject) {
+            NSLog(@"====故障数据:%@",responseObject);
+        }];
+
   	
    [2]启动服务,开始获取设备的数据
   
@@ -460,21 +473,40 @@
 	/**
 	*  设备控制
 	*
-	*  @param jsonString   设备控制的json字符串,协议中的控制节点和对应值组成的字典经转换为json字符串
+	*  @param jsonString   设备控制的json字符串,协议中的控制数据协议里面的字节属性名和对应值组成的字典经转换为json字符串,下发数据必须传递updateflag标志
+
 	*  @param successBlock 控制成功的回调
 	*  @param failureBlock 控制失败的回调
 	*/
 	- (void)deviceControlRequestWithJson:(NSString *)jsonString withSuccessBlock:(void(^)(id responseObject))successBlock withFailBlock:(void(^)( NSError *error))failureBlock; 
    
+   【示例代码】
+   
+  例如设备在开放平台里录入的控制数据的协议如下：
+   ![该设备录入的控制数据的协议](https://github.com/C-Life/clife_open_ios_sdk/blob/master/image/WiFi%E9%A6%99%E8%96%B0%E6%9C%BA%E5%8D%8F%E8%AE%AE.png?raw=true)
+ 
+       
+        NSDictionary *sendDic=@{@"color":[NSString stringWithFormat:@"%lu",(unsigned   long)self.color],@"light":[NSString stringWithFormat:@"%lu",(unsigned long)self.light],@"mist":[NSString stringWithFormat:@"%d",self.mist],@"presetShutdownTime":@"0",@"presetStartupTime":@"0",@"timeClose":@"0",@"updateFlag":[NSString stringWithFormat:@"%x",self.updateFlag]};
+        NSError * err;
+        NSData * tempjsonData = [NSJSONSerialization dataWithJSONObject:responseObject options:NSJSONWritingPrettyPrinted error:&err];
+        NSString * jsonString = [[NSString alloc] initWithData:tempjsonData encoding:NSUTF8StringEncoding];
+        [_business deviceControlRequestWithJson:jsonString withSuccessBlock:^(id responseObject) {
+           //下发控制成功
+            successBlock(responseObject);
+        } withFailBlock:^(NSError *error) {
+          //下发控制失败
+            failureBlock(error);
+        }];
+
    
    
 	
 ### 4.8 WiFi设备升级
    
-   WiFi设备升级流程:查询设备新老固件版本信息->确认升级->查询设备升级进度->升级成功确认
+   WiFi设备升级流程:查询设备新老固件版本信息->确认升级->查询设备升级进度->升级成功确认,具体升级流程可参考demo
    
    [1]查询设备固件版本信息
-   
+    
     
   
     /**
@@ -489,8 +521,22 @@
                               success:(successBlock)success
                               failure:(failureBlock)failure;
                               
-       
-                          
+   【示例代码】   
+     
+      NSString *deviceId=self.hetDeviceModel.deviceId;
+      HETDeviceUpgradeBusiness *upgradeBusiness=[[HETDeviceUpgradeBusiness alloc]init];
+    [upgradeBusiness deviceUpgradeCheckWithDeviceId:deviceId success:^(id dictValue) {
+        
+        
+        NSLog(@"%@",dictValue);
+        if ([[dictValue allKeys] containsObject:@"newDeviceVersion"]) {
+              //当有新版本的时候就可以进行步骤2（确认设备升级）          
+        }else{
+         }    
+    } failure:^(NSError *error) {
+        NSLog(@"获取硬件版本信息错误:%@",error);
+    }];
+                    
                               
                               
    [2]确认设备升级
@@ -537,7 +583,17 @@
        
                           
                               
-                              
+   正确的Json返回结果：
+
+    {
+     "data": {
+        "deviceVersionId": 10,
+        "progress": 40,
+        "upgradeStatus": 2
+    },
+    "code": 0
+    }
+                          
     
                               
    [4]升级成功确认
