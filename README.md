@@ -219,23 +219,24 @@
   
   
   
-   /**
-   *  设备绑定
-   *
-   *  @param macAddr         设备mac地址
-   *  @param deviceProductId  设备型号标识
-   *  @param deviceId         设备标识（更换MAC地址的时候才需要值，其他情况填nil就行)
-   *  @param success         绑定成功的回调
-   *  @param failure         绑定失败的回调
-  */
+    /**
+    *  设备绑定
+    *
+    *  @param macAddr         设备mac地址
+    *  @param deviceProductId  设备型号标识
+    *  @param deviceId         设备标识（更换MAC地址的时候才需要值，其他情况填nil就行)
+    *  @param success         绑定成功的回调
+    *  @param failure         绑定失败的回调
+    */
 
-   -(void)bindDeviceWithDeviceMAC:(NSString *)macAddr
+    -(void)bindDeviceWithDeviceMAC:(NSString *)macAddr
                       deviceProductId:(NSInteger) deviceProductId
                       deviceId:(NSString *) deviceId
                        success:(successBlock)success
                      failure:(failureBlock)failure;
-  
-	
+                     
+                     
+                     
 ##4.6 设备管理
  
 ### 4.6.1 获取已经绑定的设备列表
