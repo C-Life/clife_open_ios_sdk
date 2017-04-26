@@ -110,11 +110,11 @@
 使用如下：
   
  
-   //检查SDK是否已经授权登录，否则不能使用
-   HETAuthorize *auth = [[HETAuthorize alloc] init];
-	self.auth = auth;
-	if (![auth isAuthenticated]) {
-	    [auth authorizeWithCompleted:^(HETAccount *account, NSError *error)    {
+    //检查SDK是否已经授权登录，否则不能使用
+     HETAuthorize *auth = [[HETAuthorize alloc] init];
+	 self.auth = auth;
+	 if (![auth isAuthenticated]) {
+	    [auth authorizeWithCompleted:^(HETAccount *account, NSError  *error)    {
 	
 	
 	    }];
