@@ -95,6 +95,46 @@ typedef NS_ENUM(NSUInteger,HETBLEDeviceDataUploadType)
 
 
 
+/**
+ *  查询设备大类
+ *
+ *  @param success 成功的回调
+ *  @param failure 失败的回调
+ */
+
+
+- (void)fetchDeviceTypeListSuccess:(successBlock)success
+                           failure:(failureBlock)failure;
+
+
+
+
+/**
+ *  查询设备子分类
+ *
+ *  @param success 成功的回调
+ *  @param failure 失败的回调
+ */
+
+
+- (void)fetchDeviceSubtypeListWithDeviceTypeId:(NSString *)deviceTypeId
+                                       success:(successBlock)success
+                                       failure:(failureBlock)failure;
+
+
+/**
+ *  根据设备大类查询APP支持的设备型号
+ *
+ *  @param success 成功的回调
+ *  @param failure 失败的回调
+ */
+
+- (void)fetchDeviceProductListWithDeviceTypeId:(NSString *)deviceTypeId
+                                       success:(successBlock)success
+                                       failure:(failureBlock)failure;
+
+
+
 
 /**
  *  解除设备绑定
@@ -296,4 +336,47 @@ typedef NS_ENUM(NSUInteger,HETBLEDeviceDataUploadType)
 
 
 
+
+/**
+ *  获取最新检测数据(针对远大环境仪)
+ *
+ *  @param deviceId  设备标识
+ *  @param success   成功的回调
+ *  @param failure   失败的回调
+ */
+-(void)fetchBroadairDeviceLatestDataWithDeviceId:(NSString *)deviceId
+                                    success:(successBlock)success
+                                    failure:(failureBlock)failure;
+
+
+
+/**
+ *  普通网络请求
+ *
+ *  @param method     HTTP网络请求方法
+ *  @param requestUrl 网络请求的URL
+ *  @param params     请求参数
+ *  @param needSign   是否需要签名
+ *  @param success    网络请求成功的回调
+ *  @param failure    网络请求失败的回调
+ */
+-(void)startRequestWithHTTPMethod: (HETRequestMethod)method  withRequestUrl:(NSString *)requestUrl processParams:(NSDictionary *)params needSign:(BOOL)needSign
+                 BlockWithSuccess:(successBlock)success
+                          failure:(failureBlock)failure;
+
+
+
+
+
+/**
+ *  上传文件的接口
+ *
+ *  @param requestUrl 网络请求的URL
+ *  @param params     请求参数
+ *  @param success    网络请求成功的回调
+ *  @param failure    网络请求失败的回调
+ */
+
+-(void)startMultipartFormDataRequestWithRequestUrl:(NSString *)requestUrl processParams:(NSDictionary *)params  uploadFileInfo:(NSArray<HETFileInfo *>*)fileInfoArray  BlockWithSuccess:(successBlock)success
+                                           failure:(failureBlock)failure;
 @end

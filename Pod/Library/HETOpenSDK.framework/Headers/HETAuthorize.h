@@ -36,6 +36,9 @@ typedef void(^failureBlock)( NSError *error);
 - (void)authorizeWithCompleted:(authenticationCompletedBlock)completedBlock;
 
 
+
+
+
 /**
  *  取消授权认证
  */
