@@ -2,7 +2,7 @@ platform :ios, '7.0'
 
 target :"HETOpenSDKDemo" do
 
-pod 'HETOpenSDK','0.1.1'
+pod 'HETOpenSDK','0.1.2'
 
 end
 inhibit_all_warnings!

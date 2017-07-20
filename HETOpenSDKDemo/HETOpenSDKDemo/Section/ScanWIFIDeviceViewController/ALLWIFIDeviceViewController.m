@@ -12,13 +12,13 @@
 #import "HFSmartLink.h"
 #import "HFSmartLinkDeviceInfo.h"
 #import <SystemConfiguration/CaptiveNetwork.h>
-
+#import "HFBroadcast_SSID_Password.h"
 #import "ELIANBroadcast_SSID_Password.h"
 
 @interface ALLWIFIDeviceViewController ()
 {
    
-    HFSmartLink * hfsmtlk;
+    HFBroadcast_SSID_Password * hfsmtlk;
     
     ELIANBroadcast_SSID_Password *mtksmtlk;
     
@@ -42,20 +42,8 @@
     if(self.productId.integerValue==1374)//汉风模块的设备
     {
     //HF WiFi模块接入路由
-    hfsmtlk =[[HFSmartLink alloc]init];
-    hfsmtlk.isConfigOneDevice = false;
-    
-    hfsmtlk.waitTimers = 30;
-    [hfsmtlk startWithKey:self.wifiPassword processblock:^(NSInteger process) {
-        
-    } successBlock:^(HFSmartLinkDeviceInfo *dev) {
-        //[self  showAlertWithMsg:[NSString stringWithFormat:@"%@:%@",dev.mac,dev.ip] title:@"OK"];
-    } failBlock:^(NSString *failmsg) {
-        //[self  showAlertWithMsg:failmsg title:@"error"];
-    } endBlock:^(NSDictionary *deviceDic) {
-        
-        
-    }];
+    hfsmtlk =[[HFBroadcast_SSID_Password alloc]init];
+    [hfsmtlk startBroadcast_SSID:self.ssid Password:self.wifiPassword];
   }
  else if(self.productId.integerValue==2159)//MTK芯片的设备
  {
@@ -70,12 +58,7 @@
         NSLog(@"设备mac地址:%@,%@",deviceObj.macAddress,error);
         if(hfsmtlk)
         {
-          [hfsmtlk closeWithBlock:^(NSString *closeMsg, BOOL isOK) {
-            
-           }];
-           [hfsmtlk stopWithBlock:^(NSString *stopMsg, BOOL isOk) {
-            
-           }];
+            [hfsmtlk stopBroadcast];
         }
         hfsmtlk=nil;
         if(mtksmtlk)

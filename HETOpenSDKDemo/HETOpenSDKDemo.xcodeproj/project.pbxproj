@@ -7,6 +7,30 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		C6011CB21F2078CE00DE141F /* ELIANBroadcast_SSID_Password.m in Sources */ = {isa = PBXBuildFile; fileRef = C6011C821F2078CE00DE141F /* ELIANBroadcast_SSID_Password.m */; };
+		C6011CB31F2078CE00DE141F /* liblibelian.a in Frameworks */ = {isa = PBXBuildFile; fileRef = C6011C831F2078CE00DE141F /* liblibelian.a */; };
+		C6011CB41F2078CE00DE141F /* ESP_ByteUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = C6011C861F2078CE00DE141F /* ESP_ByteUtil.m */; };
+		C6011CB51F2078CE00DE141F /* ESP_CRC8.m in Sources */ = {isa = PBXBuildFile; fileRef = C6011C881F2078CE00DE141F /* ESP_CRC8.m */; };
+		C6011CB61F2078CE00DE141F /* ESP_NetUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = C6011C8A1F2078CE00DE141F /* ESP_NetUtil.m */; };
+		C6011CB71F2078CE00DE141F /* ESPBroadcast_SSID_Password.m in Sources */ = {isa = PBXBuildFile; fileRef = C6011C8C1F2078CE00DE141F /* ESPBroadcast_SSID_Password.m */; };
+		C6011CB81F2078CE00DE141F /* ESPDataCode.m in Sources */ = {isa = PBXBuildFile; fileRef = C6011C8E1F2078CE00DE141F /* ESPDataCode.m */; };
+		C6011CB91F2078CE00DE141F /* ESPDatumCode.m in Sources */ = {isa = PBXBuildFile; fileRef = C6011C901F2078CE00DE141F /* ESPDatumCode.m */; };
+		C6011CBA1F2078CE00DE141F /* ESPGuideCode.m in Sources */ = {isa = PBXBuildFile; fileRef = C6011C921F2078CE00DE141F /* ESPGuideCode.m */; };
+		C6011CBB1F2078CE00DE141F /* ESPTouchGenerator.m in Sources */ = {isa = PBXBuildFile; fileRef = C6011C951F2078CE00DE141F /* ESPTouchGenerator.m */; };
+		C6011CBC1F2078CE00DE141F /* ESPTouchResult.m in Sources */ = {isa = PBXBuildFile; fileRef = C6011C971F2078CE00DE141F /* ESPTouchResult.m */; };
+		C6011CBD1F2078CE00DE141F /* ESPTouchTask.m in Sources */ = {isa = PBXBuildFile; fileRef = C6011C991F2078CE00DE141F /* ESPTouchTask.m */; };
+		C6011CBE1F2078CE00DE141F /* ESPTouchTaskParameter.m in Sources */ = {isa = PBXBuildFile; fileRef = C6011C9B1F2078CE00DE141F /* ESPTouchTaskParameter.m */; };
+		C6011CBF1F2078CE00DE141F /* ESPUDPSocketClient.m in Sources */ = {isa = PBXBuildFile; fileRef = C6011C9D1F2078CE00DE141F /* ESPUDPSocketClient.m */; };
+		C6011CC01F2078CE00DE141F /* ESPUDPSocketServer.m in Sources */ = {isa = PBXBuildFile; fileRef = C6011C9F1F2078CE00DE141F /* ESPUDPSocketServer.m */; };
+		C6011CC11F2078CE00DE141F /* IPAddress.c in Sources */ = {isa = PBXBuildFile; fileRef = C6011CA01F2078CE00DE141F /* IPAddress.c */; };
+		C6011CC21F2078CE00DE141F /* HFBroadcast_SSID_Password.m in Sources */ = {isa = PBXBuildFile; fileRef = C6011CA41F2078CE00DE141F /* HFBroadcast_SSID_Password.m */; };
+		C6011CC31F2078CE00DE141F /* HFSmartLink.m in Sources */ = {isa = PBXBuildFile; fileRef = C6011CA61F2078CE00DE141F /* HFSmartLink.m */; };
+		C6011CC41F2078CE00DE141F /* HFSmartLinkDeviceInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = C6011CA81F2078CE00DE141F /* HFSmartLinkDeviceInfo.m */; };
+		C6011CC51F2078CE00DE141F /* UdpProxy.m in Sources */ = {isa = PBXBuildFile; fileRef = C6011CAA1F2078CE00DE141F /* UdpProxy.m */; };
+		C6011CC61F2078CE00DE141F /* Udpproxy2.m in Sources */ = {isa = PBXBuildFile; fileRef = C6011CAC1F2078CE00DE141F /* Udpproxy2.m */; };
+		C6011CC71F2078CE00DE141F /* MarvellBroadcast_SSID_Password.m in Sources */ = {isa = PBXBuildFile; fileRef = C6011CAF1F2078CE00DE141F /* MarvellBroadcast_SSID_Password.m */; };
+		C6011CC81F2078CE00DE141F /* MarvellV2Factory.m in Sources */ = {isa = PBXBuildFile; fileRef = C6011CB11F2078CE00DE141F /* MarvellV2Factory.m */; };
+		C6011CCA1F2079C400DE141F /* libz.1.2.8.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = C6011CC91F2079C400DE141F /* libz.1.2.8.tbd */; };
 		C66187EE1C85887F001E54C5 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C66187ED1C85887F001E54C5 /* SystemConfiguration.framework */; };
 		C67C08041DC0B4E70075AFC1 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = C67C07611DC0B4E70075AFC1 /* AppDelegate.m */; };
 		C67C08051DC0B4E70075AFC1 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C67C07621DC0B4E70075AFC1 /* Assets.xcassets */; };
@@ -32,10 +56,6 @@
 		C67C081C1DC0B4E70075AFC1 /* ALLWIFIDeviceViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C67C079B1DC0B4E70075AFC1 /* ALLWIFIDeviceViewController.m */; };
 		C67C081F1DC0B4E70075AFC1 /* ScanWIFIViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C67C07A11DC0B4E70075AFC1 /* ScanWIFIViewController.m */; };
 		C67C08201DC0B4E70075AFC1 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C67C07A41DC0B4E70075AFC1 /* ViewController.m */; };
-		C67C08221DC0B4E70075AFC1 /* HFSmartLink.m in Sources */ = {isa = PBXBuildFile; fileRef = C67C07A91DC0B4E70075AFC1 /* HFSmartLink.m */; };
-		C67C08231DC0B4E70075AFC1 /* HFSmartLinkDeviceInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = C67C07AB1DC0B4E70075AFC1 /* HFSmartLinkDeviceInfo.m */; };
-		C67C08251DC0B4E70075AFC1 /* UdpProxy.m in Sources */ = {isa = PBXBuildFile; fileRef = C67C07AF1DC0B4E70075AFC1 /* UdpProxy.m */; };
-		C67C08261DC0B4E70075AFC1 /* Udpproxy2.m in Sources */ = {isa = PBXBuildFile; fileRef = C67C07B11DC0B4E70075AFC1 /* Udpproxy2.m */; };
 		C67C08271DC0B4E70075AFC1 /* NSBundle+SSToolkitAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = C67C07B51DC0B4E70075AFC1 /* NSBundle+SSToolkitAdditions.m */; };
 		C67C08281DC0B4E70075AFC1 /* NSData+SAMAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = C67C07B71DC0B4E70075AFC1 /* NSData+SAMAdditions.m */; };
 		C67C08291DC0B4E70075AFC1 /* NSDate+SSToolkitAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = C67C07B91DC0B4E70075AFC1 /* NSDate+SSToolkitAdditions.m */; };
@@ -64,8 +84,6 @@
 		C67C08481DC0B4E70075AFC1 /* UIScrollView+SVPullToRefresh.m in Sources */ = {isa = PBXBuildFile; fileRef = C67C07FA1DC0B4E70075AFC1 /* UIScrollView+SVPullToRefresh.m */; };
 		C67C08491DC0B4E70075AFC1 /* CLDeviceCollectionViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = C67C07FE1DC0B4E70075AFC1 /* CLDeviceCollectionViewCell.m */; };
 		C67C084B1DC0B4E70075AFC1 /* ColorButton.m in Sources */ = {isa = PBXBuildFile; fileRef = C67C08031DC0B4E70075AFC1 /* ColorButton.m */; };
-		C69478B01E7BB3DE00AB3B09 /* ELIANBroadcast_SSID_Password.m in Sources */ = {isa = PBXBuildFile; fileRef = C69478AE1E7BB3DE00AB3B09 /* ELIANBroadcast_SSID_Password.m */; };
-		C69478B11E7BB3DE00AB3B09 /* liblibelian.a in Frameworks */ = {isa = PBXBuildFile; fileRef = C69478AF1E7BB3DE00AB3B09 /* liblibelian.a */; };
 		C69478BA1E7BB5B400AB3B09 /* libstdc++.6.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = C69478B51E7BB59700AB3B09 /* libstdc++.6.tbd */; };
 		C95FF0836608882D8B100069 /* libPods-HETOpenSDKDemo.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A350E9931D0F93EEB9CF1208 /* libPods-HETOpenSDKDemo.a */; };
 /* End PBXBuildFile section */
@@ -74,6 +92,54 @@
 		1DCFB1B2446E893E2A123E51 /* Pods-HETOpenSDKDemo.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-HETOpenSDKDemo.release.xcconfig"; path = "Pods/Target Support Files/Pods-HETOpenSDKDemo/Pods-HETOpenSDKDemo.release.xcconfig"; sourceTree = "<group>"; };
 		9885A404E160F93B84FA1D63 /* Pods-HETOpenSDKDemo.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-HETOpenSDKDemo.debug.xcconfig"; path = "Pods/Target Support Files/Pods-HETOpenSDKDemo/Pods-HETOpenSDKDemo.debug.xcconfig"; sourceTree = "<group>"; };
 		A350E9931D0F93EEB9CF1208 /* libPods-HETOpenSDKDemo.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-HETOpenSDKDemo.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		C6011C801F2078CE00DE141F /* elian.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = elian.h; sourceTree = "<group>"; };
+		C6011C811F2078CE00DE141F /* ELIANBroadcast_SSID_Password.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ELIANBroadcast_SSID_Password.h; sourceTree = "<group>"; };
+		C6011C821F2078CE00DE141F /* ELIANBroadcast_SSID_Password.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ELIANBroadcast_SSID_Password.m; sourceTree = "<group>"; };
+		C6011C831F2078CE00DE141F /* liblibelian.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = liblibelian.a; sourceTree = "<group>"; };
+		C6011C851F2078CE00DE141F /* ESP_ByteUtil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ESP_ByteUtil.h; sourceTree = "<group>"; };
+		C6011C861F2078CE00DE141F /* ESP_ByteUtil.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ESP_ByteUtil.m; sourceTree = "<group>"; };
+		C6011C871F2078CE00DE141F /* ESP_CRC8.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ESP_CRC8.h; sourceTree = "<group>"; };
+		C6011C881F2078CE00DE141F /* ESP_CRC8.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ESP_CRC8.m; sourceTree = "<group>"; };
+		C6011C891F2078CE00DE141F /* ESP_NetUtil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ESP_NetUtil.h; sourceTree = "<group>"; };
+		C6011C8A1F2078CE00DE141F /* ESP_NetUtil.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ESP_NetUtil.m; sourceTree = "<group>"; };
+		C6011C8B1F2078CE00DE141F /* ESPBroadcast_SSID_Password.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ESPBroadcast_SSID_Password.h; sourceTree = "<group>"; };
+		C6011C8C1F2078CE00DE141F /* ESPBroadcast_SSID_Password.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ESPBroadcast_SSID_Password.m; sourceTree = "<group>"; };
+		C6011C8D1F2078CE00DE141F /* ESPDataCode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ESPDataCode.h; sourceTree = "<group>"; };
+		C6011C8E1F2078CE00DE141F /* ESPDataCode.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ESPDataCode.m; sourceTree = "<group>"; };
+		C6011C8F1F2078CE00DE141F /* ESPDatumCode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ESPDatumCode.h; sourceTree = "<group>"; };
+		C6011C901F2078CE00DE141F /* ESPDatumCode.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ESPDatumCode.m; sourceTree = "<group>"; };
+		C6011C911F2078CE00DE141F /* ESPGuideCode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ESPGuideCode.h; sourceTree = "<group>"; };
+		C6011C921F2078CE00DE141F /* ESPGuideCode.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ESPGuideCode.m; sourceTree = "<group>"; };
+		C6011C931F2078CE00DE141F /* ESPTouchDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ESPTouchDelegate.h; sourceTree = "<group>"; };
+		C6011C941F2078CE00DE141F /* ESPTouchGenerator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ESPTouchGenerator.h; sourceTree = "<group>"; };
+		C6011C951F2078CE00DE141F /* ESPTouchGenerator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ESPTouchGenerator.m; sourceTree = "<group>"; };
+		C6011C961F2078CE00DE141F /* ESPTouchResult.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ESPTouchResult.h; sourceTree = "<group>"; };
+		C6011C971F2078CE00DE141F /* ESPTouchResult.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ESPTouchResult.m; sourceTree = "<group>"; };
+		C6011C981F2078CE00DE141F /* ESPTouchTask.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ESPTouchTask.h; sourceTree = "<group>"; };
+		C6011C991F2078CE00DE141F /* ESPTouchTask.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ESPTouchTask.m; sourceTree = "<group>"; };
+		C6011C9A1F2078CE00DE141F /* ESPTouchTaskParameter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ESPTouchTaskParameter.h; sourceTree = "<group>"; };
+		C6011C9B1F2078CE00DE141F /* ESPTouchTaskParameter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ESPTouchTaskParameter.m; sourceTree = "<group>"; };
+		C6011C9C1F2078CE00DE141F /* ESPUDPSocketClient.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ESPUDPSocketClient.h; sourceTree = "<group>"; };
+		C6011C9D1F2078CE00DE141F /* ESPUDPSocketClient.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ESPUDPSocketClient.m; sourceTree = "<group>"; };
+		C6011C9E1F2078CE00DE141F /* ESPUDPSocketServer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ESPUDPSocketServer.h; sourceTree = "<group>"; };
+		C6011C9F1F2078CE00DE141F /* ESPUDPSocketServer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ESPUDPSocketServer.m; sourceTree = "<group>"; };
+		C6011CA01F2078CE00DE141F /* IPAddress.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = IPAddress.c; sourceTree = "<group>"; };
+		C6011CA11F2078CE00DE141F /* IPAddress.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IPAddress.h; sourceTree = "<group>"; };
+		C6011CA31F2078CE00DE141F /* HFBroadcast_SSID_Password.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HFBroadcast_SSID_Password.h; sourceTree = "<group>"; };
+		C6011CA41F2078CE00DE141F /* HFBroadcast_SSID_Password.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HFBroadcast_SSID_Password.m; sourceTree = "<group>"; };
+		C6011CA51F2078CE00DE141F /* HFSmartLink.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HFSmartLink.h; sourceTree = "<group>"; };
+		C6011CA61F2078CE00DE141F /* HFSmartLink.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HFSmartLink.m; sourceTree = "<group>"; };
+		C6011CA71F2078CE00DE141F /* HFSmartLinkDeviceInfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HFSmartLinkDeviceInfo.h; sourceTree = "<group>"; };
+		C6011CA81F2078CE00DE141F /* HFSmartLinkDeviceInfo.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HFSmartLinkDeviceInfo.m; sourceTree = "<group>"; };
+		C6011CA91F2078CE00DE141F /* UdpProxy.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UdpProxy.h; sourceTree = "<group>"; };
+		C6011CAA1F2078CE00DE141F /* UdpProxy.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UdpProxy.m; sourceTree = "<group>"; };
+		C6011CAB1F2078CE00DE141F /* Udpproxy2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Udpproxy2.h; sourceTree = "<group>"; };
+		C6011CAC1F2078CE00DE141F /* Udpproxy2.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Udpproxy2.m; sourceTree = "<group>"; };
+		C6011CAE1F2078CE00DE141F /* MarvellBroadcast_SSID_Password.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MarvellBroadcast_SSID_Password.h; sourceTree = "<group>"; };
+		C6011CAF1F2078CE00DE141F /* MarvellBroadcast_SSID_Password.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MarvellBroadcast_SSID_Password.m; sourceTree = "<group>"; };
+		C6011CB01F2078CE00DE141F /* MarvellV2Factory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MarvellV2Factory.h; sourceTree = "<group>"; };
+		C6011CB11F2078CE00DE141F /* MarvellV2Factory.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MarvellV2Factory.m; sourceTree = "<group>"; };
+		C6011CC91F2079C400DE141F /* libz.1.2.8.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.1.2.8.tbd; path = usr/lib/libz.1.2.8.tbd; sourceTree = SDKROOT; };
 		C63AF0CD1C50D645000E0EB8 /* HETOpenSDKDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = HETOpenSDKDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C66187ED1C85887F001E54C5 /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
 		C67C07601DC0B4E70075AFC1 /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
@@ -116,14 +182,6 @@
 		C67C07A11DC0B4E70075AFC1 /* ScanWIFIViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ScanWIFIViewController.m; sourceTree = "<group>"; };
 		C67C07A31DC0B4E70075AFC1 /* ViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
 		C67C07A41DC0B4E70075AFC1 /* ViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ViewController.m; sourceTree = "<group>"; };
-		C67C07A81DC0B4E70075AFC1 /* HFSmartLink.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HFSmartLink.h; sourceTree = "<group>"; };
-		C67C07A91DC0B4E70075AFC1 /* HFSmartLink.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HFSmartLink.m; sourceTree = "<group>"; };
-		C67C07AA1DC0B4E70075AFC1 /* HFSmartLinkDeviceInfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HFSmartLinkDeviceInfo.h; sourceTree = "<group>"; };
-		C67C07AB1DC0B4E70075AFC1 /* HFSmartLinkDeviceInfo.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HFSmartLinkDeviceInfo.m; sourceTree = "<group>"; };
-		C67C07AE1DC0B4E70075AFC1 /* UdpProxy.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UdpProxy.h; sourceTree = "<group>"; };
-		C67C07AF1DC0B4E70075AFC1 /* UdpProxy.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UdpProxy.m; sourceTree = "<group>"; };
-		C67C07B01DC0B4E70075AFC1 /* Udpproxy2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Udpproxy2.h; sourceTree = "<group>"; };
-		C67C07B11DC0B4E70075AFC1 /* Udpproxy2.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Udpproxy2.m; sourceTree = "<group>"; };
 		C67C07B41DC0B4E70075AFC1 /* NSBundle+SSToolkitAdditions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSBundle+SSToolkitAdditions.h"; sourceTree = "<group>"; };
 		C67C07B51DC0B4E70075AFC1 /* NSBundle+SSToolkitAdditions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSBundle+SSToolkitAdditions.m"; sourceTree = "<group>"; };
 		C67C07B61DC0B4E70075AFC1 /* NSData+SAMAdditions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSData+SAMAdditions.h"; sourceTree = "<group>"; };
@@ -178,10 +236,6 @@
 		C67C07FE1DC0B4E70075AFC1 /* CLDeviceCollectionViewCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CLDeviceCollectionViewCell.m; sourceTree = "<group>"; };
 		C67C08021DC0B4E70075AFC1 /* ColorButton.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ColorButton.h; sourceTree = "<group>"; };
 		C67C08031DC0B4E70075AFC1 /* ColorButton.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ColorButton.m; sourceTree = "<group>"; };
-		C69478AC1E7BB3DE00AB3B09 /* elian.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = elian.h; sourceTree = "<group>"; };
-		C69478AD1E7BB3DE00AB3B09 /* ELIANBroadcast_SSID_Password.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ELIANBroadcast_SSID_Password.h; sourceTree = "<group>"; };
-		C69478AE1E7BB3DE00AB3B09 /* ELIANBroadcast_SSID_Password.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ELIANBroadcast_SSID_Password.m; sourceTree = "<group>"; };
-		C69478AF1E7BB3DE00AB3B09 /* liblibelian.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = liblibelian.a; sourceTree = "<group>"; };
 		C69478B21E7BB4DA00AB3B09 /* libc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libc++.tbd"; path = "usr/lib/libc++.tbd"; sourceTree = SDKROOT; };
 		C69478B41E7BB59700AB3B09 /* libstdc++.6.0.9.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libstdc++.6.0.9.tbd"; path = "usr/lib/libstdc++.6.0.9.tbd"; sourceTree = SDKROOT; };
 		C69478B51E7BB59700AB3B09 /* libstdc++.6.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libstdc++.6.tbd"; path = "usr/lib/libstdc++.6.tbd"; sourceTree = SDKROOT; };
@@ -193,10 +247,11 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C6011CCA1F2079C400DE141F /* libz.1.2.8.tbd in Frameworks */,
 				C69478BA1E7BB5B400AB3B09 /* libstdc++.6.tbd in Frameworks */,
 				C66187EE1C85887F001E54C5 /* SystemConfiguration.framework in Frameworks */,
-				C69478B11E7BB3DE00AB3B09 /* liblibelian.a in Frameworks */,
 				C95FF0836608882D8B100069 /* libPods-HETOpenSDKDemo.a in Frameworks */,
+				C6011CB31F2078CE00DE141F /* liblibelian.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -210,6 +265,92 @@
 				1DCFB1B2446E893E2A123E51 /* Pods-HETOpenSDKDemo.release.xcconfig */,
 			);
 			name = Pods;
+			sourceTree = "<group>";
+		};
+		C6011C7E1F2078CE00DE141F /* WiFiModules */ = {
+			isa = PBXGroup;
+			children = (
+				C6011C7F1F2078CE00DE141F /* ELIAN */,
+				C6011C841F2078CE00DE141F /* ESP8266 */,
+				C6011CA21F2078CE00DE141F /* HF_LPT100_V3 */,
+				C6011CAD1F2078CE00DE141F /* Marvell */,
+			);
+			path = WiFiModules;
+			sourceTree = "<group>";
+		};
+		C6011C7F1F2078CE00DE141F /* ELIAN */ = {
+			isa = PBXGroup;
+			children = (
+				C6011C801F2078CE00DE141F /* elian.h */,
+				C6011C811F2078CE00DE141F /* ELIANBroadcast_SSID_Password.h */,
+				C6011C821F2078CE00DE141F /* ELIANBroadcast_SSID_Password.m */,
+				C6011C831F2078CE00DE141F /* liblibelian.a */,
+			);
+			path = ELIAN;
+			sourceTree = "<group>";
+		};
+		C6011C841F2078CE00DE141F /* ESP8266 */ = {
+			isa = PBXGroup;
+			children = (
+				C6011C851F2078CE00DE141F /* ESP_ByteUtil.h */,
+				C6011C861F2078CE00DE141F /* ESP_ByteUtil.m */,
+				C6011C871F2078CE00DE141F /* ESP_CRC8.h */,
+				C6011C881F2078CE00DE141F /* ESP_CRC8.m */,
+				C6011C891F2078CE00DE141F /* ESP_NetUtil.h */,
+				C6011C8A1F2078CE00DE141F /* ESP_NetUtil.m */,
+				C6011C8B1F2078CE00DE141F /* ESPBroadcast_SSID_Password.h */,
+				C6011C8C1F2078CE00DE141F /* ESPBroadcast_SSID_Password.m */,
+				C6011C8D1F2078CE00DE141F /* ESPDataCode.h */,
+				C6011C8E1F2078CE00DE141F /* ESPDataCode.m */,
+				C6011C8F1F2078CE00DE141F /* ESPDatumCode.h */,
+				C6011C901F2078CE00DE141F /* ESPDatumCode.m */,
+				C6011C911F2078CE00DE141F /* ESPGuideCode.h */,
+				C6011C921F2078CE00DE141F /* ESPGuideCode.m */,
+				C6011C931F2078CE00DE141F /* ESPTouchDelegate.h */,
+				C6011C941F2078CE00DE141F /* ESPTouchGenerator.h */,
+				C6011C951F2078CE00DE141F /* ESPTouchGenerator.m */,
+				C6011C961F2078CE00DE141F /* ESPTouchResult.h */,
+				C6011C971F2078CE00DE141F /* ESPTouchResult.m */,
+				C6011C981F2078CE00DE141F /* ESPTouchTask.h */,
+				C6011C991F2078CE00DE141F /* ESPTouchTask.m */,
+				C6011C9A1F2078CE00DE141F /* ESPTouchTaskParameter.h */,
+				C6011C9B1F2078CE00DE141F /* ESPTouchTaskParameter.m */,
+				C6011C9C1F2078CE00DE141F /* ESPUDPSocketClient.h */,
+				C6011C9D1F2078CE00DE141F /* ESPUDPSocketClient.m */,
+				C6011C9E1F2078CE00DE141F /* ESPUDPSocketServer.h */,
+				C6011C9F1F2078CE00DE141F /* ESPUDPSocketServer.m */,
+				C6011CA01F2078CE00DE141F /* IPAddress.c */,
+				C6011CA11F2078CE00DE141F /* IPAddress.h */,
+			);
+			path = ESP8266;
+			sourceTree = "<group>";
+		};
+		C6011CA21F2078CE00DE141F /* HF_LPT100_V3 */ = {
+			isa = PBXGroup;
+			children = (
+				C6011CA31F2078CE00DE141F /* HFBroadcast_SSID_Password.h */,
+				C6011CA41F2078CE00DE141F /* HFBroadcast_SSID_Password.m */,
+				C6011CA51F2078CE00DE141F /* HFSmartLink.h */,
+				C6011CA61F2078CE00DE141F /* HFSmartLink.m */,
+				C6011CA71F2078CE00DE141F /* HFSmartLinkDeviceInfo.h */,
+				C6011CA81F2078CE00DE141F /* HFSmartLinkDeviceInfo.m */,
+				C6011CA91F2078CE00DE141F /* UdpProxy.h */,
+				C6011CAA1F2078CE00DE141F /* UdpProxy.m */,
+				C6011CAB1F2078CE00DE141F /* Udpproxy2.h */,
+				C6011CAC1F2078CE00DE141F /* Udpproxy2.m */,
+			);
+			path = HF_LPT100_V3;
+			sourceTree = "<group>";
+		};
+		C6011CAD1F2078CE00DE141F /* Marvell */ = {
+			isa = PBXGroup;
+			children = (
+				C6011CAE1F2078CE00DE141F /* MarvellBroadcast_SSID_Password.h */,
+				C6011CAF1F2078CE00DE141F /* MarvellBroadcast_SSID_Password.m */,
+				C6011CB01F2078CE00DE141F /* MarvellV2Factory.h */,
+				C6011CB11F2078CE00DE141F /* MarvellV2Factory.m */,
+			);
+			path = Marvell;
 			sourceTree = "<group>";
 		};
 		C63AF0C41C50D645000E0EB8 = {
@@ -234,7 +375,6 @@
 		C67C075E1DC0B4E70075AFC1 /* HETOpenSDKDemo */ = {
 			isa = PBXGroup;
 			children = (
-				C69478AB1E7BB3DE00AB3B09 /* liblibelian */,
 				C67C075F1DC0B4E70075AFC1 /* AppDelegate */,
 				C67C07621DC0B4E70075AFC1 /* Assets.xcassets */,
 				C67C07631DC0B4E70075AFC1 /* LaunchScreen.storyboard */,
@@ -244,7 +384,6 @@
 				C67C077D1DC0B4E70075AFC1 /* main.m */,
 				C67C077E1DC0B4E70075AFC1 /* Resource */,
 				C67C07851DC0B4E70075AFC1 /* Section */,
-				C67C07A51DC0B4E70075AFC1 /* smartlink */,
 				C67C07B21DC0B4E70075AFC1 /* Vendors */,
 				C67C07FB1DC0B4E70075AFC1 /* Views */,
 			);
@@ -418,24 +557,10 @@
 			path = ViewController;
 			sourceTree = "<group>";
 		};
-		C67C07A51DC0B4E70075AFC1 /* smartlink */ = {
-			isa = PBXGroup;
-			children = (
-				C67C07A81DC0B4E70075AFC1 /* HFSmartLink.h */,
-				C67C07A91DC0B4E70075AFC1 /* HFSmartLink.m */,
-				C67C07AA1DC0B4E70075AFC1 /* HFSmartLinkDeviceInfo.h */,
-				C67C07AB1DC0B4E70075AFC1 /* HFSmartLinkDeviceInfo.m */,
-				C67C07AE1DC0B4E70075AFC1 /* UdpProxy.h */,
-				C67C07AF1DC0B4E70075AFC1 /* UdpProxy.m */,
-				C67C07B01DC0B4E70075AFC1 /* Udpproxy2.h */,
-				C67C07B11DC0B4E70075AFC1 /* Udpproxy2.m */,
-			);
-			path = smartlink;
-			sourceTree = "<group>";
-		};
 		C67C07B21DC0B4E70075AFC1 /* Vendors */ = {
 			isa = PBXGroup;
 			children = (
+				C6011C7E1F2078CE00DE141F /* WiFiModules */,
 				C67C07B31DC0B4E70075AFC1 /* DMFoundation */,
 				C67C07C91DC0B4E70075AFC1 /* HETModel */,
 				C67C07CD1DC0B4E70075AFC1 /* MBProgressHUD */,
@@ -565,20 +690,10 @@
 			path = ColorButton;
 			sourceTree = "<group>";
 		};
-		C69478AB1E7BB3DE00AB3B09 /* liblibelian */ = {
-			isa = PBXGroup;
-			children = (
-				C69478AC1E7BB3DE00AB3B09 /* elian.h */,
-				C69478AD1E7BB3DE00AB3B09 /* ELIANBroadcast_SSID_Password.h */,
-				C69478AE1E7BB3DE00AB3B09 /* ELIANBroadcast_SSID_Password.m */,
-				C69478AF1E7BB3DE00AB3B09 /* liblibelian.a */,
-			);
-			path = liblibelian;
-			sourceTree = "<group>";
-		};
 		CA921CAC8EB12F9918272C9D /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				C6011CC91F2079C400DE141F /* libz.1.2.8.tbd */,
 				C69478B41E7BB59700AB3B09 /* libstdc++.6.0.9.tbd */,
 				C69478B51E7BB59700AB3B09 /* libstdc++.6.tbd */,
 				C69478B61E7BB59700AB3B09 /* libstdc++.tbd */,
@@ -722,48 +837,65 @@
 				C67C08351DC0B4E70075AFC1 /* README.mdown in Sources */,
 				C67C08201DC0B4E70075AFC1 /* ViewController.m in Sources */,
 				C67C08171DC0B4E70075AFC1 /* HETDeviceInfoViewController.m in Sources */,
+				C6011CBA1F2078CE00DE141F /* ESPGuideCode.m in Sources */,
 				C67C08441DC0B4E70075AFC1 /* UIImageView+HighlightedWebCache.m in Sources */,
 				C67C084B1DC0B4E70075AFC1 /* ColorButton.m in Sources */,
 				C67C08101DC0B4E70075AFC1 /* main.m in Sources */,
+				C6011CB61F2078CE00DE141F /* ESP_NetUtil.m in Sources */,
+				C6011CC31F2078CE00DE141F /* HFSmartLink.m in Sources */,
 				C67C08391DC0B4E70075AFC1 /* NSData+ImageContentType.m in Sources */,
 				C67C083E1DC0B4E70075AFC1 /* SDWebImageDownloaderOperation.m in Sources */,
 				C67C08181DC0B4E70075AFC1 /* HETWIFIUpgradeViewController.m in Sources */,
 				C67C083C1DC0B4E70075AFC1 /* SDWebImageDecoder.m in Sources */,
 				C67C08471DC0B4E70075AFC1 /* UIScrollView+SVInfiniteScrolling.m in Sources */,
 				C67C08271DC0B4E70075AFC1 /* NSBundle+SSToolkitAdditions.m in Sources */,
-				C67C08261DC0B4E70075AFC1 /* Udpproxy2.m in Sources */,
+				C6011CC71F2078CE00DE141F /* MarvellBroadcast_SSID_Password.m in Sources */,
+				C6011CC11F2078CE00DE141F /* IPAddress.c in Sources */,
+				C6011CC21F2078CE00DE141F /* HFBroadcast_SSID_Password.m in Sources */,
+				C6011CB41F2078CE00DE141F /* ESP_ByteUtil.m in Sources */,
 				C67C08341DC0B4E70075AFC1 /* MBProgressHUD.m in Sources */,
 				C67C081B1DC0B4E70075AFC1 /* MainViewController.m in Sources */,
 				C67C08041DC0B4E70075AFC1 /* AppDelegate.m in Sources */,
 				C67C08411DC0B4E70075AFC1 /* UIButton+WebCache.m in Sources */,
-				C67C08251DC0B4E70075AFC1 /* UdpProxy.m in Sources */,
+				C6011CB51F2078CE00DE141F /* ESP_CRC8.m in Sources */,
 				C67C081F1DC0B4E70075AFC1 /* ScanWIFIViewController.m in Sources */,
 				C67C08481DC0B4E70075AFC1 /* UIScrollView+SVPullToRefresh.m in Sources */,
-				C67C08221DC0B4E70075AFC1 /* HFSmartLink.m in Sources */,
+				C6011CC51F2078CE00DE141F /* UdpProxy.m in Sources */,
+				C6011CB91F2078CE00DE141F /* ESPDatumCode.m in Sources */,
 				C67C081C1DC0B4E70075AFC1 /* ALLWIFIDeviceViewController.m in Sources */,
+				C6011CBE1F2078CE00DE141F /* ESPTouchTaskParameter.m in Sources */,
 				C67C081A1DC0B4E70075AFC1 /* HETWIFIAromaDiffuserDevice.m in Sources */,
 				C67C08161DC0B4E70075AFC1 /* AromaDiffuserViewController.m in Sources */,
 				C67C08081DC0B4E70075AFC1 /* NSBundle+SSToolkitAdditions.m in Sources */,
+				C6011CB81F2078CE00DE141F /* ESPDataCode.m in Sources */,
 				C67C080A1DC0B4E70075AFC1 /* NSDate+SSToolkitAdditions.m in Sources */,
 				C67C08281DC0B4E70075AFC1 /* NSData+SAMAdditions.m in Sources */,
 				C67C080C1DC0B4E70075AFC1 /* DMString.m in Sources */,
 				C67C08421DC0B4E70075AFC1 /* UIImage+GIF.m in Sources */,
-				C67C08231DC0B4E70075AFC1 /* HFSmartLinkDeviceInfo.m in Sources */,
 				C67C08461DC0B4E70075AFC1 /* UIView+WebCacheOperation.m in Sources */,
 				C67C083F1DC0B4E70075AFC1 /* SDWebImageManager.m in Sources */,
+				C6011CBD1F2078CE00DE141F /* ESPTouchTask.m in Sources */,
 				C67C08311DC0B4E70075AFC1 /* HETBaseModel.m in Sources */,
+				C6011CBF1F2078CE00DE141F /* ESPUDPSocketClient.m in Sources */,
 				C67C08091DC0B4E70075AFC1 /* NSData+SAMAdditions.m in Sources */,
 				C67C083B1DC0B4E70075AFC1 /* SDWebImageCompat.m in Sources */,
 				C67C080D1DC0B4E70075AFC1 /* HETUIConfig.m in Sources */,
 				C67C08371DC0B4E70075AFC1 /* Reachability.m in Sources */,
 				C67C08071DC0B4E70075AFC1 /* BaseViewController.m in Sources */,
-				C69478B01E7BB3DE00AB3B09 /* ELIANBroadcast_SSID_Password.m in Sources */,
+				C6011CC61F2078CE00DE141F /* Udpproxy2.m in Sources */,
+				C6011CC81F2078CE00DE141F /* MarvellV2Factory.m in Sources */,
+				C6011CB21F2078CE00DE141F /* ELIANBroadcast_SSID_Password.m in Sources */,
+				C6011CBB1F2078CE00DE141F /* ESPTouchGenerator.m in Sources */,
 				C67C08291DC0B4E70075AFC1 /* NSDate+SSToolkitAdditions.m in Sources */,
+				C6011CBC1F2078CE00DE141F /* ESPTouchResult.m in Sources */,
+				C6011CB71F2078CE00DE141F /* ESPBroadcast_SSID_Password.m in Sources */,
 				C67C08401DC0B4E70075AFC1 /* SDWebImagePrefetcher.m in Sources */,
 				C67C08451DC0B4E70075AFC1 /* UIImageView+WebCache.m in Sources */,
 				C67C083A1DC0B4E70075AFC1 /* SDImageCache.m in Sources */,
+				C6011CC01F2078CE00DE141F /* ESPUDPSocketServer.m in Sources */,
 				C67C08381DC0B4E70075AFC1 /* README.md in Sources */,
 				C67C080B1DC0B4E70075AFC1 /* HETCommonHelp.m in Sources */,
+				C6011CC41F2078CE00DE141F /* HFSmartLinkDeviceInfo.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -882,6 +1014,7 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/HETOpenSDKDemo/liblibelian",
+					"$(PROJECT_DIR)/HETOpenSDKDemo/Vendors/WiFiModules/ELIAN",
 				);
 				OTHER_LDFLAGS = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = com.Het.HETOpenSDKDemo;
@@ -909,6 +1042,7 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/HETOpenSDKDemo/liblibelian",
+					"$(PROJECT_DIR)/HETOpenSDKDemo/Vendors/WiFiModules/ELIAN",
 				);
 				OTHER_LDFLAGS = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = com.Het.HETOpenSDKDemo;
