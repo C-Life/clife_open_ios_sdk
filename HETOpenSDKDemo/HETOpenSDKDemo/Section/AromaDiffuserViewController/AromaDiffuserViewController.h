@@ -7,10 +7,10 @@
 //
 
 #import <UIKit/UIKit.h>
-#import "BaseViewController.h"
+#import "HETBaseViewController.h"
 
 
-@interface AromaDiffuserViewController :BaseViewController
+@interface AromaDiffuserViewController :HETBaseViewController
 
 @property(nonatomic,strong)HETDevice *hetDeviceModel;
 

@@ -569,7 +569,7 @@
     if(!_deviceControlButton)
     {
         UIButton *nextBtn = [UIButton buttonWithType:UIButtonTypeSystem];
-        nextBtn.frame =  CGRectMake(0, (CCViewHeight)-88*CC_scale, CCViewWidth, 88*CC_scale);
+          nextBtn.frame =  CGRectMake(0, CGRectGetHeight([UIScreen mainScreen].bounds)-64-44, CGRectGetWidth([UIScreen mainScreen].bounds), 44);
         [nextBtn setTitle:@"设备控制" forState:UIControlStateNormal];
         [nextBtn setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
         [nextBtn addTarget:self action:@selector(sendData) forControlEvents:UIControlEventTouchUpInside];
@@ -586,7 +586,7 @@
 {
     if(!_logTextView)
     {
-        UITextView *textView=[[UITextView alloc]initWithFrame: CGRectMake(0, _scrollV.frame.size.height+_scrollV.frame.origin.y,CCViewWidth, CCViewHeight-88*CC_scale-_scrollV.frame.size.height-_scrollV.frame.origin.y)];
+        UITextView *textView=[[UITextView alloc]initWithFrame:CGRectZero];
         textView.backgroundColor=[UIColor lightGrayColor];
         textView.layoutManager.allowsNonContiguousLayout = NO;
         _logTextView=textView;

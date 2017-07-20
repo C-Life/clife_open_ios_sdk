@@ -7,8 +7,8 @@
 //
 
 #import <UIKit/UIKit.h>
-#import "BaseViewController.h"
-@interface HETWIFIUpgradeViewController : BaseViewController
+#import "HETBaseViewController.h"
+@interface HETWIFIUpgradeViewController : HETBaseViewController
 
 @property (nonatomic,copy  ) NSString  * deviceId;
 @property (nonatomic,copy  ) NSString  * versionType;

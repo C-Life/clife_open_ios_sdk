@@ -42,9 +42,9 @@
     // Do any additional setup after loading the view.
     
     
-    int btnHeight=44;
+    int btnHeight=60;
     int btnWidth=250;
-    int btnGap=(CCViewHeight-btnHeight*3)/4;
+    int btnGap=(CGRectGetHeight([UIScreen mainScreen].bounds)-btnHeight*3)/4;
     UIButton *upgradeBtn = [UIButton buttonWithType:UIButtonTypeCustom];
     upgradeBtn.frame =  CGRectMake(self.view.bounds.size.width/2.0-btnWidth/2.0, btnGap, btnWidth, btnHeight);
     [upgradeBtn setTitle:@"设备升级" forState:UIControlStateNormal];
@@ -63,8 +63,6 @@
     [self.view addSubview:runDataBtn];
     
     
-    
-    
     UIButton *modifyDeviceInfoBtn = [UIButton buttonWithType:UIButtonTypeCustom];
     modifyDeviceInfoBtn.frame =  CGRectMake(self.view.bounds.size.width/2.0-btnWidth/2.0, btnGap*3+btnHeight*2, btnWidth, btnHeight);
     [modifyDeviceInfoBtn setTitle:@"修改设备信息" forState:UIControlStateNormal];
@@ -72,6 +70,8 @@
     [modifyDeviceInfoBtn addTarget:self action:@selector(modifyDeviceInfoBtnAction) forControlEvents:UIControlEventTouchUpInside];
     modifyDeviceInfoBtn.backgroundColor=[self colorFromHexRGB:@"2E7BD3"];
     [self.view addSubview:modifyDeviceInfoBtn];
+    
+    
     
     
    

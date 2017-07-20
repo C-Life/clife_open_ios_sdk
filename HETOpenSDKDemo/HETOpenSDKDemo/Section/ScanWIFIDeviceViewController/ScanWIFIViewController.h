@@ -7,13 +7,13 @@
 //  WiFi扫描的界面
 
 #import <UIKit/UIKit.h>
-#import "BaseViewController.h"
+#import "HETBaseViewController.h"
 
-@interface ScanWIFIViewController :BaseViewController
+@interface ScanWIFIViewController :HETBaseViewController
 @property(nonatomic,strong)NSString *bindTypeStr;
 @property(nonatomic,strong)NSString *deviceTypeStr;
 @property(nonatomic,strong)NSString *deviceSubTypeStr;
 @property(nonatomic,strong)NSString *moduleIdStr;
-@property(nonatomic,strong)NSString *productId;
+@property(nonatomic,strong)NSString *productIdStr;
 
 @end

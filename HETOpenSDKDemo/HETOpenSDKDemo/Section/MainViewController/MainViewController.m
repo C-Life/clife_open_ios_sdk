@@ -8,7 +8,7 @@
 
 #import "MainViewController.h"
 #import "SVPullToRefresh.h"
-
+#import "HETChooseDeviceViewController.h"
 #import "ScanWIFIViewController.h"
 #import "AromaDiffuserViewController.h"
 
@@ -18,7 +18,7 @@
     
 }
 @property(strong,nonatomic)HETAuthorize *auth;
-@property(strong,nonatomic)UITableView *scanDeviceTableView;
+@property(strong,nonatomic)UITableView *allBindDeviceTableView;
 @property(strong,nonatomic)UIButton    *wifiScanButton;
 @end
 
@@ -28,16 +28,29 @@
     [super viewDidLoad];
     // Do any additional setup after loading the view.
      self.view.backgroundColor=[UIColor whiteColor];
-    [self.view addSubview:self.scanDeviceTableView];
+    [self.view addSubview:self.allBindDeviceTableView];
     [self.view addSubview:self.wifiScanButton];
     
-    //右边添加按钮
-    UIButton *rightButton = [UIButton buttonWithType:UIButtonTypeCustom];
-    rightButton.frame = CGRectMake(0, 0, 60, 40);
-    [rightButton setTitle:@"退出登录" forState:UIControlStateNormal];
-    rightButton.titleLabel.font=[UIFont systemFontOfSize:14];
-    [rightButton addTarget:self action:@selector(loginOutBtnClick) forControlEvents:UIControlEventTouchUpInside];
-    [self.navigationItem setRightBarButtonItem:[[UIBarButtonItem alloc] initWithCustomView:rightButton] animated:NO];
+//    //右边添加按钮
+//    UIButton *rightButton = [UIButton buttonWithType:UIButtonTypeCustom];
+//    rightButton.frame = CGRectMake(0, 0, 60, 40);
+//    [rightButton setTitle:@"退出登录" forState:UIControlStateNormal];
+//    rightButton.titleLabel.font=[UIFont systemFontOfSize:14];
+//    [rightButton addTarget:self action:@selector(loginOutBtnClick) forControlEvents:UIControlEventTouchUpInside];
+//    [self.navigationItem setRightBarButtonItem:[[UIBarButtonItem alloc] initWithCustomView:rightButton] animated:NO];
+    if(!self.auth)
+    {
+        self.auth = [[HETAuthorize alloc] init];
+    }
+    
+    if ([self.auth isAuthenticated])
+    {
+        self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"切换账号" style:UIBarButtonItemStyleDone target:self action:@selector(loginOutBtnClick)];
+    }
+    else
+    {
+        self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"登录" style:UIBarButtonItemStyleDone target:self action:@selector(loginOutBtnClick)];
+    }
 
     
 }
@@ -59,7 +72,7 @@
     [self setLeftBarButtonItemHide:YES];
     __weak MainViewController *weakSelf = self;
 
-     [self.scanDeviceTableView addPullToRefreshWithActionHandler:^{
+     [self.allBindDeviceTableView addPullToRefreshWithActionHandler:^{
          
          //获取绑定的设备列表
          
@@ -67,24 +80,44 @@
          [bussiness fetchAllBindDeviceSuccess:^(NSArray<HETDevice *> *deviceArray) {
              _allDeviceDataSouce=[deviceArray copy];
              dispatch_async(dispatch_get_main_queue(), ^{
-             [weakSelf.scanDeviceTableView reloadData];
-             [weakSelf.scanDeviceTableView.pullToRefreshView stopAnimating];
+             [weakSelf.allBindDeviceTableView reloadData];
+             [weakSelf.allBindDeviceTableView.pullToRefreshView stopAnimating];
              });
          } failure:^(NSError *error) {
              _allDeviceDataSouce=nil;
              dispatch_async(dispatch_get_main_queue(), ^{
-             [weakSelf.scanDeviceTableView reloadData];
-             [weakSelf.scanDeviceTableView.pullToRefreshView stopAnimating];
+             [weakSelf.allBindDeviceTableView reloadData];
+             [weakSelf.allBindDeviceTableView.pullToRefreshView stopAnimating];
              });
          }];
          
      }];
     
-    dispatch_async(dispatch_get_main_queue(), ^{
-        
-        [self.scanDeviceTableView triggerPullToRefresh];
-    });
+   
 
+    //检查SDK是否已经授权登录，否则不能使用
+    if(!self.auth)
+    {
+        self.auth = [[HETAuthorize alloc] init];
+    }
+    
+    if (![self.auth isAuthenticated]) {
+        [self setNavigationBarTitle:@"未登录"];
+        //self.allBindDeviceTableView.hidden=YES;
+        //        [self.auth authorizeWithCompleted:^(HETAccount *account, NSError *error) {
+        //            NSLog(@"%@,token:%@",account,account.accessToken);
+        //            [self.allBindDeviceTableView triggerPullToRefresh];
+        //        }];
+        
+    }
+    else
+    {
+        [self setNavigationBarTitle:@"已登录"];
+        // self.allBindDeviceTableView.hidden=NO;
+        [self.allBindDeviceTableView triggerPullToRefresh];
+    }
+    
+    [self setLeftBarButtonItemHide:YES];
 
 
     
@@ -94,8 +127,7 @@
 - (void)wifiBindAction
 {
     
-    ScanWIFIViewController *vc=[[ScanWIFIViewController alloc]init];
-    vc.productId=@"2159";//@"1374";//测试用的productId,这里根据自己产品填写
+    HETChooseDeviceViewController *vc=[[HETChooseDeviceViewController alloc]init];
     [self.navigationController pushViewController:vc animated:YES];
 }
 
@@ -110,7 +142,7 @@
         {
             dispatch_async(dispatch_get_main_queue(), ^{
                 
-                [self.scanDeviceTableView triggerPullToRefresh];
+                [self.allBindDeviceTableView triggerPullToRefresh];
             });
         }
     }];
@@ -239,12 +271,12 @@
 
 -(void)viewDidLayoutSubviews {
     
-    if ([self.scanDeviceTableView respondsToSelector:@selector(setSeparatorInset:)]) {
-        [self.scanDeviceTableView setSeparatorInset:UIEdgeInsetsZero];
+    if ([self.allBindDeviceTableView respondsToSelector:@selector(setSeparatorInset:)]) {
+        [self.allBindDeviceTableView setSeparatorInset:UIEdgeInsetsZero];
         
     }
-    if ([self.scanDeviceTableView respondsToSelector:@selector(setLayoutMargins:)])  {
-        [self.scanDeviceTableView setLayoutMargins:UIEdgeInsetsZero];
+    if ([self.allBindDeviceTableView respondsToSelector:@selector(setLayoutMargins:)])  {
+        [self.allBindDeviceTableView setLayoutMargins:UIEdgeInsetsZero];
     }
     
 }
@@ -259,18 +291,18 @@
 }
 
 #pragma mark 初始化UITableView
--(UITableView *)scanDeviceTableView
+-(UITableView *)allBindDeviceTableView
 {
-    if(!_scanDeviceTableView)
+    if(!_allBindDeviceTableView)
     {
-        _scanDeviceTableView = [[UITableView alloc] initWithFrame:CGRectMake(0,0,CGRectGetWidth([UIScreen mainScreen].bounds), CGRectGetHeight([UIScreen mainScreen].bounds)-100) style:UITableViewStyleGrouped];
-        _scanDeviceTableView.delegate = self;
-        _scanDeviceTableView.dataSource = self;
-        _scanDeviceTableView.backgroundColor = [UIColor clearColor];
-        _scanDeviceTableView.separatorStyle=UITableViewCellSeparatorStyleSingleLine;
-        _scanDeviceTableView.tableFooterView=[UIView new];
+        _allBindDeviceTableView = [[UITableView alloc] initWithFrame:CGRectMake(0,0,CGRectGetWidth([UIScreen mainScreen].bounds), CGRectGetHeight([UIScreen mainScreen].bounds)-100) style:UITableViewStyleGrouped];
+        _allBindDeviceTableView.delegate = self;
+        _allBindDeviceTableView.dataSource = self;
+        _allBindDeviceTableView.backgroundColor = [UIColor clearColor];
+        _allBindDeviceTableView.separatorStyle=UITableViewCellSeparatorStyleSingleLine;
+        _allBindDeviceTableView.tableFooterView=[UIView new];
     }
-    return _scanDeviceTableView;
+    return _allBindDeviceTableView;
 }
 
 #pragma mark-----扫描按钮

@@ -7,11 +7,11 @@
 //  扫描到的所有WiFi设备列表
 
 #import <UIKit/UIKit.h>
-#import "BaseViewController.h"
-@interface ALLWIFIDeviceViewController : BaseViewController
+#import "HETBaseViewController.h"
+@interface ALLWIFIDeviceViewController : HETBaseViewController
 
 @property(nonatomic,strong)NSString  *wifiPassword;
-@property(nonatomic,strong)NSString  *ssid;
+@property(nonatomic,strong)NSString  *wifiSsid;
 
 @property(nonatomic,strong)NSString *bindTypeStr;
 @property(nonatomic,strong)NSString *deviceTypeStr;

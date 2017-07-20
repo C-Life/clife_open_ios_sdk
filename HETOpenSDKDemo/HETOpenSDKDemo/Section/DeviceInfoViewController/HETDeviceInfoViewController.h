@@ -6,10 +6,10 @@
 //  Copyright © 2016年 mr.cao. All rights reserved.
 //
 
-#import "BaseViewController.h"
+#import "HETBaseViewController.h"
 
 
-@interface HETDeviceInfoViewController : BaseViewController
+@interface HETDeviceInfoViewController : HETBaseViewController
 
 @property(nonatomic,strong)HETDevice *hetDeviceModel;
 
