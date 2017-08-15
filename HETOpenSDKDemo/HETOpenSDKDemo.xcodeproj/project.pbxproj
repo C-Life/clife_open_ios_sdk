@@ -49,6 +49,10 @@
 		C6011D001F20938000DE141F /* HETBaseViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C6011CFF1F20938000DE141F /* HETBaseViewController.m */; };
 		C6011D051F20987B00DE141F /* CYAlertView.m in Sources */ = {isa = PBXBuildFile; fileRef = C6011D021F20987B00DE141F /* CYAlertView.m */; };
 		C6011D061F20987B00DE141F /* HETCircleLoader.m in Sources */ = {isa = PBXBuildFile; fileRef = C6011D041F20987B00DE141F /* HETCircleLoader.m */; };
+		C60992BB1F42C6ED00D6387D /* HETDeviceAuthInviteViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C60992B81F42C6ED00D6387D /* HETDeviceAuthInviteViewController.m */; };
+		C60992BC1F42C6ED00D6387D /* HETScanViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C60992BA1F42C6ED00D6387D /* HETScanViewController.m */; };
+		C60992C11F42C81E00D6387D /* HETDeviceShareViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C60992BF1F42C81E00D6387D /* HETDeviceShareViewController.m */; };
+		C60992C21F42C81E00D6387D /* HETDeviceShareViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = C60992C01F42C81E00D6387D /* HETDeviceShareViewController.xib */; };
 		C66187EE1C85887F001E54C5 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C66187ED1C85887F001E54C5 /* SystemConfiguration.framework */; };
 		C67C08041DC0B4E70075AFC1 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = C67C07611DC0B4E70075AFC1 /* AppDelegate.m */; };
 		C67C08051DC0B4E70075AFC1 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C67C07621DC0B4E70075AFC1 /* Assets.xcassets */; };
@@ -63,8 +67,8 @@
 		C67C08101DC0B4E70075AFC1 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = C67C077D1DC0B4E70075AFC1 /* main.m */; };
 		C67C08111DC0B4E70075AFC1 /* bingxiang_deviceBind@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = C67C077F1DC0B4E70075AFC1 /* bingxiang_deviceBind@2x.png */; };
 		C67C08121DC0B4E70075AFC1 /* bingxiang_deviceBind@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = C67C07801DC0B4E70075AFC1 /* bingxiang_deviceBind@3x.png */; };
-		C67C08141DC0B4E70075AFC1 /* gotoBack_deviceBind.png in Resources */ = {isa = PBXBuildFile; fileRef = C67C07831DC0B4E70075AFC1 /* gotoBack_deviceBind.png */; };
-		C67C08151DC0B4E70075AFC1 /* gotoBack_deviceBind@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = C67C07841DC0B4E70075AFC1 /* gotoBack_deviceBind@3x.png */; };
+		C67C08141DC0B4E70075AFC1 /* gotoBack.png in Resources */ = {isa = PBXBuildFile; fileRef = C67C07831DC0B4E70075AFC1 /* gotoBack.png */; };
+		C67C08151DC0B4E70075AFC1 /* gotoBack@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = C67C07841DC0B4E70075AFC1 /* gotoBack@3x.png */; };
 		C67C08161DC0B4E70075AFC1 /* AromaDiffuserViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C67C07881DC0B4E70075AFC1 /* AromaDiffuserViewController.m */; };
 		C67C08171DC0B4E70075AFC1 /* HETDeviceInfoViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C67C078B1DC0B4E70075AFC1 /* HETDeviceInfoViewController.m */; };
 		C67C08181DC0B4E70075AFC1 /* HETWIFIUpgradeViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C67C078E1DC0B4E70075AFC1 /* HETWIFIUpgradeViewController.m */; };
@@ -197,6 +201,13 @@
 		C6011D021F20987B00DE141F /* CYAlertView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CYAlertView.m; sourceTree = "<group>"; };
 		C6011D031F20987B00DE141F /* HETCircleLoader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HETCircleLoader.h; sourceTree = "<group>"; };
 		C6011D041F20987B00DE141F /* HETCircleLoader.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HETCircleLoader.m; sourceTree = "<group>"; };
+		C60992B71F42C6ED00D6387D /* HETDeviceAuthInviteViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HETDeviceAuthInviteViewController.h; sourceTree = "<group>"; };
+		C60992B81F42C6ED00D6387D /* HETDeviceAuthInviteViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HETDeviceAuthInviteViewController.m; sourceTree = "<group>"; };
+		C60992B91F42C6ED00D6387D /* HETScanViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HETScanViewController.h; sourceTree = "<group>"; };
+		C60992BA1F42C6ED00D6387D /* HETScanViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HETScanViewController.m; sourceTree = "<group>"; };
+		C60992BE1F42C81E00D6387D /* HETDeviceShareViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HETDeviceShareViewController.h; sourceTree = "<group>"; };
+		C60992BF1F42C81E00D6387D /* HETDeviceShareViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HETDeviceShareViewController.m; sourceTree = "<group>"; };
+		C60992C01F42C81E00D6387D /* HETDeviceShareViewController.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = HETDeviceShareViewController.xib; sourceTree = "<group>"; };
 		C63AF0CD1C50D645000E0EB8 /* HETOpenSDKDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = HETOpenSDKDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C66187ED1C85887F001E54C5 /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
 		C67C07601DC0B4E70075AFC1 /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
@@ -219,8 +230,8 @@
 		C67C077D1DC0B4E70075AFC1 /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		C67C077F1DC0B4E70075AFC1 /* bingxiang_deviceBind@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "bingxiang_deviceBind@2x.png"; sourceTree = "<group>"; };
 		C67C07801DC0B4E70075AFC1 /* bingxiang_deviceBind@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "bingxiang_deviceBind@3x.png"; sourceTree = "<group>"; };
-		C67C07831DC0B4E70075AFC1 /* gotoBack_deviceBind.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = gotoBack_deviceBind.png; sourceTree = "<group>"; };
-		C67C07841DC0B4E70075AFC1 /* gotoBack_deviceBind@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "gotoBack_deviceBind@3x.png"; sourceTree = "<group>"; };
+		C67C07831DC0B4E70075AFC1 /* gotoBack.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = gotoBack.png; sourceTree = "<group>"; };
+		C67C07841DC0B4E70075AFC1 /* gotoBack@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "gotoBack@3x.png"; sourceTree = "<group>"; };
 		C67C07871DC0B4E70075AFC1 /* AromaDiffuserViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AromaDiffuserViewController.h; sourceTree = "<group>"; };
 		C67C07881DC0B4E70075AFC1 /* AromaDiffuserViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AromaDiffuserViewController.m; sourceTree = "<group>"; };
 		C67C078A1DC0B4E70075AFC1 /* HETDeviceInfoViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HETDeviceInfoViewController.h; sourceTree = "<group>"; };
@@ -438,6 +449,27 @@
 			path = Masonry;
 			sourceTree = "<group>";
 		};
+		C60992B61F42C6ED00D6387D /* DeviceMessageCenterController */ = {
+			isa = PBXGroup;
+			children = (
+				C60992B71F42C6ED00D6387D /* HETDeviceAuthInviteViewController.h */,
+				C60992B81F42C6ED00D6387D /* HETDeviceAuthInviteViewController.m */,
+				C60992B91F42C6ED00D6387D /* HETScanViewController.h */,
+				C60992BA1F42C6ED00D6387D /* HETScanViewController.m */,
+			);
+			path = DeviceMessageCenterController;
+			sourceTree = "<group>";
+		};
+		C60992BD1F42C81E00D6387D /* DeviceShareViewController */ = {
+			isa = PBXGroup;
+			children = (
+				C60992BE1F42C81E00D6387D /* HETDeviceShareViewController.h */,
+				C60992BF1F42C81E00D6387D /* HETDeviceShareViewController.m */,
+				C60992C01F42C81E00D6387D /* HETDeviceShareViewController.xib */,
+			);
+			path = DeviceShareViewController;
+			sourceTree = "<group>";
+		};
 		C63AF0C41C50D645000E0EB8 = {
 			isa = PBXGroup;
 			children = (
@@ -549,8 +581,8 @@
 			children = (
 				C67C077F1DC0B4E70075AFC1 /* bingxiang_deviceBind@2x.png */,
 				C67C07801DC0B4E70075AFC1 /* bingxiang_deviceBind@3x.png */,
-				C67C07831DC0B4E70075AFC1 /* gotoBack_deviceBind.png */,
-				C67C07841DC0B4E70075AFC1 /* gotoBack_deviceBind@3x.png */,
+				C67C07831DC0B4E70075AFC1 /* gotoBack.png */,
+				C67C07841DC0B4E70075AFC1 /* gotoBack@3x.png */,
 			);
 			path = Resource;
 			sourceTree = "<group>";
@@ -558,6 +590,8 @@
 		C67C07851DC0B4E70075AFC1 /* Section */ = {
 			isa = PBXGroup;
 			children = (
+				C60992BD1F42C81E00D6387D /* DeviceShareViewController */,
+				C60992B61F42C6ED00D6387D /* DeviceMessageCenterController */,
 				C67C07861DC0B4E70075AFC1 /* AromaDiffuserViewController */,
 				C67C07891DC0B4E70075AFC1 /* DeviceInfoViewController */,
 				C67C078C1DC0B4E70075AFC1 /* DeviceUpgradeViewController */,
@@ -862,14 +896,15 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C67C08141DC0B4E70075AFC1 /* gotoBack_deviceBind.png in Resources */,
+				C67C08141DC0B4E70075AFC1 /* gotoBack.png in Resources */,
 				C67C08121DC0B4E70075AFC1 /* bingxiang_deviceBind@3x.png in Resources */,
 				C67C08331DC0B4E70075AFC1 /* LICENSE in Resources */,
 				C67C08051DC0B4E70075AFC1 /* Assets.xcassets in Resources */,
 				C67C08061DC0B4E70075AFC1 /* LaunchScreen.storyboard in Resources */,
 				C67C08361DC0B4E70075AFC1 /* LICENCE.txt in Resources */,
 				C67C080F1DC0B4E70075AFC1 /* Info.plist in Resources */,
-				C67C08151DC0B4E70075AFC1 /* gotoBack_deviceBind@3x.png in Resources */,
+				C67C08151DC0B4E70075AFC1 /* gotoBack@3x.png in Resources */,
+				C60992C21F42C81E00D6387D /* HETDeviceShareViewController.xib in Resources */,
 				C67C08111DC0B4E70075AFC1 /* bingxiang_deviceBind@2x.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -941,7 +976,9 @@
 				C6011CFC1F20933C00DE141F /* View+MASAdditions.m in Sources */,
 				C6011CBA1F2078CE00DE141F /* ESPGuideCode.m in Sources */,
 				C67C08441DC0B4E70075AFC1 /* UIImageView+HighlightedWebCache.m in Sources */,
+				C60992C11F42C81E00D6387D /* HETDeviceShareViewController.m in Sources */,
 				C67C084B1DC0B4E70075AFC1 /* ColorButton.m in Sources */,
+				C60992BC1F42C6ED00D6387D /* HETScanViewController.m in Sources */,
 				C67C08101DC0B4E70075AFC1 /* main.m in Sources */,
 				C6011D001F20938000DE141F /* HETBaseViewController.m in Sources */,
 				C6011CB61F2078CE00DE141F /* ESP_NetUtil.m in Sources */,
@@ -958,6 +995,7 @@
 				C6011CC11F2078CE00DE141F /* IPAddress.c in Sources */,
 				C6011CC21F2078CE00DE141F /* HFBroadcast_SSID_Password.m in Sources */,
 				C6011CB41F2078CE00DE141F /* ESP_ByteUtil.m in Sources */,
+				C60992BB1F42C6ED00D6387D /* HETDeviceAuthInviteViewController.m in Sources */,
 				C67C08341DC0B4E70075AFC1 /* MBProgressHUD.m in Sources */,
 				C6011CF41F20933C00DE141F /* MASCompositeConstraint.m in Sources */,
 				C67C081B1DC0B4E70075AFC1 /* MainViewController.m in Sources */,

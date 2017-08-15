@@ -16,7 +16,7 @@
 #import "HETWIFIBindBusiness.h"
 #import "HETDeviceControlBusiness.h"
 #import "HETDeviceUpgradeBusiness.h"
-
+#import "HETDeviceShareBusiness.h"
 
 
 

@@ -25,10 +25,11 @@
     // Override point for customization after application launch.
      self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
     
-    [HETOpenSDK registerAppId:@"30284" appSecret:@"331dcf8e1c5a4a13bded9eb521c2934c"];
-
+    //[HETOpenSDK registerAppId:@"30284" appSecret:@"331dcf8e1c5a4a13bded9eb521c2934c"];
+     [HETOpenSDK registerAppId:ktestAPPID appSecret:ktestAPPSECRET];
        MainViewController *rootvc=[[MainViewController alloc]init];
-    
+
+
     UINavigationController * rootNav = [[UINavigationController alloc] initWithRootViewController:rootvc];
     self.window.rootViewController = rootNav;
     [self.window makeKeyAndVisible];

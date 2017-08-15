@@ -9,6 +9,9 @@
 #import "HETDeviceInfoViewController.h"
 
 #import "HETWIFIUpgradeViewController.h"
+#import "HETScanViewController.h"
+#import "HETDeviceAuthInviteViewController.h"
+#import "HETDeviceShareViewController.h"
 
 @interface HETDeviceInfoViewController ()
 
@@ -42,9 +45,9 @@
     // Do any additional setup after loading the view.
     
     
-    int btnHeight=60;
+    int btnHeight=44;
     int btnWidth=250;
-    int btnGap=(CGRectGetHeight([UIScreen mainScreen].bounds)-btnHeight*3)/4;
+    int btnGap=(CGRectGetHeight([UIScreen mainScreen].bounds)-btnHeight*5)/7;
     UIButton *upgradeBtn = [UIButton buttonWithType:UIButtonTypeCustom];
     upgradeBtn.frame =  CGRectMake(self.view.bounds.size.width/2.0-btnWidth/2.0, btnGap, btnWidth, btnHeight);
     [upgradeBtn setTitle:@"设备升级" forState:UIControlStateNormal];
@@ -72,7 +75,24 @@
     [self.view addSubview:modifyDeviceInfoBtn];
     
     
+    UIButton *shareBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+    shareBtn.frame =   CGRectMake(self.view.bounds.size.width/2.0-btnWidth/2.0, btnGap*4+btnHeight*3, btnWidth, btnHeight);
+    [shareBtn setTitle:@"设备分享" forState:UIControlStateNormal];
+    [shareBtn setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
+    [shareBtn addTarget:self action:@selector(shareBtnAction) forControlEvents:UIControlEventTouchUpInside];
+    shareBtn.backgroundColor=[self colorFromHexRGB:@"2E7BD3"];
+    [self.view addSubview:shareBtn];
     
+    
+    
+    UIButton *agreeBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+    agreeBtn.frame =  CGRectMake(self.view.bounds.size.width/2.0-btnWidth/2.0, btnGap*5+btnHeight*4, btnWidth, btnHeight);
+    [agreeBtn setTitle:@"同意分享" forState:UIControlStateNormal];
+    [agreeBtn setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
+    [agreeBtn addTarget:self action:@selector(agreeBtnAction) forControlEvents:UIControlEventTouchUpInside];
+    agreeBtn.backgroundColor=[self colorFromHexRGB:@"2E7BD3"];
+    [self.view addSubview:agreeBtn];
+
     
    
     
@@ -162,7 +182,27 @@
     }];
  
 }
+-(void)shareBtnAction
+{
+    HETDeviceShareViewController *vc=[[HETDeviceShareViewController alloc]init];
+    vc.deviceId=self.hetDeviceModel.deviceId;
+    [self.navigationController pushViewController:vc animated:YES];
+    
+}
 
+
+
+-(void)agreeBtnAction
+{
+    
+    HETScanViewController *vc=[[HETScanViewController alloc]init];
+    [vc finishingBlock:^(NSString *string) {
+        
+        HETDeviceAuthInviteViewController *vc=[[HETDeviceAuthInviteViewController alloc]init];
+        [self.navigationController pushViewController:vc animated:YES];
+    }];
+    [self.navigationController pushViewController:vc animated:YES];
+}
 
 
 - (void)didReceiveMemoryWarning {

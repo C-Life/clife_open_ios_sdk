@@ -123,6 +123,10 @@
     
     
 }
+-(void)viewWillDisappear:(BOOL)animated
+{
+     [self setLeftBarButtonItemHide:NO];
+}
 //扫描WiFi新设备
 - (void)wifiBindAction
 {
