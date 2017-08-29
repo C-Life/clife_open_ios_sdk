@@ -17,20 +17,6 @@ typedef void(^failureBlock)( NSError *error);
 @interface HETDeviceShareBusiness : NSObject
 
 
-/**
- *  请求手机账号所有设备的授权
- *
- *  @param phone 待授权的手机号
- *  @param authOpenId  授权的openId
- *  @param openId  待授权的openId
- *  @param success  成功的回调
- *  @param failure  失败的回调
- */
-+(void)fetchAllAuthDeviceWithPhone:(NSString *)phone
-                        authOpenId:(NSString *)authOpenId
-                            openId:(NSString *)openId
-                           success:(successBlock)success
-                           failure:(failureBlock)failure;
 
 /**
  *  设备授权邀请
@@ -49,18 +35,6 @@ typedef void(^failureBlock)( NSError *error);
 
 
 
-/**
- *  多用户设备授权
- *
- *  @param deviceId  设备标识
- *  @param friendIds 好友标识（多个标识用','（逗号）隔开）
- *  @param success  成功的回调
- *  @param failure  失败的回调
- */
-+(void)deviceAuthWithDeviceId:(NSString *)deviceId
-                       friendIds:(NSString *)friendIds
-                       success:(successBlock)success
-                       failure:(failureBlock)failure;
 
 
 
@@ -114,21 +88,45 @@ typedef void(^failureBlock)( NSError *error);
 
 
 
-
 /**
- *  多设备授权邀请
+ *  获取设备未分享的好友列表
  *
- *  @param deviceIds  设备标识（多个标识用','（逗号）隔开）
- *  @param account  帐号（手机、邮箱）
+ *  @param deviceId  设备标识
  *  @param success  成功的回调
  *  @param failure  失败的回调
  */
-+(void)deviceMultiInviteWithDeviceIds:(NSString *)deviceIds
-                       account:(NSString *)account
-                       success:(successBlock)success
-                       failure:(failureBlock)failure;
++(void)deviceGetNotAuthUserWithDeviceId:(NSString *)deviceId
+                             success:(successBlock)success
+                             failure:(failureBlock)failure;
 
 
+
+
+
+/**
+ *  获取授权给好友的设备列表
+ *
+ *  @param deviceId  设备标识
+ *  @param success  成功的回调
+ *  @param failure  失败的回调
+ */
++(void)deviceGetAuthFriendWithFriendId:(NSString *)friendId
+                                success:(successBlock)success
+                                failure:(failureBlock)failure;
+
+
+
+
+/**
+ *  获取未授权给好友的设备列表
+ *
+ *  @param deviceId  设备标识
+ *  @param success  成功的回调
+ *  @param failure  失败的回调
+ */
++(void)deviceGetNotAuthFriendWithFriendId:(NSString *)friendId
+                               success:(successBlock)success
+                               failure:(failureBlock)failure;
 
 
 /**
@@ -141,6 +139,36 @@ typedef void(^failureBlock)( NSError *error);
                        failure:(failureBlock)failure;
 
 
-
+/**
+ *  消息列表
+ *
+ *  @param messageId  消息标识，只有上拉时传值，下拉时不能传值
+ *  @param pageRows  每页数据大小
+ *  @param pageIndex 加载第几页
+ *  @param success   成功的回调
+ *  @param failure   失败的回调
+ 
+ 字段名称	字段类型	字段说明
+ messageId	number	消息标识
+ title	string	标题
+ description	string	描述
+ businessParam	string	业务参数的值(系统推送消息对应消息详情URL(businessParam为空时不要跳转)；添加好友消息对应用户Id，控制设备消息对应设备ID，查看帖子评论对应帖子详情URL。）
+ sender	number	发送者ID
+ icon	string	图标URL
+ messageType	number	消息类型：0-系统消息；1-添加好友；2-邀请控制设备；3-查看帖子评论；5-运营互动；其他后续补充
+ createTime	number	时间戳
+ status	number	消息状态(0-删除；1-未处理；2-已处理)
+ level2	number	(系统消息的时候如果操作类标识)系统消息下的二级分类：1-无正文；2-文本H5；3-外链；4-设备
+ content	String	(表示设备信息时候建议接口调用时传json格式值)系统消息内容
+ readed	number	消息是否已读（0-已读 1-未读）
+ readonly	number	消息是否只读（0-只读类 1-操作类）
+ summary	String	简要描述
+ pictureUrl	String	简图路径
+ */
++(void)fetchMessageListByPageWithMessageId:(NSString*)messageId
+                                  pageRows:(NSString *)pageRows
+                                 pageIndex:(NSString *)pageIndex
+                                   success:(successBlock)success
+                                   failure:(failureBlock)failure;
 
 @end
