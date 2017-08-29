@@ -141,13 +141,18 @@
     HETAuthorize *auth = [[HETAuthorize alloc] init];
     self.auth = auth;
     [self.auth unauthorize];
-    [self.auth authorizeWithCompleted:^(HETAccount *account, NSError *error) {
+    [self.auth authorizeWithCompleted:^(NSString *openId, NSError *error) {
         if(!error)
         {
+            [self setNavigationBarTitle:@"已登录"];
             dispatch_async(dispatch_get_main_queue(), ^{
                 
                 [self.allBindDeviceTableView triggerPullToRefresh];
             });
+        }
+        else
+        {
+            [self setNavigationBarTitle:@"未登录"];
         }
     }];
 }

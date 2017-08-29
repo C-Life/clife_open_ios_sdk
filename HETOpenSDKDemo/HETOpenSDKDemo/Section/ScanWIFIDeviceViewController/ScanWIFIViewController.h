@@ -15,5 +15,6 @@
 @property(nonatomic,strong)NSString *deviceSubTypeStr;
 @property(nonatomic,strong)NSString *moduleIdStr;
 @property(nonatomic,strong)NSString *productIdStr;
+@property(nonatomic,strong)NSString  *radiocastName;
 
 @end

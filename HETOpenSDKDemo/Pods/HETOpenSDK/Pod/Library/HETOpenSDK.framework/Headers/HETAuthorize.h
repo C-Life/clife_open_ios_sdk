@@ -8,10 +8,9 @@
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 
-#import "HETAccount.h"
 
 
-typedef void(^authenticationCompletedBlock)(HETAccount *account, NSError *error);
+typedef void(^authenticationCompletedBlock)(NSString *openId, NSError *error);
 typedef void(^successBlock)(id responseObject);
 typedef void(^failureBlock)( NSError *error);
 

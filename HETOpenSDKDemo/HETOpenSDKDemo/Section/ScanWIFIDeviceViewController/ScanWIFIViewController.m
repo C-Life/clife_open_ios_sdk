@@ -19,6 +19,7 @@ static NSString * KWifiPasswordKey;
 {
     
     NSString *lastSSIDStr;
+     BOOL                _isNext;
     
 }
 @property(strong,nonatomic)UILabel *titleLable;
@@ -123,6 +124,7 @@ static NSString * KWifiPasswordKey;
             
         }
     }];
+  
     
 }
 -(void)viewWillDisappear:(BOOL)animated
@@ -131,15 +133,19 @@ static NSString * KWifiPasswordKey;
     
     [[HETWIFIBindBusiness sharedInstance] stopFetchSSIDInfo];
 }
-
-
 #pragma ButtonAction进入下一个扫描所有设备界面
 - (void) turnToScanDeviceVCAction
 {
-    
+    if(!self.passwordField.text.length||!self.wifiNameField.text.length)
+    {
+        UIAlertView *alertView=[[UIAlertView alloc]initWithTitle:nil message:@"请先输入设备需要连接的路由器的名称与密码" delegate:nil cancelButtonTitle:@"确定" otherButtonTitles:nil];
+        [alertView show];
+        return;
+    }
     
     [[NSUserDefaults standardUserDefaults]setObject:self.passwordField.text forKey:self.wifiNameField.text];
     [[NSUserDefaults standardUserDefaults]synchronize];
+   
     ALLWIFIDeviceViewController *vc=[[ALLWIFIDeviceViewController alloc]init];
     vc.wifiPassword=self.passwordField.text;
     vc.wifiSsid=self.wifiNameField.text;
@@ -148,6 +154,7 @@ static NSString * KWifiPasswordKey;
     vc.deviceSubTypeStr=self.deviceSubTypeStr;
     vc.moduleIdStr=self.moduleIdStr;
     vc.productId=self.productIdStr;
+    vc.radiocastName=self.radiocastName;
     [self.navigationController pushViewController:vc animated:YES];
 }
 

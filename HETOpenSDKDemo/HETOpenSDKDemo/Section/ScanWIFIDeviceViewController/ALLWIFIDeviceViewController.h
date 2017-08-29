@@ -12,7 +12,7 @@
 
 @property(nonatomic,strong)NSString  *wifiPassword;
 @property(nonatomic,strong)NSString  *wifiSsid;
-
+@property(nonatomic,strong)NSString  *radiocastName;
 @property(nonatomic,strong)NSString *bindTypeStr;
 @property(nonatomic,strong)NSString *deviceTypeStr;
 @property(nonatomic,strong)NSString *deviceSubTypeStr;

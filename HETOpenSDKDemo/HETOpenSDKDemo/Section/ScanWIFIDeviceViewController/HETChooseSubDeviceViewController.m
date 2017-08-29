@@ -233,6 +233,7 @@
         vc.deviceSubTypeStr=deviceSubTypeStr;
         vc.moduleIdStr=moduleIdStr;
         vc.productIdStr=productId;
+        vc.radiocastName=dic[@"radiocastName"];
         [self.navigationController pushViewController:vc animated:YES];
         
     }

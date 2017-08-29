@@ -32,8 +32,8 @@
     self.auth = auth;
     
     if (![auth isAuthenticated]) {
-        [auth authorizeWithCompleted:^(HETAccount *account, NSError *error) {
-            NSLog(@"%@,token:%@",account,account.accessToken);
+        [auth authorizeWithCompleted:^(NSString *openId, NSError *error) {
+            NSLog(@"openId:%@",openId);
             MainViewController *vc=[[MainViewController alloc]init];
             [self.navigationController pushViewController:vc animated:YES];
         }];

@@ -63,15 +63,35 @@ typedef NS_ENUM(NSInteger, HETDeviceBindError) {
 
 
 /**
- *  绑定WiFi设备
+ *  绑定smartLink的WiFi设备
  *
- *  @param productId         设备的productId
+ *  @param productId         设备型号标识
  *  @param interval          绑定的超时时间,单位是秒
  *  @param handler           绑定的回调
  */
--(void)startBindDeviceWithProductId:(NSString *)productId withTimeOut:(NSTimeInterval)interval completionHandler:(void (^)(HETDevice *deviceObj, NSError *error))handler;
+-(void)startBindDeviceWithProductId:(NSString *)productId
+                        withTimeOut:(NSTimeInterval)interval
+                  completionHandler:(void (^)(HETDevice *deviceObj, NSError *error))handler;
 
 
+/**
+ *  绑定AP模式的WiFi设备
+ *
+ *  @param productId         设备型号标识
+ *  @param deviceTypeId      设备的大类
+ *  @param deviceSubtypeId   设备的小类
+ *  @param ssid              AP设备所需要接入的路由器名称
+ *  @param password          AP设备所需要接入的路由器密码
+ *  @param interval          绑定的超时时间,单位是秒
+ *  @param handler           绑定的回调
+ */
+-(void)startAPBindDeviceWithProductId:(NSString *)productId
+                     withDeviceTypeId:(NSUInteger)deviceTypeId
+                  withDeviceSubtypeId:(NSUInteger )deviceSubtypeId
+                             withSSID:(NSString *)ssid
+                             withPassWord:(NSString *)password
+                           withTimeOut:(NSTimeInterval)interval
+                    completionHandler:(void (^)(HETDevice *deviceObj, NSError *error))handler;
 
 /**
  *  停止服务，关闭socket
